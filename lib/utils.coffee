@@ -44,6 +44,7 @@ modalMsg = (title, msg) ->
       Ok: ->
 
 
+# FIXME https://github.com/ensime/ensime-atom/issues/30
 projectPath = -> (p for p in atom.project.getPaths() when fs.existsSync(p+"/.ensime"))[0]
 
 
