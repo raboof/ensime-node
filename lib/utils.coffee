@@ -47,7 +47,18 @@ modalMsg = (title, msg) ->
 # FIXME https://github.com/ensime/ensime-atom/issues/30
 projectPath = -> (p for p in atom.project.getPaths() when fs.existsSync(p+"/.ensime"))[0]
 
-
+withSbt = (callback) =>
+  sbtCmd = atom.config.get('Ensime.sbtExec')
+  if sbtCmd
+    callback(sbtCmd)
+  else
+    # TODO: try to check if on path, can we do this with fs?
+    dialog = remote.require('dialog')
+    dialog.showOpenDialog({title: "Sorry, but we need you to point out your SBT executive", properties:['openFile']}, (filenames) =>
+        sbtCmd = filenames[0]
+        atom.config.set('Ensime.sbtExec', sbtCmd)
+        callback(sbtCmd)
+      )
 
 
 module.exports = {
@@ -58,5 +69,6 @@ module.exports = {
   getElementsByClass,
   log,
   modalMsg,
-  projectPath
+  projectPath,
+  withSbt
 }
