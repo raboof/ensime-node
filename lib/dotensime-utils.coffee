@@ -12,8 +12,12 @@ parseDotEnsime = (path) ->
   dotEnsimeLisp = lisp.readFromString(dotEnsime)
   dotEnsimeJs = sexpToJObject(dotEnsimeLisp)
   {
+    name: dotEnsimeJs[':name']
     scalaVersion: dotEnsimeJs[':scala-version']
     javaHome: dotEnsimeJs[':java-home']
+    javaFlags: dotEnsimeJs[':java-flags']
+    rootDir: dotEnsimeJs[':root-dir']
+    cacheDir: dotEnsimeJs[':cache-dir']
   }
 
 module.exports = {

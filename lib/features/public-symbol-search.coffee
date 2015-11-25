@@ -1,4 +1,5 @@
 SymbolSearchVue = require('../views/public-symbol-search-vue')
+{addModalPanel} = require('../utils')
 
 maxSymbols = 5
 
@@ -6,10 +7,7 @@ module.exports = class PublicSymbolSearch
 
   constructor: (@client) ->
     @vue = new SymbolSearchVue
-    @element = document.createElement('div')
-    @modalPanel = atom.workspace.addModalPanel
-          item: @element, visible: false
-    @vue.$mount(@element)
+    @modalPanel = addModalPanel(@vue, false)
 
     @vue.onSearchTextUpdated (newText, oldText) =>
       req =

@@ -18,6 +18,7 @@ AutocompletePlusProvider = require './features/autocomplete-plus'
 
 ImplicitInfo = require './model/implicit-info'
 ImplicitInfoView = require './views/implicit-info-view'
+SelectFile = require './views/select-file'
 
 portFile = ->
     loadSettings = atom.getLoadSettings()
@@ -88,18 +89,15 @@ module.exports = Ensime =
     # Need to have a started server and port file
     @stoppedCommands = new CompositeDisposable
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", => updateEnsimeServer()
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", =>
-      if !projectPath()?
-        modalMsg("no valid Ensime project found (did you remember to generate a .ensime file?)")
-      else
-        @initProject()
 
+    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @startAnEnsime()
 
 
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @stopEnsime()
+    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @startAnEnsime()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:mark-implicits", => @markImplicits()
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:unmark-implicits", => @unmarkImplicits()
@@ -263,6 +261,23 @@ module.exports = Ensime =
     for editor in atom.workspace.getTextEditors()
       @deleteControllers editor
 
+
+  # to start an ensime, first we need to to select a .ensime file under any project path
+  startAnEnsime: ->
+    read = require('fs-readdir-recursive')
+
+    dirs = atom.project.getPaths()
+    # get all .ensimes with an ugly js-flatten:
+    dotEnsimes = [].concat dirs.map((dir) ->
+      read(dir, (f) ->
+        f == ".ensime").map((f) -> dir + path.sep + f))
+
+    new SelectFile(dotEnsimes, (selected) =>
+        console.log('selected' + selected)
+      )
+
+    # TODO: modal dialog to select which .ensime to use
+    # @initProject()
 
   stopEnsime: ->
     if not atom.config.get('Ensime.runServerDetached')

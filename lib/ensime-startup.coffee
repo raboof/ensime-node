@@ -20,6 +20,7 @@ mkClasspathFileName = (scalaVersion, ensimeServerVersion) ->
   atom.packages.resolvePackagePath('Ensime') + path.sep + "classpath_#{scalaVersion}_#{ensimeServerVersion}"
 
 
+# This should be read from .ensime
 ensimeCache = -> projectPath() + path.sep + '.ensime_cache'
 ensimeServerLogFile = -> ensimeCache() + path.sep + 'server.log'
 

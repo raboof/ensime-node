@@ -2,7 +2,6 @@ path = require 'path'
 fs = require 'fs'
 
 
-
 isScalaSource = (editor) ->
   buffer = editor.getBuffer()
   fname = buffer.getUri()
@@ -43,9 +42,16 @@ modalMsg = (title, msg) ->
     buttons:
       Ok: ->
 
+addModalPanel = (vue, visible = false) ->
+  # element = document.createElement('div')
+  vue.$mount()
+  modalPanel = atom.workspace.addModalPanel
+        item: vue.$el, visible: visible
+  # element
+  vue.$el
 
-# FIXME https://github.com/ensime/ensime-atom/issues/30
-projectPath = -> (p for p in atom.project.getPaths() when fs.existsSync(p+"/.ensime"))[0]
+
+
 
 withSbt = (callback) =>
   sbtCmd = atom.config.get('Ensime.sbtExec')
@@ -61,6 +67,9 @@ withSbt = (callback) =>
       )
 
 
+
+
+
 module.exports = {
   isScalaSource,
   pixelPositionFromMouseEvent,
@@ -69,6 +78,6 @@ module.exports = {
   getElementsByClass,
   log,
   modalMsg,
-  projectPath,
-  withSbt
+  withSbt,
+  addModalPanel
 }

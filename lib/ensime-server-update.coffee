@@ -76,6 +76,8 @@ createSbtClasspathBuild = (scalaVersion, ensimeServerVersion, classpathFile) ->
     atom.config.get('Ensime.ensimeServerVersion')
 
   updateEnsimeServerManually = (dotEnsime, javaHome) ->
+    # TODO:
+
     if not projectPath()
       modalMsg('No .ensime found', "You need to have a project open with a .ensime in root.")
     else

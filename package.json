@@ -16,7 +16,8 @@
     "jquery": "^2",
     "lodash": "~3.9.3",
     "sub-atom": "~1.0.0",
-    "vue": "1.0.0-csp"
+    "vue": "1.0.0-csp",
+    "fs-readdir-recursive": "^1.0.0"
   },
   "package-dependencies": {
     "hyperclick": "whatever",
