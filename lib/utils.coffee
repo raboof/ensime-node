@@ -43,12 +43,11 @@ modalMsg = (title, msg) ->
       Ok: ->
 
 addModalPanel = (vue, visible = false) ->
-  # element = document.createElement('div')
-  vue.$mount()
+  element = document.createElement('div')
   modalPanel = atom.workspace.addModalPanel
-        item: vue.$el, visible: visible
-  # element
-  vue.$el
+        item: element, visible: visible
+  vue.$mount(element)
+  modalPanel
 
 
 
