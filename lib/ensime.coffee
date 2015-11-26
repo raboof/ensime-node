@@ -90,14 +90,14 @@ module.exports = Ensime =
     @stoppedCommands = new CompositeDisposable
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", => updateEnsimeServer()
 
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @startAnEnsime()
+    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndStartAnEnsime()
 
 
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @stopEnsime()
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @startAnEnsime()
+    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndStartAnEnsime()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:mark-implicits", => @markImplicits()
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:unmark-implicits", => @unmarkImplicits()
@@ -132,16 +132,7 @@ module.exports = Ensime =
     @autotypecheckControllers = new WeakMap
 
     @addCommandsForStoppedState()
-    # https://discuss.atom.io/t/ok-to-use-grammar-cson-for-just-file-assoc/17801/11
-    Promise.resolve(
-      atom.packages.isPackageLoaded('language-scala') && atom.packages.activatePackage('language-scala')
-    ).then (languageScalaPkg) ->
-      if languageScalaPkg
-        # language-scala is loaded and activated
-      else
-        # language-scala is not loaded
-        grammar = atom.packages.resolvePackagePath('Ensime') + path.sep + 'grammars-hidden' + path.sep + 'scala.cson'
-        atom.grammars.loadGrammar grammar
+  
 
 
 
@@ -263,7 +254,7 @@ module.exports = Ensime =
 
 
   # to start an ensime, first we need to to select a .ensime file under any project path
-  startAnEnsime: ->
+  selectAndBootAnEnsime: ->
     read = require('fs-readdir-recursive')
 
     dirs = atom.project.getPaths()
@@ -272,12 +263,10 @@ module.exports = Ensime =
       read(dir, (f) ->
         f == ".ensime").map((f) -> dir + path.sep + f))
 
-    new SelectFile(dotEnsimes, (selected) =>
-        console.log('selected' + selected)
-      )
+    new SelectFile(dotEnsimes, (selectedDotEnsime) =>
+      @bootDotEnsime(selectedDotEnsime)
+    )
 
-    # TODO: modal dialog to select which .ensime to use
-    # @initProject()
 
   stopEnsime: ->
     if not atom.config.get('Ensime.runServerDetached')
