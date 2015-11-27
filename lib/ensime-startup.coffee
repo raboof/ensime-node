@@ -7,6 +7,17 @@ EnsimeServerUpdateLogView = require('./views/ensime-server-update-log-view')
 lisp = require './lisp/lisp'
 {sexpToJObject} = require './lisp/swank-extras'
 remote = require 'remote'
+{parseDotEnsime} = require './dotensime-utils'
+
+
+bootDotEnsime = (dotEnsimePath) ->
+  parsedDotEnsime = parseDotEnsime(dotEnsimePath)
+  console.log(parsedDotEnsime)
+
+
+
+
+
 
 
 
@@ -102,6 +113,7 @@ startEnsimeServer = (pidCallback) ->
 
 
 module.exports = {
-  startEnsimeServer: startEnsimeServer,
+  bootDotEnsime: bootDotEnsime
+  startEnsimeServer: startEnsimeServer
   classpathFileName: dotEnsimeToCPFileName
 }

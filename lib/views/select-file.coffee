@@ -38,7 +38,7 @@ module.exports = class SelectFile
 
           'core:confirm': (event) =>
             selected = files[@selected]
-            console.log("selected: " + selected)
+            console.log(["selected: ", [selected])
             onSelect(selected)
             @done()
             event.stopPropagation()
@@ -47,7 +47,7 @@ module.exports = class SelectFile
             onCancel()
             @done()
             event.stopPropagation()
-            
+
         console.log("attached finished: " + @$el)
       })
 

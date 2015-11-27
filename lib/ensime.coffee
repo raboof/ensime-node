@@ -6,7 +6,7 @@ path = require('path')
 Client = require './client'
 StatusbarView = require './views/statusbar-view'
 {CompositeDisposable} = require 'atom'
-{updateEnsimeServer, startEnsimeServer, classpathFileName} = require './ensime-startup'
+{bootDotEnsime, updateEnsimeServer, startEnsimeServer, classpathFileName} = require './ensime-startup'
 
 ShowTypes = require './features/show-types'
 Implicits = require './features/implicits'
@@ -89,15 +89,13 @@ module.exports = Ensime =
     # Need to have a started server and port file
     @stoppedCommands = new CompositeDisposable
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", => updateEnsimeServer()
-
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndStartAnEnsime()
-
+    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @stopEnsime()
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndStartAnEnsime()
+    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:mark-implicits", => @markImplicits()
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:unmark-implicits", => @unmarkImplicits()
@@ -113,7 +111,6 @@ module.exports = Ensime =
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:format-source", => @formatCurrentSourceFile()
 
-
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:search-public-symbol", => @searchPublicSymbol()
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:import-suggestion", => @getImportSuggestions()
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:organize-imports", => @organizeImports()
@@ -123,7 +120,6 @@ module.exports = Ensime =
     apd = require('atom-package-dependencies')
     apd.install()
 
-
     @subscriptions = new CompositeDisposable
 
     # Feature controllers
@@ -132,14 +128,9 @@ module.exports = Ensime =
     @autotypecheckControllers = new WeakMap
 
     @addCommandsForStoppedState()
-  
-
-
-
 
   deactivate: ->
-    @stopEnsime()
-
+    @stopAllEnsimes()
 
   maybeStartEnsimeServer: ->
     if not @ensimeServerPid
@@ -264,7 +255,8 @@ module.exports = Ensime =
         f == ".ensime").map((f) -> dir + path.sep + f))
 
     new SelectFile(dotEnsimes, (selectedDotEnsime) =>
-      @bootDotEnsime(selectedDotEnsime)
+      console.log(['selectedDotEnsime: ', selectedDotEnsime])
+      bootDotEnsime(selectedDotEnsime)
     )
 
 
