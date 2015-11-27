@@ -65,9 +65,13 @@ withSbt = (callback) =>
         callback(sbtCmd)
       )
 
+# create classpath file name for ensime server startup
+mkClasspathFileName = (scalaVersion, ensimeServerVersion) ->
+  atom.packages.resolvePackagePath('Ensime') + path.sep + "classpath_#{scalaVersion}_#{ensimeServerVersion}"
 
 
 
+packageDir = () -> atom.packages.resolvePackagePath('Ensime')
 
 module.exports = {
   isScalaSource,
@@ -78,5 +82,7 @@ module.exports = {
   log,
   modalMsg,
   withSbt,
-  addModalPanel
+  addModalPanel,
+  packageDir,
+  mkClasspathFileName
 }

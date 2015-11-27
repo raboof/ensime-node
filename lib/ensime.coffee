@@ -2,11 +2,13 @@ net = require('net')
 exec = require('child_process').exec
 fs = require 'fs'
 path = require('path')
+_ = require 'lodash'
+
 {Subscriber} = require 'emissary'
 Client = require './client'
 StatusbarView = require './views/statusbar-view'
 {CompositeDisposable} = require 'atom'
-{bootDotEnsime, updateEnsimeServer, startEnsimeServer, classpathFileName} = require './ensime-startup'
+{startClient} = require './ensime-startup'
 
 ShowTypes = require './features/show-types'
 Implicits = require './features/implicits'
@@ -19,16 +21,6 @@ AutocompletePlusProvider = require './features/autocomplete-plus'
 ImplicitInfo = require './model/implicit-info'
 ImplicitInfoView = require './views/implicit-info-view'
 SelectFile = require './views/select-file'
-
-portFile = ->
-    loadSettings = atom.getLoadSettings()
-    projectPath() + '/.ensime_cache/port'
-
-
-createClient = (portFileLoc, generalHandler) ->
-  port = fs.readFileSync(portFileLoc).toString()
-  new Client(port, generalHandler)
-
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 
@@ -132,21 +124,10 @@ module.exports = Ensime =
   deactivate: ->
     @stopAllEnsimes()
 
-  maybeStartEnsimeServer: ->
-    if not @ensimeServerPid
-      if fs.existsSync(portFile())
-        modalMsg(".ensime_cache/port file already exists. Sure no running server already? If so, remove file and try again.")
-      else
-        startEnsimeServer((pid) =>
-          @ensimeServerPid = pid
-          @ensimeServerPid.on 'exit', (code) =>
-            @ensimeServerPid = null
-        )
-    else
-      modalMsg("Already running", "Ensime server process already running")
+
 
   generalHandler: (msg) ->
-
+    console.log(["this in generalHandler callback: ", this])
     typehint = msg.typehint
 
     if(typehint == 'AnalyzerReadyEvent')
@@ -172,7 +153,7 @@ module.exports = Ensime =
 
 
 
-  initProject: ->
+  initClient: (dotEnsimePath) ->
     @typechecking = new TypeCheckingFeature()
 
     # Register model-view mappings
@@ -180,17 +161,15 @@ module.exports = Ensime =
       result = new ImplicitInfoView().initialize(implicitInfo)
       result
 
-    initClient = =>
-      # remove start command and add others
-      @stoppedCommands.dispose()
-      @addCommandsForStartedState()
 
-      @client = createClient(portFile(), (msg) => @generalHandler(msg) )
-
-
+    # remove start command and add others
+    @stoppedCommands.dispose()
+    @addCommandsForStartedState()
+    startClient(dotEnsimePath, ((msg) => @generalHandler(msg)), (client) =>
+      @client = client
+      console.log(["this in startClient callback: ", this])
       @statusbarView = new StatusbarView()
       @statusbarView.init()
-
       @client.post({"typehint":"ConnectionInfoReq"}, (msg) -> )
 
       @controlSubscription = atom.workspace.observeTextEditors (editor) =>
@@ -205,27 +184,7 @@ module.exports = Ensime =
 
 
       @autocompletePlusProvider = new AutocompletePlusProvider(@client)
-
-
-    # Startup server
-    if not fs.existsSync(portFile())
-      @maybeStartEnsimeServer()
-
-    # Client
-    tryStartup = (trysLeft) =>
-      if(trysLeft == 0)
-        modalMsg("Server doesn't seem to startup in time. Check .ensime_cache/server.log, run 'Update Ensime Server' and/or report this as a bug!")
-      else if fs.existsSync(portFile())
-        initClient()
-      else
-        @clientStartupTimeout = setTimeout (=>
-          tryStartup(trysLeft - 1)
-        ), 500
-
-    if(fs.existsSync(classpathFileName()))
-      tryStartup(20) # 10 sec should be enough?
-    else
-      tryStartup(200)
+    )
 
 
 
@@ -250,13 +209,16 @@ module.exports = Ensime =
 
     dirs = atom.project.getPaths()
     # get all .ensimes with an ugly js-flatten:
-    dotEnsimes = [].concat dirs.map((dir) ->
-      read(dir, (f) ->
-        f == ".ensime").map((f) -> dir + path.sep + f))
+    dotEnsimes = _.flatten(dirs.map((dir) ->
+      filtered = read(dir, (f) -> f.endsWith ".ensime")
+      filtered.map((f) -> dir + path.sep + f)
+    ))
+
+    console.log(['dotEnsime: ', dotEnsimes])
 
     new SelectFile(dotEnsimes, (selectedDotEnsime) =>
       console.log(['selectedDotEnsime: ', selectedDotEnsime])
-      bootDotEnsime(selectedDotEnsime)
+      @initClient(selectedDotEnsime)
     )
 
 

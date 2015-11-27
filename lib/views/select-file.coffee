@@ -5,7 +5,7 @@ module.exports = class SelectFile
   constructor: (files, onSelect, onCancel = -> ) ->
     vue = new Vue({
       template: """
-        <div id="select-file" class="select-list fuzzy-finder">
+        <div tabindex="0" id="select-file" class="select-list fuzzy-finder">
           <div>Please choose which Ensime project to start up:</div>
           <ol class="list-group">
             <li v-for="file in files" v-bind:class="{'selected': $index==selected}">
@@ -18,35 +18,36 @@ module.exports = class SelectFile
         selected: 0
         files: files
 
-      attached: () ->
-        console.log("attached called")
 
-        @done = () =>
+      attached: () ->
+        console.log("attached called: " + this.$el)
+
+        done = () =>
           @commands.dispose()
           @$emit('done')
 
-        @commands = atom.commands.add document,
+        @commands = atom.commands.add window,
           'core:move-up': (event) =>
             if(@selected > 0)
               @selected -= 1
             event.stopPropagation()
-
           'core:move-down': (event) =>
             if(@selected < files.length - 1)
               @selected += 1
             event.stopPropagation()
-
           'core:confirm': (event) =>
             selected = files[@selected]
-            console.log(["selected: ", [selected])
+            console.log(["selected: ", selected])
+            done()
             onSelect(selected)
-            @done()
             event.stopPropagation()
-
           'core:cancel': (event) =>
             onCancel()
-            @done()
+            done()
             event.stopPropagation()
+
+        @$on 'focusout', () =>
+          done()
 
         console.log("attached finished: " + @$el)
       })
@@ -56,3 +57,4 @@ module.exports = class SelectFile
       @container.destroy()
 
     vue.$el.focus()
+    console.log("vue.el: " + vue.$el)

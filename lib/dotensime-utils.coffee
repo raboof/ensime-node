@@ -1,4 +1,6 @@
-require ('fs')
+fs = require ('fs')
+lisp = require ('./lisp/lisp')
+{sexpToJObject} = require './lisp/swank-extras'
 
 readDotEnsime = (path) ->
   raw = fs.readFileSync(path)
@@ -18,6 +20,7 @@ parseDotEnsime = (path) ->
     javaFlags: dotEnsimeJs[':java-flags']
     rootDir: dotEnsimeJs[':root-dir']
     cacheDir: dotEnsimeJs[':cache-dir']
+    dotEnsimePath: path
   }
 
 module.exports = {
