@@ -21,9 +21,10 @@ AutocompletePlusProvider = require './features/autocomplete-plus'
 ImplicitInfo = require './model/implicit-info'
 ImplicitInfoView = require './views/implicit-info-view'
 SelectFile = require './views/select-file'
+{parseDotEnsime} = require './ensime-client/dotensime-utils'
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
-
+InstanceManager = require './ensime-client/ensime-instance-manager'
 
 module.exports = Ensime =
 
@@ -80,7 +81,7 @@ module.exports = Ensime =
   addCommandsForStoppedState: ->
     # Need to have a started server and port file
     @stoppedCommands = new CompositeDisposable
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", => updateEnsimeServer()
+    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", -> updateEnsimeServer()
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
 
@@ -99,7 +100,7 @@ module.exports = Ensime =
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:go-to-definition", => @goToDefinitionOfCursor()
 
-    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", => updateEnsimeServer()
+    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", -> updateEnsimeServer()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:format-source", => @formatCurrentSourceFile()
 
@@ -119,42 +120,69 @@ module.exports = Ensime =
     @implicitControllers = new WeakMap
     @autotypecheckControllers = new WeakMap
 
+    @instanceManager = new InstanceManager
+
     @addCommandsForStoppedState()
+
+
+    @controlSubscription = atom.workspace.observeTextEditors (editor) =>
+      if isScalaSource(editor)
+        # For now I'm doing least amount of change to support multiple ensime projects
+        # This way you have to re-open editors after an ensime i started to get a client for it
+        # client lookup could be pushed into the features so this is delayed
+        instance = @instanceManager.instanceOfFile(editor.getPath())
+        if (instance)
+          client = instance.client
+          if atom.config.get('Ensime.enableTypeTooltip')
+            if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, client))
+          if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, client))
+          if not @autotypecheckControllers.get(editor) then @autotypecheckControllers.set(editor, new AutoTypecheck(editor, client))
+
+          @subscriptions.add editor.onDidDestroy () =>
+            @deleteControllers editor
+
+    atom.workspace.onDidStopChangingActivePaneItem (pane) =>
+      console.log(this + 'changedTo ' + pane)
+      # TODO: change statusbarView to the one for this instance
 
   deactivate: ->
     @stopAllEnsimes()
 
+  clientOfEditor: (editor) ->
+    @instanceManager.instanceOfFile(editor.getPath())?.client
+
+  clientOfActiveTextEditor: ->
+    clientOfEditor(getActiveTextEditor())
 
 
-  generalHandler: (msg) ->
-    console.log(["this in generalHandler callback: ", this])
+  # TODO: move out
+  statusbarOutput: (statusbarView, typechecking) -> (msg) ->
     typehint = msg.typehint
 
     if(typehint == 'AnalyzerReadyEvent')
-      @statusbarView.setText('Analyzer ready!')
+      statusbarView.setText('Analyzer ready!')
 
     else if(typehint == 'FullTypeCheckCompleteEvent')
-      @statusbarView.setText('Full typecheck finished!')
+      statusbarView.setText('Full typecheck finished!')
 
     else if(typehint == 'IndexerReadyEvent')
-      @statusbarView.setText('Indexer ready!')
+      statusbarView.setText('Indexer ready!')
 
     else if(typehint == 'CompilerRestartedEvent')
-      @statusbarView.setText('Compiler restarted!')
+      statusbarView.setText('Compiler restarted!')
 
     else if(typehint == 'ClearAllScalaNotesEvent')
-      @typechecking.clearScalaNotes()
+      typechecking.clearScalaNotes()
 
     else if(typehint == 'NewScalaNotesEvent')
-      @typechecking.addScalaNotes(msg)
+      typechecking.addScalaNotes(msg)
 
     else if(typehint.startsWith('SendBackgroundMessageEvent'))
-      @statusbarView.setText(msg.detail)
+      statusbarView.setText(msg.detail)
 
 
 
   initClient: (dotEnsimePath) ->
-    @typechecking = new TypeCheckingFeature()
 
     # Register model-view mappings
     @subscriptions.add atom.views.addViewProvider ImplicitInfo, (implicitInfo) ->
@@ -165,31 +193,35 @@ module.exports = Ensime =
     # remove start command and add others
     @stoppedCommands.dispose()
     @addCommandsForStartedState()
-    startClient(dotEnsimePath, ((msg) => @generalHandler(msg)), (client) =>
-      @client = client
-      console.log(["this in startClient callback: ", this])
-      @statusbarView = new StatusbarView()
-      @statusbarView.init()
-      @client.post({"typehint":"ConnectionInfoReq"}, (msg) -> )
+    dotEnsime = parseDotEnsime(dotEnsimePath)
 
-      @controlSubscription = atom.workspace.observeTextEditors (editor) =>
-        if isScalaSource(editor)
-          if atom.config.get('Ensime.enableTypeTooltip')
-            if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, @client))
-          if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, @client))
-          if not @autotypecheckControllers.get(editor) then @autotypecheckControllers.set(editor, new AutoTypecheck(editor, @client))
+    typechecking = new TypeCheckingFeature()
+    statusbarView = new StatusbarView()
+    statusbarView.init()
 
-          @subscriptions.add editor.onDidDestroy () =>
-            @deleteControllers editor
+    startClient(dotEnsime, @statusbarOutput(statusbarView, typechecking), (client) =>
+      instance = {
+        rootDir: dotEnsime.rootDir
+        dotEnsime: dotEnsime
+        client: client
+        statusbarView: statusbarView
+      }
+
+      @instanceManager.registerInstance(instance)
+
+      client.post({"typehint":"ConnectionInfoReq"}, (msg) -> )
 
 
-      @autocompletePlusProvider = new AutocompletePlusProvider(@client)
+
+
+      #FIXME:
+      @autocompletePlusProvider = new AutocompletePlusProvider(client)
     )
 
 
 
   deleteControllers: (editor) ->
-    deactivateAndDelete = (controller) =>
+    deactivateAndDelete = (controller) ->
       controller.get(editor)?.deactivate()
       controller.delete(editor)
 
@@ -228,16 +260,7 @@ module.exports = Ensime =
 
     @ensimeServerPid = null
 
-    @statusbarView?.destroy()
-    @statusbarView = null
-
     @deleteAllEditorsControllers()
-
-    @client?.destroy()
-    @client = null
-
-    @typechecking?.destroy()
-    @typechecking = null
 
     @startedCommands.dispose()
     @addCommandsForStoppedState()
@@ -251,25 +274,25 @@ module.exports = Ensime =
 
 
   typecheckAll: ->
-    @client.post( {"typehint": "TypecheckAllReq"}, (msg) ->)
+    clientOfActiveTextEditor()?.post( {"typehint": "TypecheckAllReq"}, (msg) ->)
 
   unloadAll: ->
-    @client.post( {"typehint": "UnloadAllReq"}, (msg) ->)
+    clientOfActiveTextEditor()?.post( {"typehint": "UnloadAllReq"}, (msg) ->)
 
   # typechecks currently open file
   typecheckBuffer: ->
     b = atom.workspace.getActiveTextEditor()?.getBuffer()
-    @client.typecheckBuffer(b)
+    clientOfEditor(b.getPath()).typecheckBuffer(b)
 
   typecheckFile: ->
     b = atom.workspace.getActiveTextEditor()?.getBuffer()
-    @client.typecheckFile(b)
+    clientOfEditor(b.getPath()).typecheckFile(b)
 
   goToDefinitionOfCursor: ->
     editor = atom.workspace.getActiveTextEditor()
     textBuffer = editor.getBuffer()
     pos = editor.getCursorBufferPosition()
-    @client.goToTypeAtPoint(textBuffer, pos)
+    clientOfEditor(textBuffer.getPath()).goToTypeAtPoint(textBuffer, pos)
 
   markImplicits: ->
     editor = atom.workspace.getActiveTextEditor()
@@ -296,10 +319,10 @@ module.exports = Ensime =
       inclusionPriority: 10
       excludeLowerPriority: true
 
-      getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) =>
+      getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
         provider = getProvider()
         if(provider)
-          new Promise (resolve) =>
+          new Promise (resolve) ->
             log('ensime.getSuggestions')
             provider.getCompletions(editor.getBuffer(), bufferPosition, resolve)
         else
@@ -310,9 +333,17 @@ module.exports = Ensime =
     {
       providerName: 'ensime-atom'
       getSuggestionForWord: (textEditor, text, range) =>
+        client = @instanceManager.instanceOfFile(textEditor())?.client
         {
           range: range
-          callback: () => @client?.goToTypeAtPoint(textEditor.getBuffer(), range.start)
+          callback: () ->
+            if(client)
+              client.goToTypeAtPoint(textEditor.getBuffer(), range.start)
+            else
+              atom.notifications.addError("Ensime not started! :(", {
+                dismissable: true
+                detail: "There is no running ensime instance for this particular file. Please start ensime first!"
+                })
         }
     }
 
@@ -325,7 +356,7 @@ module.exports = Ensime =
       file:
         file: editor.getPath()
         contents: editor.getText()
-    @client?.post(req, (msg) ->
+    clientOfEditor(editor.getPath())?.post(req, (msg) ->
       editor.setText(msg.text)
       editor.setCursorBufferPosition(cursorPos)
     )
@@ -333,15 +364,16 @@ module.exports = Ensime =
   searchPublicSymbol: ->
     unless @publicSymbolSearch
       PublicSymbolSearch = require('./features/public-symbol-search')
-      @publicSymbolSearch = new PublicSymbolSearch(@client)
-    @publicSymbolSearch.toggle()
+      @publicSymbolSearch = new PublicSymbolSearch()
+    @publicSymbolSearch.toggle(clientOfActiveTextEditor())
 
   getImportSuggestions: ->
     unless @importSuggestions
       ImportSuggestions = require('./features/import-suggestions')
-      @importSuggestions = new ImportSuggestions(@client)
+      @importSuggestions = new ImportSuggestions()
     editor = atom.workspace.getActiveTextEditor()
     @importSuggestions.getImportSuggestions(
+      @clientOfEditor(editor.getPath()),
       editor.getBuffer(),
       editor.getBuffer().characterIndexForPosition(editor.getCursorBufferPosition()),
       editor.getWordUnderCursor()
@@ -350,6 +382,6 @@ module.exports = Ensime =
   organizeImports: ->
     unless @refactorings
       Refactorings = require './features/refactorings'
-      @refactorings = new Refactorings(@client)
+      @refactorings = new Refactorings
     editor = atom.workspace.getActiveTextEditor()
-    @refactorings.organizeImports(editor.getPath())
+    @refactorings.organizeImports(@clientOfEditor(editor.getPath()), editor.getPath())

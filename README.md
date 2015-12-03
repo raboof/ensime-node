@@ -79,11 +79,13 @@ https://gitter.im/ensime/ensime-atom
 - [x] See if we can use code-links for mouse clicks https://atom.io/packages/code-links (Not gonna do it)
 - [x] Check if we can get rid of terminal escape stuff from log. Look at term2 or ask.
 - [x] getPath is deprecated: https://github.com/atom/atom/blob/master/src/project.coffee#L471 Maybe need to ask about where .ensime is like Emacs.
+- [ ] Multiple instances - BIG REFACTORING
+- [ ] Don't use jquery lookup for https://github.com/atom/status-bar
+- [ ]
 - [ ] Use path.dirname(module.filename) instead of package name lookup? https://github.com/paulpflug/vue-hello-world/blob/master/lib/vue-hello-world.coffee#L31
 - [ ] Use .vue https://github.com/vuejs/vueify#compiler-api
 - [ ] If error with "not found" -> alt-enter for quick import just like idea
 - [ ] Check out https://github.com/OmniSharp/omnisharp-atom Seems we can learn a lot!
-- [ ] Create FRP stream for editors that features can use.
 - [ ] Wait for analyzer ready msg - (:return (:abort 209 "Analyzer is not ready! Please wait.") 4)
 - [ ] server will stop logging when atom is reloaded since stdio is piped via node. Pipe to file directly from process
  and tail -f to buffer in atom?

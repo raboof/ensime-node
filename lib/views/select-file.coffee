@@ -1,6 +1,9 @@
 Vue = require('vue')
 {addModalPanel} = require('../utils')
 
+
+# TODO: Look at https://github.com/js-padavan/atom-enhanced-tabs/blob/master/lib/SimpleListView.coffee
+
 module.exports = class SelectFile
   constructor: (files, onSelect, onCancel = -> ) ->
     vue = new Vue({

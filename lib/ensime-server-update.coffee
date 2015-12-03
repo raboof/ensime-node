@@ -78,7 +78,7 @@ updateEnsimeServer = (sbtCmd, scalaVersion, ensimeServerVersion, whenUpdated = (
     if(exitCode == 0)
       whenUpdated()
     else
-      console.log('ps process exited with code ' + code);
+      console.log('ps process exited with code ' + code)
 
 
 

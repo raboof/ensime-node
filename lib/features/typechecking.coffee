@@ -9,7 +9,7 @@ class TypeChecking
 
   constructor: ->
     @messages = new MessagePanelView
-        title: 'Ensime'
+      title: 'Ensime'
     @messages.attach()
 
     @disposables = new CompositeDisposable
@@ -34,14 +34,14 @@ class TypeChecking
     addNoteToMessageView = (note) =>
       file = note.file
       @messages.add new LineMessageView
-          file: file
-          line: note.line
-          character: note.col
-          message: note.msg
-          className: switch note.severity.typehint
-            when "NoteError" then "highlight-error"
-            when "NoteWarn" then "highlight-warning"
-            else ""
+        file: file
+        line: note.line
+        character: note.col
+        message: note.msg
+        className: switch note.severity.typehint
+          when "NoteError" then "highlight-error"
+          when "NoteWarn" then "highlight-warning"
+          else ""
 
     for file, notes of @notesByFile
       if(not file.includes('dep-src')) # TODO: put under flag

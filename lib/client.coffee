@@ -1,6 +1,6 @@
 net = require('net')
 {log, modalMsg} = require './utils'
-Swank = require './lisp/swank-protocol'
+Swank = require './ensime-client/lisp/swank-protocol'
 _ = require 'lodash'
 
 
