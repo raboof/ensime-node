@@ -18,7 +18,7 @@ module.exports = class InstanceManager
     for instance in @instances when instance.rootDir == dotEnsime.rootDir
       do (instance) ->
         instance.destroy()
-        @instances = _.wihtout(instances, instance)
+        @instances = _.without(instances, instance)
 
   # optional running ensime client of scala source path O(n)
   instanceOfFile: (path) ->

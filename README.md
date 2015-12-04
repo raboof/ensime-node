@@ -79,7 +79,9 @@ https://gitter.im/ensime/ensime-atom
 - [x] See if we can use code-links for mouse clicks https://atom.io/packages/code-links (Not gonna do it)
 - [x] Check if we can get rid of terminal escape stuff from log. Look at term2 or ask.
 - [x] getPath is deprecated: https://github.com/atom/atom/blob/master/src/project.coffee#L471 Maybe need to ask about where .ensime is like Emacs.
-- [ ] Multiple instances - BIG REFACTORING
+- [x] Multiple instances - BIG REFACTORING
+- [ ] Hook to switch out bottom pane on change of text editor
+- [ ] Start/stop ui with server/client info
 - [ ] Don't use jquery lookup for https://github.com/atom/status-bar
 - [ ]
 - [ ] Use path.dirname(module.filename) instead of package name lookup? https://github.com/paulpflug/vue-hello-world/blob/master/lib/vue-hello-world.coffee#L31
@@ -92,6 +94,8 @@ https://gitter.im/ensime/ensime-atom
 - [ ] add a bottom panel with tabs (one for errors/warnings, one for server log maybe)
 - [ ] Look how https://github.com/OmniSharp/omnisharp-atom/wiki makes autocomplete and linter install automatically
 - [ ] Rewrite core parts in scala.js, reuse msg classes from ensime and so forth. Make atom interface for scala.js.
+- [ ] Someday it would be cool to not use exploded single tree for dep-src so that one have more control like "open on github" of ensime: 404: https://github.com/xebia/cakemix/blob/master/.ensime_cache/dep-src/source-jars/scala/concurrent/duration/package.scala#L17
+
 
 ## Inspiration (steal if you can)
 - https://github.com/lukehoban/atom-ide-flow/

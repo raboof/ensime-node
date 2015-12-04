@@ -83,7 +83,7 @@ doStartClient = (parsedDotEnsime, port, generalHandler, callback) ->
 # Start ensime server. If classpath file is out of date, make an update first
 startEnsimeServer = (parsedDotEnsime, portCallback) ->
   if not fs.existsSync(parsedDotEnsime.cacheDir)
-    fs.mkdirSync(cacheDir)
+    fs.mkdirSync(parsedDotEnsime.cacheDir)
 
   cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
   log("classpathfile name: #{cpF}")

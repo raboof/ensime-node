@@ -7,6 +7,7 @@ _ = require 'lodash'
 module.exports =
 class TypeChecking
 
+
   constructor: ->
     @messages = new MessagePanelView
       title: 'Ensime'
@@ -24,6 +25,11 @@ class TypeChecking
         @disposables.add editor.onDidDestroy () =>
           @editors.delete(editor.getPath())
 
+  hide: ->
+    @messages.detach()
+
+  show: ->
+    @messages.attach()
 
   addScalaNotes: (msg) ->
     notes = msg.notes

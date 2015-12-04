@@ -4,7 +4,7 @@ SubAtom = require 'sub-atom'
 module.exports =
 class AutocompletePlusProvider
 
-  constructor: (@client) ->
+  constructor: (@clientLookup) ->
     @disposables = new SubAtom
     @disposables.add atom.config.observe 'Ensime.noOfAutocompleteSuggestions', (value) =>
       @noOfAutocompleteSuggestions = value
@@ -26,7 +26,7 @@ class AutocompletePlusProvider
       caseSens: false
       reload: true
 
-    @client.post(msg, (result) ->
+    @clientLookup(textBuffer)?.post(msg, (result) ->
       completions = result.completions
 
       if(completions)

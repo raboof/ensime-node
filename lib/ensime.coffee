@@ -7,7 +7,7 @@ _ = require 'lodash'
 {Subscriber} = require 'emissary'
 Client = require './client'
 StatusbarView = require './views/statusbar-view'
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, TextEditor} = require 'atom'
 {startClient} = require './ensime-startup'
 
 ShowTypes = require './features/show-types'
@@ -49,8 +49,8 @@ module.exports = Ensime =
       type: 'boolean'
       default: false
       order: 4
-    runServerDetached:
-      description: "Run the Ensime server as a detached process. Useful while developing"
+    runServersDetached:
+      description: "Run the Ensime servers as a detached processes. Useful while developing"
       type: 'boolean'
       default: false
       order: 5
@@ -139,9 +139,20 @@ module.exports = Ensime =
         @subscriptions.add editor.onDidDestroy () =>
           @deleteControllers editor
 
+    clientLookup = (editor) => @clientOfEditor(editor)
+    @autocompletePlusProvider = new AutocompletePlusProvider(clientLookup)
+
     atom.workspace.onDidStopChangingActivePaneItem (pane) =>
-      console.log(this + 'changedTo ' + pane)
-      # TODO: change statusbarView to the one for this instance
+      if(pane instanceof TextEditor and isScalaSource(pane))
+        instance = @instanceManager.instanceOfFile(pane.getPath())
+        console.log(['changed from ', @activeInstance, ' to ', instance])
+        if(instance != @activeInstance)
+          console.log('changed instance for realz')
+          @activeInstance?.typechecking.hide()
+          @activeInstance = instance
+          if(instance)
+            instance.typechecking.show()
+
 
   deactivate: ->
     @stopAllEnsimes()
@@ -202,17 +213,15 @@ module.exports = Ensime =
         dotEnsime: dotEnsime
         client: client
         statusbarView: statusbarView
+        typechecking: typechecking
       }
 
       @instanceManager.registerInstance(instance)
+      if (not @activeInstance)
+        @activeInstance = instance
 
       client.post({"typehint":"ConnectionInfoReq"}, (msg) -> )
 
-
-
-
-      #FIXME:
-      @autocompletePlusProvider = new AutocompletePlusProvider(client)
     )
 
 
@@ -252,11 +261,6 @@ module.exports = Ensime =
 
 
   stopEnsime: ->
-    if not atom.config.get('Ensime.runServerDetached')
-      @ensimeServerPid?.kill()
-
-    @ensimeServerPid = null
-
     @deleteAllEditorsControllers()
 
     @startedCommands.dispose()
@@ -265,7 +269,7 @@ module.exports = Ensime =
     @subscriptions.dispose()
     @controlSubscription.dispose()
 
-    @autocompletePlusProvider.dispose()
+    @autocompletePlusProvider?.dispose()
     @autocompletePlusProvider = null
 
 
