@@ -6,7 +6,7 @@ SubAtom = require('sub-atom')
 
 
 class ShowTypes
-  constructor: (@editor, @client) ->
+  constructor: (@editor, @clientLookup) ->
     @disposables = new SubAtom
 
     @editorView = atom.views.getView(@editor)
@@ -56,7 +56,7 @@ class ShowTypes
       file: @editor.getPath()
       point: offset
 
-    @client.post(req, (msg) =>
+    @clientLookup()?.post(req, (msg) =>
       if msg.typehint == 'SymbolInfo'
         @exprTypeTooltip?.updateText(formatType(msg.type))
       else

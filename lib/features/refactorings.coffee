@@ -13,17 +13,17 @@ module.exports = class Refactorings
     client.post(msg, callback)
 
   prepareAddImport: (client, qualifiedName, file, callback) ->
-    @prepareRefactoring({
+    @prepareRefactoring(client,
       typehint: "AddImportRefactorDesc"
       qualifiedName: qualifiedName
       file: file
-    }, false, callback)
+    , false, callback)
 
   prepareOrganizeImports: (client, file, callback) ->
-    @prepareRefactoring({
+    @prepareRefactoring(client,
       typehint: "OrganiseImportsRefactorDesc"
       file: file
-    }, false, callback)
+    , false, callback)
 
   organizeImports: (client, file, callback = -> ) ->
     @prepareOrganizeImports(client, file, (res) =>

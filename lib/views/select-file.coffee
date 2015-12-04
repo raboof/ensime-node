@@ -4,7 +4,7 @@ Vue = require('vue')
 
 # TODO: Look at https://github.com/js-padavan/atom-enhanced-tabs/blob/master/lib/SimpleListView.coffee
 
-module.exports = class SelectFile
+module.exports = class SelectDotEnsime
   constructor: (files, onSelect, onCancel = -> ) ->
     vue = new Vue({
       template: """
@@ -20,7 +20,6 @@ module.exports = class SelectFile
       data: () ->
         selected: 0
         files: files
-
 
       attached: () ->
         console.log("attached called: " + this.$el)
@@ -44,12 +43,12 @@ module.exports = class SelectFile
             done()
             onSelect(selected)
             event.stopPropagation()
-          'core:cancel': (event) =>
+          'core:cancel': (event) ->
             onCancel()
             done()
             event.stopPropagation()
 
-        @$on 'focusout', () =>
+        @$on 'focusout', () ->
           done()
 
         console.log("attached finished: " + @$el)

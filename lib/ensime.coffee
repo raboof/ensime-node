@@ -130,16 +130,14 @@ module.exports = Ensime =
         # For now I'm doing least amount of change to support multiple ensime projects
         # This way you have to re-open editors after an ensime i started to get a client for it
         # client lookup could be pushed into the features so this is delayed
-        instance = @instanceManager.instanceOfFile(editor.getPath())
-        if (instance)
-          client = instance.client
-          if atom.config.get('Ensime.enableTypeTooltip')
-            if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, client))
-          if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, client))
-          if not @autotypecheckControllers.get(editor) then @autotypecheckControllers.set(editor, new AutoTypecheck(editor, client))
+        clientLookup = => @instanceManager.instanceOfFile(editor.getPath())?.client
+        if atom.config.get('Ensime.enableTypeTooltip')
+          if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, clientLookup))
+        if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, clientLookup))
+        if not @autotypecheckControllers.get(editor) then @autotypecheckControllers.set(editor, new AutoTypecheck(editor, clientLookup))
 
-          @subscriptions.add editor.onDidDestroy () =>
-            @deleteControllers editor
+        @subscriptions.add editor.onDidDestroy () =>
+          @deleteControllers editor
 
     atom.workspace.onDidStopChangingActivePaneItem (pane) =>
       console.log(this + 'changedTo ' + pane)
@@ -152,8 +150,7 @@ module.exports = Ensime =
     @instanceManager.instanceOfFile(editor.getPath())?.client
 
   clientOfActiveTextEditor: ->
-    clientOfEditor(getActiveTextEditor())
-
+    @clientOfEditor(atom.workspace.getActiveTextEditor())
 
   # TODO: move out
   statusbarOutput: (statusbarView, typechecking) -> (msg) ->
@@ -274,25 +271,25 @@ module.exports = Ensime =
 
 
   typecheckAll: ->
-    clientOfActiveTextEditor()?.post( {"typehint": "TypecheckAllReq"}, (msg) ->)
+    @clientOfActiveTextEditor()?.post( {"typehint": "TypecheckAllReq"}, (msg) ->)
 
   unloadAll: ->
-    clientOfActiveTextEditor()?.post( {"typehint": "UnloadAllReq"}, (msg) ->)
+    @clientOfActiveTextEditor()?.post( {"typehint": "UnloadAllReq"}, (msg) ->)
 
   # typechecks currently open file
   typecheckBuffer: ->
     b = atom.workspace.getActiveTextEditor()?.getBuffer()
-    clientOfEditor(b.getPath()).typecheckBuffer(b)
+    @clientOfEditor(b)?.typecheckBuffer(b)
 
   typecheckFile: ->
     b = atom.workspace.getActiveTextEditor()?.getBuffer()
-    clientOfEditor(b.getPath()).typecheckFile(b)
+    @clientOfEditor(b)?.typecheckFile(b)
 
   goToDefinitionOfCursor: ->
     editor = atom.workspace.getActiveTextEditor()
     textBuffer = editor.getBuffer()
     pos = editor.getCursorBufferPosition()
-    clientOfEditor(textBuffer.getPath()).goToTypeAtPoint(textBuffer, pos)
+    @clientOfEditor(editor)?.goToTypeAtPoint(textBuffer, pos)
 
   markImplicits: ->
     editor = atom.workspace.getActiveTextEditor()
@@ -333,7 +330,8 @@ module.exports = Ensime =
     {
       providerName: 'ensime-atom'
       getSuggestionForWord: (textEditor, text, range) =>
-        client = @instanceManager.instanceOfFile(textEditor())?.client
+        client = @clientOfEditor(textEditor)
+        console.log("client " + client)
         {
           range: range
           callback: () ->
@@ -356,7 +354,7 @@ module.exports = Ensime =
       file:
         file: editor.getPath()
         contents: editor.getText()
-    clientOfEditor(editor.getPath())?.post(req, (msg) ->
+    @clientOfEditor(editor)?.post(req, (msg) ->
       editor.setText(msg.text)
       editor.setCursorBufferPosition(cursorPos)
     )
@@ -365,7 +363,7 @@ module.exports = Ensime =
     unless @publicSymbolSearch
       PublicSymbolSearch = require('./features/public-symbol-search')
       @publicSymbolSearch = new PublicSymbolSearch()
-    @publicSymbolSearch.toggle(clientOfActiveTextEditor())
+    @publicSymbolSearch.toggle(@clientOfActiveTextEditor())
 
   getImportSuggestions: ->
     unless @importSuggestions
@@ -373,7 +371,7 @@ module.exports = Ensime =
       @importSuggestions = new ImportSuggestions()
     editor = atom.workspace.getActiveTextEditor()
     @importSuggestions.getImportSuggestions(
-      @clientOfEditor(editor.getPath()),
+      @clientOfEditor(editor),
       editor.getBuffer(),
       editor.getBuffer().characterIndexForPosition(editor.getCursorBufferPosition()),
       editor.getWordUnderCursor()
@@ -384,4 +382,4 @@ module.exports = Ensime =
       Refactorings = require './features/refactorings'
       @refactorings = new Refactorings
     editor = atom.workspace.getActiveTextEditor()
-    @refactorings.organizeImports(@clientOfEditor(editor.getPath()), editor.getPath())
+    @refactorings.organizeImports(@clientOfEditor(editor), editor.getPath())

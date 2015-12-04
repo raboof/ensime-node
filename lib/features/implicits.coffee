@@ -2,7 +2,7 @@ ImplicitInfo = require '../model/implicit-info'
 SubAtom = require 'sub-atom'
 {log} = require '../utils'
 class Implicits
-  constructor: (@editor, @client) ->
+  constructor: (@editor, @clientLookup) ->
     # @gutter = @editor.gutterWithName "ensime-implicits"
     # @gutter ?= @editor.addGutter
     #   name: "ensime-implicits"
@@ -26,7 +26,7 @@ class Implicits
   showImplicits: ->
     log("showImplicits this: " + this)
     b = @editor.getBuffer()
-    @client.typecheckBuffer(b, (typecheckResult) =>
+    @clientLookup()?.typecheckBuffer(b, (typecheckResult) =>
       range = b.getRange()
       startO = b.characterIndexForPosition(range.start)
       endO = b.characterIndexForPosition(range.end)
@@ -39,7 +39,7 @@ class Implicits
           "to": endO
 
       @clearMarkers()
-      @client.post(msg, (result) =>
+      @clientLookup()?.post(msg, (result) =>
         log(result)
 
         createMarker = (info) =>
@@ -62,7 +62,7 @@ class Implicits
 
 
           marker
-        markers = createMarker info for info in result.infos
+        markers = (createMarker info for info in result.infos)
       )
     )
 
