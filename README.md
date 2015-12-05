@@ -83,6 +83,7 @@ https://gitter.im/ensime/ensime-atom
 - [ ] Hook to switch out bottom pane on change of text editor
 - [ ] Start/stop ui with server/client info
 - [ ] Don't use jquery lookup for https://github.com/atom/status-bar
+- [ ] Listen to editors and add custom attribute per instance. https://atom.io/docs/api/v1.2.4/CommandRegistry#instance-add. Then we probably can add commands for just those editors?
 - [ ]
 - [ ] Use path.dirname(module.filename) instead of package name lookup? https://github.com/paulpflug/vue-hello-world/blob/master/lib/vue-hello-world.coffee#L31
 - [ ] Use .vue https://github.com/vuejs/vueify#compiler-api

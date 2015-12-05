@@ -45,21 +45,24 @@ modalMsg = (title, msg) ->
 addModalPanel = (vue, visible = false) ->
   element = document.createElement('div')
   modalPanel = atom.workspace.addModalPanel
-        item: element, visible: visible
+    item: element, visible: visible
   vue.$mount(element)
   modalPanel
 
 
 
 
-withSbt = (callback) =>
+withSbt = (callback) ->
   sbtCmd = atom.config.get('Ensime.sbtExec')
   if sbtCmd
     callback(sbtCmd)
   else
     # TODO: try to check if on path, can we do this with fs?
     dialog = remote.require('dialog')
-    dialog.showOpenDialog({title: "Sorry, but we need you to point out your SBT executive", properties:['openFile']}, (filenames) =>
+    dialog.showOpenDialog(
+      title: "Sorry, but we need you to point out your SBT executive"
+      properties:['openFile']
+      , (filenames) ->
         sbtCmd = filenames[0]
         atom.config.set('Ensime.sbtExec', sbtCmd)
         callback(sbtCmd)

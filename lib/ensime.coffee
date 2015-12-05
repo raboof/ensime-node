@@ -87,7 +87,7 @@ module.exports = Ensime =
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
-    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @stopEnsime()
+    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @selectAndStopAnEnsime()
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:mark-implicits", => @markImplicits()
@@ -145,14 +145,19 @@ module.exports = Ensime =
     atom.workspace.onDidStopChangingActivePaneItem (pane) =>
       if(pane instanceof TextEditor and isScalaSource(pane))
         instance = @instanceManager.instanceOfFile(pane.getPath())
-        console.log(['changed from ', @activeInstance, ' to ', instance])
-        if(instance != @activeInstance)
-          console.log('changed instance for realz')
-          @activeInstance?.typechecking.hide()
-          @activeInstance = instance
-          if(instance)
-            instance.typechecking.show()
+        @switchToInstance(instance)
 
+
+  switchToInstance: (instance) ->
+    console.log(['changed from ', @activeInstance, ' to ', instance])
+    if(instance != @activeInstance)
+      # TODO: create "class" for instance
+      @activeInstance?.typechecking.hide()
+      @activeInstance?.statusbarView.hide()
+      @activeInstance = instance
+      if(instance)
+        instance.typechecking.show()
+        instance.statusbarView.show()
 
   deactivate: ->
     @stopAllEnsimes()
@@ -222,6 +227,7 @@ module.exports = Ensime =
 
       client.post({"typehint":"ConnectionInfoReq"}, (msg) -> )
 
+      @switchToInstance(instance)
     )
 
 
@@ -260,11 +266,13 @@ module.exports = Ensime =
     )
 
 
-  stopEnsime: ->
+  selectAndStopAnEnsime: ->
+    # delet controllers of this ensime
     @deleteAllEditorsControllers()
 
-    @startedCommands.dispose()
-    @addCommandsForStoppedState()
+
+  stopEnsime: ->
+
 
     @subscriptions.dispose()
     @controlSubscription.dispose()

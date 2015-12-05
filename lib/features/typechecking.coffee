@@ -26,10 +26,10 @@ class TypeChecking
           @editors.delete(editor.getPath())
 
   hide: ->
-    @messages.detach()
+    @messages.hide()
 
   show: ->
-    @messages.attach()
+    @messages.show()
 
   addScalaNotes: (msg) ->
     notes = msg.notes
