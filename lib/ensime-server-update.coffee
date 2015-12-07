@@ -1,7 +1,8 @@
 {packageDir, mkClasspathFileName, log} = require './utils'
 EnsimeServerUpdateLogView = require './views/ensime-server-update-log-view'
 {spawn} = require('child_process')
-
+fs = require('fs')
+path = require('path')
 
 createSbtClasspathBuild = (scalaVersion, ensimeServerVersion, classpathFile) ->
   """
