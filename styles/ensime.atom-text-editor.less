@@ -13,6 +13,12 @@
 @warn-gutter-color: lighten(desaturate(@background-color-warning, 50%), 50%);
 @warn-underline-color:  fade(@background-color-warning, 50%);
 
+@implicit-class: .implicit;
+@implicit-gutter-icon:  @info;
+@implicit-gutter-background:  inherit;
+@implicit-gutter-color: @text-color-info;
+@implicit-underline-color: fade(@text-color-info, 50%);
+
 .highlight.varField .region {
   color: @syntax-color-variable;
 }
@@ -38,29 +44,9 @@
 }
 
 atom-text-editor, atom-text-editor::shadow {
+  .inline-marker(@implicit-class,@implicit-underline-color, @implicit-gutter-background,@implicit-gutter-icon, @implicit-gutter-color);
   .inline-marker(@error-class,@error-underline-color, @error-gutter-background,@error-gutter-icon, @error-gutter-color);
   .inline-marker(@warn-class,@warn-underline-color, @warn-gutter-background,@warn-gutter-icon, @warn-gutter-color);
-}
-
-@implicit-color: #09C ;
-
-.highlight.implicit .region {
-  border-bottom: 1px dashed fade(@implicit-color, 70%);
-}
-
-// Styles for ensime gutter, don't know if we should really have one
-atom-text-editor .gutter[gutter-name="ensime-implicits"] {
-  border-left: none;
-}
-
-atom-text-editor .gutter .line-number.implicit .icon-right,
-atom-text-editor::shadow .gutter .line-number.implicit .icon-right {
-  visibility: visible;
-}
-atom-text-editor .gutter .line-number.implicit .icon-right:before,
-atom-text-editor::shadow .gutter .line-number.implicit .icon-right:before {
-  content: "\f087";
-  color: #09C;
 }
 
 implicit-info.select-list.popover-list {
