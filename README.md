@@ -80,6 +80,7 @@ https://gitter.im/ensime/ensime-atom
 - [x] Check if we can get rid of terminal escape stuff from log. Look at term2 or ask.
 - [x] getPath is deprecated: https://github.com/atom/atom/blob/master/src/project.coffee#L471 Maybe need to ask about where .ensime is like Emacs.
 - [x] Multiple instances - BIG REFACTORING
+- [ ] Really need to lookup instances out of source folder from .ensimes. Just path prefix against project folder doesn't work since sbt meta project typically resides inside.
 - [ ] Hook to switch out bottom pane on change of text editor
 - [ ] Start/stop ui with server/client info
 - [ ] Don't use jquery lookup for https://github.com/atom/status-bar

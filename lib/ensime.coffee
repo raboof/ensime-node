@@ -22,7 +22,7 @@ AutocompletePlusProvider = require './features/autocomplete-plus'
 ImplicitInfo = require './model/implicit-info'
 ImplicitInfoView = require './views/implicit-info-view'
 SelectFile = require './views/select-file'
-{parseDotEnsime} = require './ensime-client/dotensime-utils'
+{parseDotEnsime, dotEnsimesFilter} = require './ensime-client/dotensime-utils'
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 InstanceManager = require './ensime-client/ensime-instance-manager'
@@ -177,6 +177,13 @@ module.exports = Ensime =
   deactivate: ->
     @stopAllEnsimes()
 
+    @subscriptions.dispose()
+    @controlSubscription.dispose()
+
+    @autocompletePlusProvider?.dispose()
+    @autocompletePlusProvider = null
+
+
   clientOfEditor: (editor) ->
     @instanceManager.instanceOfFile(editor.getPath())?.client
 
@@ -216,7 +223,7 @@ module.exports = Ensime =
 
 
 
-  initClient: (dotEnsimePath) ->
+  startInstance: (dotEnsimePath) ->
 
     # Register model-view mappings
     @subscriptions.add atom.views.addViewProvider ImplicitInfo, (implicitInfo) ->
@@ -272,37 +279,30 @@ module.exports = Ensime =
 
   # to start an ensime, first we need to to select a .ensime file under any project path
   selectAndBootAnEnsime: ->
-    read = require('fs-readdir-recursive')
+    #recursive-readdir is callback based
+    recread = require 'recursive-readdir'
 
+    Promise = require 'bluebird'
+
+    recreadPromisified = Promise.promisify(recread)
     dirs = atom.project.getPaths()
-    # get all .ensimes with an ugly js-flatten:
-    dotEnsimes = _.flatten(dirs.map((dir) ->
-      filtered = read(dir, (f) -> f.endsWith ".ensime")
-      filtered.map((f) -> dir + path.sep + f)
-    ))
 
-    console.log(['dotEnsime: ', dotEnsimes])
+    promises = dirs.map (dir) ->
+      recreadPromisified(dir, [dotEnsimesFilter])
 
-    new SelectFile(dotEnsimes, (selectedDotEnsime) =>
-      console.log(['selectedDotEnsime: ', selectedDotEnsime])
-      @initClient(selectedDotEnsime)
-    )
+    promise = Promise.all(promises)
+    promise.then (dotEnsimesUnflattened) =>
+      dotEnsimes = _.flatten(dotEnsimesUnflattened)
+      new SelectFile(dotEnsimes, (selectedDotEnsime) =>
+        console.log(['selectedDotEnsime: ', selectedDotEnsime])
+        @startInstance(selectedDotEnsime)
+      )
+
 
 
   selectAndStopAnEnsime: ->
     # delet controllers of this ensime
     @deleteAllEditorsControllers()
-
-
-  stopEnsime: ->
-
-
-    @subscriptions.dispose()
-    @controlSubscription.dispose()
-
-    @autocompletePlusProvider?.dispose()
-    @autocompletePlusProvider = null
-
 
 
   typecheckAll: ->

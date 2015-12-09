@@ -4,7 +4,7 @@ lisp = require ('./lisp/lisp')
 
 readDotEnsime = (path) ->
   raw = fs.readFileSync(path)
-  rows = raw.toString().split(/\r?\n/);
+  rows = raw.toString().split(/\r?\n/)
   filtered = rows.filter (l) -> l.indexOf(';;') != 0
   filtered.join('\n')
 
@@ -23,6 +23,10 @@ parseDotEnsime = (path) ->
     dotEnsimePath: path
   }
 
+dotEnsimesFilter = (path, stats) ->
+  !stats.isDirectory() && ! path.endsWith('.ensime')
+
 module.exports = {
   parseDotEnsime
+  dotEnsimesFilter
 }

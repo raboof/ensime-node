@@ -1,5 +1,6 @@
-{formatType, formatCompletionsSignature, formatImplicitInfo} = require '../lib/formatting'
-{readFromString, fromLisp} = require '../lib/lisp/lisp'
+root = '../..'
+{formatType, formatCompletionsSignature, formatImplicitInfo} = require "#{root}/lib/formatting"
+{readFromString, fromLisp} = require "#{root}/lib/ensime-client/lisp/lisp"
 
 
 describe 'formatCompletionsSignature', ->
@@ -109,148 +110,148 @@ describe 'formatType', ->
 
   it "should format implicit params", ->
     input = {
-        "params": [
-          {
-            "name": "y",
-            "localName": "y",
-            "declPos": {
-              "typehint": "OffsetSourcePosition",
-              "file": "/Users/viktor/dev/projects/ensime-test-project/src/main/scala/Foo.scala",
-              "offset": 547
-            },
-            "type": {
-              "name": "Int",
-              "fullName": "scala.Int",
-              "pos": {
-                "typehint": "OffsetSourcePosition",
-                "file": "/Users/viktor/dev/projects/ensime-test-project/.ensime_cache/dep-src/source-jars/scala/Int.scala",
-                "offset": 1093
-              },
-              "typehint": "BasicTypeInfo",
-              "typeId": 14,
-              "typeArgs": [],
-              "members": [],
-              "declAs": {
-                "typehint": "Class"
-              }
-            },
-            "isCallable": false,
-            "ownerTypeId": 16
-          },
-          {
-            "name": "y",
-            "localName": "y",
-            "declPos": {
-              "typehint": "OffsetSourcePosition",
-              "file": "/Users/viktor/dev/projects/ensime-test-project/src/main/scala/Foo.scala",
-              "offset": 547
-            },
-            "type": {
-              "name": "Int",
-              "fullName": "scala.Int",
-              "pos": {
-                "typehint": "OffsetSourcePosition",
-                "file": "/Users/viktor/dev/projects/ensime-test-project/.ensime_cache/dep-src/source-jars/scala/Int.scala",
-                "offset": 1093
-              },
-              "typehint": "BasicTypeInfo",
-              "typeId": 14,
-              "typeArgs": [],
-              "members": [],
-              "declAs": {
-                "typehint": "Class"
-              }
-            },
-            "isCallable": false,
-            "ownerTypeId": 16
-          }
-        ],
-        "typehint": "ImplicitParamInfo",
-        "fun": {
-          "name": "curried",
-          "localName": "curried",
+      "params": [
+        {
+          "name": "y",
+          "localName": "y",
           "declPos": {
             "typehint": "OffsetSourcePosition",
             "file": "/Users/viktor/dev/projects/ensime-test-project/src/main/scala/Foo.scala",
-            "offset": 421
+            "offset": 547
           },
           "type": {
-            "resultType": {
-              "name": "Int",
-              "fullName": "scala.Int",
-              "typehint": "BasicTypeInfo",
-              "typeId": 14,
-              "typeArgs": [],
-              "members": [],
-              "declAs": {
-                "typehint": "Class"
-              }
+            "name": "Int",
+            "fullName": "scala.Int",
+            "pos": {
+              "typehint": "OffsetSourcePosition",
+              "file": "/Users/viktor/dev/projects/ensime-test-project/.ensime_cache/dep-src/source-jars/scala/Int.scala",
+              "offset": 1093
             },
-            "name": "(x: Int)(implicit y: Int, implicit z: Int)Int",
-            "paramSections": [
-              {
-                "params": [
-                  [
-                    "x",
-                    {
-                      "name": "Int",
-                      "fullName": "scala.Int",
-                      "typehint": "BasicTypeInfo",
-                      "typeId": 14,
-                      "typeArgs": [],
-                      "members": [],
-                      "declAs": {
-                        "typehint": "Class"
-                      }
-                    }
-                  ]
-                ],
-                "isImplicit": false
-              },
-              {
-                "params": [
-                  [
-                    "y",
-                    {
-                      "name": "Int",
-                      "fullName": "scala.Int",
-                      "typehint": "BasicTypeInfo",
-                      "typeId": 14,
-                      "typeArgs": [],
-                      "members": [],
-                      "declAs": {
-                        "typehint": "Class"
-                      }
-                    }
-                  ],
-                  [
-                    "z",
-                    {
-                      "name": "Int",
-                      "fullName": "scala.Int",
-                      "typehint": "BasicTypeInfo",
-                      "typeId": 14,
-                      "typeArgs": [],
-                      "members": [],
-                      "declAs": {
-                        "typehint": "Class"
-                      }
-                    }
-                  ]
-                ],
-                "isImplicit": true
-              }
-            ],
-            "typehint": "ArrowTypeInfo",
-            "typeId": 4367
+            "typehint": "BasicTypeInfo",
+            "typeId": 14,
+            "typeArgs": [],
+            "members": [],
+            "declAs": {
+              "typehint": "Class"
+            }
           },
-          "isCallable": true,
+          "isCallable": false,
           "ownerTypeId": 16
         },
-        "funIsImplicit": false,
-        "end": 574,
-        "start": 564
-      }
+        {
+          "name": "y",
+          "localName": "y",
+          "declPos": {
+            "typehint": "OffsetSourcePosition",
+            "file": "/Users/viktor/dev/projects/ensime-test-project/src/main/scala/Foo.scala",
+            "offset": 547
+          },
+          "type": {
+            "name": "Int",
+            "fullName": "scala.Int",
+            "pos": {
+              "typehint": "OffsetSourcePosition",
+              "file": "/Users/viktor/dev/projects/ensime-test-project/.ensime_cache/dep-src/source-jars/scala/Int.scala",
+              "offset": 1093
+            },
+            "typehint": "BasicTypeInfo",
+            "typeId": 14,
+            "typeArgs": [],
+            "members": [],
+            "declAs": {
+              "typehint": "Class"
+            }
+          },
+          "isCallable": false,
+          "ownerTypeId": 16
+        }
+      ],
+      "typehint": "ImplicitParamInfo",
+      "fun": {
+        "name": "curried",
+        "localName": "curried",
+        "declPos": {
+          "typehint": "OffsetSourcePosition",
+          "file": "/Users/viktor/dev/projects/ensime-test-project/src/main/scala/Foo.scala",
+          "offset": 421
+        },
+        "type": {
+          "resultType": {
+            "name": "Int",
+            "fullName": "scala.Int",
+            "typehint": "BasicTypeInfo",
+            "typeId": 14,
+            "typeArgs": [],
+            "members": [],
+            "declAs": {
+              "typehint": "Class"
+            }
+          },
+          "name": "(x: Int)(implicit y: Int, implicit z: Int)Int",
+          "paramSections": [
+            {
+              "params": [
+                [
+                  "x",
+                  {
+                    "name": "Int",
+                    "fullName": "scala.Int",
+                    "typehint": "BasicTypeInfo",
+                    "typeId": 14,
+                    "typeArgs": [],
+                    "members": [],
+                    "declAs": {
+                      "typehint": "Class"
+                    }
+                  }
+                ]
+              ],
+              "isImplicit": false
+            },
+            {
+              "params": [
+                [
+                  "y",
+                  {
+                    "name": "Int",
+                    "fullName": "scala.Int",
+                    "typehint": "BasicTypeInfo",
+                    "typeId": 14,
+                    "typeArgs": [],
+                    "members": [],
+                    "declAs": {
+                      "typehint": "Class"
+                    }
+                  }
+                ],
+                [
+                  "z",
+                  {
+                    "name": "Int",
+                    "fullName": "scala.Int",
+                    "typehint": "BasicTypeInfo",
+                    "typeId": 14,
+                    "typeArgs": [],
+                    "members": [],
+                    "declAs": {
+                      "typehint": "Class"
+                    }
+                  }
+                ]
+              ],
+              "isImplicit": true
+            }
+          ],
+          "typehint": "ArrowTypeInfo",
+          "typeId": 4367
+        },
+        "isCallable": true,
+        "ownerTypeId": 16
+      },
+      "funIsImplicit": false,
+      "end": 574,
+      "start": 564
+    }
     result = formatImplicitInfo(input)
     expect(result).toBe("Implicit parameters added to call of curried: (y, y)")
 
