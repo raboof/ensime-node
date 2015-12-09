@@ -1,17 +1,17 @@
 @import "octicon-mixins";
+@import "octicon-utf-codes";
 
-atom-text-editor::shadow {
-  .my-awesome-octicon {
-    .octicon(octoface);
-  }
-}
+@error-class: .error;
+@error-gutter-icon:  @stop;
+@error-gutter-background:  @background-color-error;
+@error-gutter-color: lighten(desaturate(@background-color-error, 50%), 50%);
+@error-underline-color:  fade(@background-color-error, 50%);
 
-
-
-
-
-
-@implicit-color: #09C ;
+@warn-class: .warn;
+@warn-gutter-icon:  @alert;
+@warn-gutter-background:  @background-color-warning;
+@warn-gutter-color: lighten(desaturate(@background-color-warning, 50%), 50%);
+@warn-underline-color:  fade(@background-color-warning, 50%);
 
 .highlight.varField .region {
   color: @syntax-color-variable;
@@ -21,6 +21,29 @@ atom-text-editor::shadow {
   color: @syntax-color-value;
 }
 
+.inline-marker(@name; @underline-color; @gutter-background-color; @gutter-icon; @gutter-icon-color) {
+  .highlight@{name} .region {
+    border-bottom: 1px dashed @underline-color;
+  }
+  .gutter .line-number@{name} {
+    background-color: @gutter-background-color;
+    .icon-right {
+      visibility: visible;
+      &:before {
+        content: @gutter-icon;
+        color: @gutter-icon-color;
+      }
+    }
+  }
+}
+
+atom-text-editor, atom-text-editor::shadow {
+  .inline-marker(@error-class,@error-underline-color, @error-gutter-background,@error-gutter-icon, @error-gutter-color);
+  .inline-marker(@warn-class,@warn-underline-color, @warn-gutter-background,@warn-gutter-icon, @warn-gutter-color);
+}
+
+@implicit-color: #09C ;
+
 .highlight.implicit .region {
   border-bottom: 1px dashed fade(@implicit-color, 70%);
 }
@@ -29,9 +52,6 @@ atom-text-editor::shadow {
 atom-text-editor .gutter[gutter-name="ensime-implicits"] {
   border-left: none;
 }
-
-
-
 
 atom-text-editor .gutter .line-number.implicit .icon-right,
 atom-text-editor::shadow .gutter .line-number.implicit .icon-right {

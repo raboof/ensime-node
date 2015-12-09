@@ -12,6 +12,7 @@ StatusbarView = require './views/statusbar-view'
 
 ShowTypes = require './features/show-types'
 Implicits = require './features/implicits'
+{InlineErrors, InlineWarnings} = require './features/inline-decorators'
 AutoTypecheck = require './features/auto-typecheck'
 
 TypeCheckingFeature = require './features/typechecking'
@@ -65,16 +66,26 @@ module.exports = Ensime =
       type: 'boolean'
       default: true
       order: 7
+    markErrorsInline:
+      description: "Mark compile errors in the text editor"
+      type: 'boolean'
+      default: true
+      order: 8
+    markWarningsInline:
+      description: "Mark compile warnings in the text editor"
+      type: 'boolean'
+      default: true
+      order: 9
     markImplicitsAutomatically:
       description: "Mark implicits on buffer load and save"
       type: 'boolean'
       default: true
-      order: 8
+      order: 10
     noOfAutocompleteSuggestions:
       description: "Number of autocomplete suggestions requested of server"
       type: 'integer'
       default: 5
-      order: 9
+      order: 11
 
 
 
@@ -118,6 +129,8 @@ module.exports = Ensime =
     # Feature controllers
     @showTypesControllers = new WeakMap
     @implicitControllers = new WeakMap
+    @inlineErrorsControllers = new WeakMap
+    @inlineWarningsControllers = new WeakMap
     @autotypecheckControllers = new WeakMap
 
     @instanceManager = new InstanceManager
@@ -133,6 +146,8 @@ module.exports = Ensime =
         clientLookup = => @instanceManager.instanceOfFile(editor.getPath())?.client
         if atom.config.get('Ensime.enableTypeTooltip')
           if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, clientLookup))
+        if not @inlineErrorsControllers.get(editor) then @inlineErrorsControllers.set(editor, new InlineErrors(editor, clientLookup))
+        if not @inlineWarningsControllers.get(editor) then @inlineWarningsControllers.set(editor, new InlineWarnings(editor, clientLookup))
         if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, clientLookup))
         if not @autotypecheckControllers.get(editor) then @autotypecheckControllers.set(editor, new AutoTypecheck(editor, clientLookup))
 
@@ -169,7 +184,7 @@ module.exports = Ensime =
     @clientOfEditor(atom.workspace.getActiveTextEditor())
 
   # TODO: move out
-  statusbarOutput: (statusbarView, typechecking) -> (msg) ->
+  statusbarOutput: (statusbarView, typechecking) -> (msg) =>
     typehint = msg.typehint
 
     if(typehint == 'AnalyzerReadyEvent')
@@ -186,9 +201,15 @@ module.exports = Ensime =
 
     else if(typehint == 'ClearAllScalaNotesEvent')
       typechecking.clearScalaNotes()
+      for e in atom.workspace.getTextEditors()
+        @inlineErrorsControllers.get(e)?.clearScalaNotes()
+        @inlineWarningsControllers.get(e)?.clearScalaNotes()
 
     else if(typehint == 'NewScalaNotesEvent')
       typechecking.addScalaNotes(msg)
+      for e in atom.workspace.getTextEditors()
+        @inlineErrorsControllers.get(e)?.addScalaNotes(msg)
+        @inlineWarningsControllers.get(e)?.addScalaNotes(msg)
 
     else if(typehint.startsWith('SendBackgroundMessageEvent'))
       statusbarView.setText(msg.detail)
@@ -239,6 +260,8 @@ module.exports = Ensime =
 
     deactivateAndDelete(@showTypesControllers)
     deactivateAndDelete(@implicitControllers)
+    deactivateAndDelete(@inlineErrorsControllers)
+    deactivateAndDelete(@inlineWarningsControllers)
     deactivateAndDelete(@autotypecheckControllers)
 
 
