@@ -3,13 +3,8 @@ SubAtom = require 'sub-atom'
 {log} = require '../utils'
 class Implicits
   constructor: (@editor, @clientLookup) ->
-    # @gutter = @editor.gutterWithName "ensime-implicits"
-    # @gutter ?= @editor.addGutter
-    #   name: "ensime-implicits"
-    #   priority: 10
     @disposables = new SubAtom
 
-    # @handleSetting(atom.config.get('Ensime.markImplicitsAutomatically'))
     @disposables.add atom.config.observe 'Ensime.markImplicitsAutomatically', (setting) => @handleSetting(setting)
 
 
@@ -44,24 +39,25 @@ class Implicits
 
         createMarker = (info) =>
           range = [b.positionForCharacterIndex(parseInt(info.start)), b.positionForCharacterIndex(parseInt(info.end))]
-          marker = @editor.markBufferRange(range,
-              invalidate: 'inside'
+          spot = [range[0], range[0]]
+
+          markerRange = @editor.markBufferRange(range,
               type: 'implicit'
               info: info
           )
-          @editor.decorateMarker(marker,
+          markerSpot = @editor.markBufferRange(spot,
+              type: 'implicit'
+              info: info
+          )
+          @editor.decorateMarker(markerRange,
               type: 'highlight'
               class: 'implicit'
           )
-
-
-          @editor.decorateMarker(marker,
+          @editor.decorateMarker(markerSpot,
               type: 'line-number'
               class: 'implicit'
           )
 
-
-          marker
         markers = (createMarker info for info in result.infos)
       )
     )

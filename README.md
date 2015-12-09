@@ -35,7 +35,7 @@ Way early still and will most likely be very buggy. Or maybe not start at all. P
 - [x] Goto type by simple typing prefix (like cmd-N in Idea or cmd-shift-T in Eclipse?)
 - [x] Organize imports
 - [ ] Import type at point
-- [ ] Better errors and warnings with markings in gutter
+- [x] Better errors and warnings with markings in gutter
 - [ ] "explicify" applied implicits
 - [ ] Find all subclasses of the class under the cursor
 - [ ] Find all usages of the function under the cursor
