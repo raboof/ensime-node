@@ -33,6 +33,11 @@ class TypeChecking
       if(not file.includes('dep-src')) # TODO: put under flag
         addNoteToMessageView note for note in notes
 
+  hide: ->
+    @messages.hide()
+
+  show: ->
+    @messages.show()
 
   clearScalaNotes: ->
     @messages.clear()
