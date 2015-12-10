@@ -26,6 +26,8 @@ SelectFile = require './views/select-file'
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 InstanceManager = require './ensime-client/ensime-instance-manager'
+{PathScanner} = require 'scandal'
+
 
 module.exports = Ensime =
 
@@ -279,26 +281,30 @@ module.exports = Ensime =
 
   # to start an ensime, first we need to to select a .ensime file under any project path
   selectAndBootAnEnsime: ->
-    #recursive-readdir is callback based
-    recread = require 'recursive-readdir'
 
-    Promise = require 'bluebird'
-
-    recreadPromisified = Promise.promisify(recread)
     dirs = atom.project.getPaths()
-
     promises = dirs.map (dir) ->
-      recreadPromisified(dir, [dotEnsimesFilter])
+      scanner = new PathScanner(dir,
+        inclusions: ['.ensime']
+        includeHidden: true
+        exclusions: ['node_modules', '.ensime_cache', '.git', 'target', '.idea']
+        )
+      findings = []
+      scanner.on 'path-found', (path) ->
+        findings.push path
+      new Promise (resolve, reject) ->
+        scanner.on 'finished-scanning', ->
+          resolve findings
+        scanner.scan()
 
     promise = Promise.all(promises)
+
     promise.then (dotEnsimesUnflattened) =>
       dotEnsimes = _.flatten(dotEnsimesUnflattened)
       new SelectFile(dotEnsimes, (selectedDotEnsime) =>
         console.log(['selectedDotEnsime: ', selectedDotEnsime])
         @startInstance(selectedDotEnsime)
       )
-
-
 
   selectAndStopAnEnsime: ->
     # delet controllers of this ensime
