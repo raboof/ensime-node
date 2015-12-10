@@ -18,9 +18,8 @@ class TypeChecking
     @notesByFile = _.groupBy(notes, (note) -> note.file)
 
     addNoteToMessageView = (note) =>
-      file = atom.project.relativizePath(note.file)[1]
       @messages.add new LineMessageView
-        file: file
+        file: note.file
         line: note.line
         character: note.col
         message: note.msg
