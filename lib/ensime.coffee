@@ -371,19 +371,23 @@ module.exports = Ensime =
     {
       providerName: 'ensime-atom'
       getSuggestionForWord: (textEditor, text, range) =>
-        client = @clientOfEditor(textEditor)
-        console.log("client " + client)
-        {
-          range: range
-          callback: () ->
-            if(client)
-              client.goToTypeAtPoint(textEditor.getBuffer(), range.start)
-            else
-              atom.notifications.addError("Ensime not started! :(", {
-                dismissable: true
-                detail: "There is no running ensime instance for this particular file. Please start ensime first!"
-                })
-        }
+        if isScalaSource(textEditor)
+          client = @clientOfEditor(textEditor)
+          console.log("client " + client)
+          {
+            range: range
+            callback: () ->
+              if(client)
+                client.goToTypeAtPoint(textEditor.getBuffer(), range.start)
+              else
+                atom.notifications.addError("Ensime not started! :(", {
+                  dismissable: true
+                  detail: "There is no running ensime instance for this particular file. Please start ensime first!"
+                  })
+          }
+        else
+          undefined
+
     }
 
 
