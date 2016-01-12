@@ -12,7 +12,7 @@ module.exports = class SelectDotEnsime
           <div>Please choose which Ensime project to start up:</div>
           <ol class="list-group">
             <li v-for="file in files" v-bind:class="{'selected': $index==selected}">
-              <div class="primary-line file icon icon-file-text">{{file}}</div>
+              <div class="primary-line file icon icon-file-text">{{file.path}}</div>
             </li>
           </ol>
         </div>

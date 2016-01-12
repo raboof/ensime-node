@@ -291,7 +291,8 @@ module.exports = Ensime =
         )
       findings = []
       scanner.on 'path-found', (path) ->
-        findings.push path
+        findings.push {path: path}
+        # TODO: add extra info
       new Promise (resolve, reject) ->
         scanner.on 'finished-scanning', ->
           resolve findings
@@ -301,9 +302,10 @@ module.exports = Ensime =
 
     promise.then (dotEnsimesUnflattened) =>
       dotEnsimes = _.flatten(dotEnsimesUnflattened)
+      console.log('dotEnsimes, ' + dotEnsimes)
       new SelectFile(dotEnsimes, (selectedDotEnsime) =>
         console.log(['selectedDotEnsime: ', selectedDotEnsime])
-        @startInstance(selectedDotEnsime)
+        @startInstance(selectedDotEnsime.path)
       )
 
   selectAndStopAnEnsime: ->
