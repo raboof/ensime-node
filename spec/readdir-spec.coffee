@@ -11,6 +11,6 @@ describe 'read-dir depdendency should work', ->
     dotEnsimesFilter = (path, stats) ->
       stats.isFile() && ! path.endsWith('.ensime')
 
-    recread(root, [ignoreFilter], (err, files) ->
+    recread(root, [], (err, files) ->
       console.log(files)
       )
