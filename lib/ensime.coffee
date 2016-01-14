@@ -292,7 +292,7 @@ module.exports = Ensime =
       findings = []
       scanner.on 'path-found', (path) ->
         findings.push {path: path}
-        # TODO: add extra info
+        # TODO: add extra info. .path exists? -> server started, client already started? (look in instance manager)
       new Promise (resolve, reject) ->
         scanner.on 'finished-scanning', ->
           resolve findings

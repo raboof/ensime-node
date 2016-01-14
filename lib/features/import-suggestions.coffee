@@ -16,17 +16,9 @@ module.exports = class ImportSuggestions
       maxResults: 10
 
     client.post(req, (res) =>
-      @refactorings.prepareAddImport(client, res.symLists[0][0].name, file, (ref) =>
-        if(ref.status == 'success')
-          change = ref.changes[0] # TODO:
-          @refactorings.performTextEdit(change, () =>
-            console.log('performTextEdit callback')
-            @refactorings.organizeImports(client, file, () ->
-              console.log('organizeImports callback')
-              client.typecheckBuffer(buffer)
-              )
-            )
-        else
-          console.log('failed add import')
+      @refactorings.getAddImportPatch(client, res.symLists[0][0].name, file, (importResponse) =>
+        @refactorings.maybeApplyPatch(client, importResponse, () ->
+          client.typecheckBuffer(buffer)
+        )
       )
     )
