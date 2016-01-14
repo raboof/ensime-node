@@ -12,9 +12,13 @@
     "atom-message-panel": "~1.2.4",
     "atom-package-dependencies": "latest",
     "atom-space-pen-views": "^2.1.0",
+    "bluebird": "^3.0.6",
+    "diff": "^2.2.1",
     "emissary": "1.x",
     "jquery": "^2",
     "lodash": "~3.9.3",
+    "recursive-readdir": "^1.3.0",
+    "scandal": "^2.2.0",
     "sub-atom": "~1.0.0",
     "vue": "1.0.0-csp"
   },
@@ -32,6 +36,20 @@
       "versions": {
         "0.0.0": "provideHyperclick"
       }
+    }
+  },
+  "coffeelintConfig": {
+    "indentation": {
+      "level": "error",
+      "value": 2
+    },
+    "line_endings": {
+      "value": "unix",
+      "level": "error"
+    },
+    "max_line_length": {
+      "level": "warn",
+      "value": 200
     }
   }
 }

@@ -2,10 +2,10 @@
 # TODO: make ui for selecting
 
 module.exports = class ImportSuggestions
-  constructor: (@client) ->
-    @refactorings = new (require('./refactorings'))(@client)
+  constructor: ->
+    @refactorings = new (require('./refactorings'))
 
-  getImportSuggestions: (buffer, pos, symbol) ->
+  getImportSuggestions: (client, buffer, pos, symbol) ->
     file = buffer.getPath()
 
     req =
@@ -15,18 +15,10 @@ module.exports = class ImportSuggestions
       names: [symbol]
       maxResults: 10
 
-    @client.post(req, (res) =>
-      @refactorings.prepareAddImport(res.symLists[0][0].name, file, (ref) =>
-        if(ref.status == 'success')
-          change = ref.changes[0] # TODO:
-          @refactorings.performTextEdit(change, () =>
-            console.log('performTextEdit callback')
-            @refactorings.organizeImports(file, () =>
-              console.log('organizeImports callback')
-              @client.typecheckBuffer(buffer)
-              )
-            )
-        else
-          console.log('failed add import')
+    client.post(req, (res) =>
+      @refactorings.getAddImportPatch(client, res.symLists[0][0].name, file, (importResponse) =>
+        @refactorings.maybeApplyPatch(client, importResponse, () ->
+          client.typecheckBuffer(buffer)
+        )
       )
     )

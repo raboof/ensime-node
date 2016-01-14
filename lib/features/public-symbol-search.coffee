@@ -1,15 +1,14 @@
 SymbolSearchVue = require('../views/public-symbol-search-vue')
+{addModalPanel} = require('../utils')
 
 maxSymbols = 5
 
+
 module.exports = class PublicSymbolSearch
 
-  constructor: (@client) ->
+  constructor: ->
     @vue = new SymbolSearchVue
-    @element = document.createElement('div')
-    @modalPanel = atom.workspace.addModalPanel
-          item: @element, visible: false
-    @vue.$mount(@element)
+    @modalPanel = addModalPanel(@vue, false)
 
     @vue.onSearchTextUpdated (newText, oldText) =>
       req =
@@ -18,9 +17,9 @@ module.exports = class PublicSymbolSearch
         maxResults: maxSymbols
 
       @client.post(req, (msg) =>
-          @vue.results = msg.syms
-          @vue.selected = 0
-        )
+        @vue.results = msg.syms
+        @vue.selected = 0
+      )
 
     atom.commands.add @vue.$el,
       'core:move-up': (event) =>
@@ -53,10 +52,12 @@ module.exports = class PublicSymbolSearch
         @cancel()
         event.stopPropagation()
 
-  toggle: () ->
+  # TODO: remove ugly hack to insert correct client on the fly
+  toggle: (client) ->
     if @modalPanel.isVisible()
       @modalPanel.hide()
     else
+      @client = client
       @modalPanel.show()
       @vue.focusSearchField()
       @vue.se

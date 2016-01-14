@@ -1,6 +1,6 @@
 net = require('net')
 {log, modalMsg} = require './utils'
-Swank = require './lisp/swank-protocol'
+Swank = require './ensime-client/lisp/swank-protocol'
 _ = require 'lodash'
 
 
@@ -23,7 +23,6 @@ class Client
           log("error in callback: #{error}")
         finally
           delete @callbackMap[callId]
-
       else
         generalMsgHandler(json.payload)
     )
@@ -157,8 +156,8 @@ class Client
         makeCodeLink = (marker) ->
           range: marker.getBufferRange()
 
-        makers = markers sym for sym in syms
-        codeLinks = makeCodeLink marker for maker in makers
+        makers = (markers sym for sym in syms)
+        codeLinks = (makeCodeLink marker for maker in makers)
 
         resolve(codeLinks)
       )

@@ -2,7 +2,6 @@ path = require 'path'
 fs = require 'fs'
 
 
-
 isScalaSource = (editor) ->
   buffer = editor.getBuffer()
   fname = buffer.getUri()
@@ -43,11 +42,39 @@ modalMsg = (title, msg) ->
     buttons:
       Ok: ->
 
+addModalPanel = (vue, visible = false) ->
+  element = document.createElement('div')
+  modalPanel = atom.workspace.addModalPanel
+    item: element, visible: visible
+  vue.$mount(element)
+  modalPanel
 
-projectPath = -> (p for p in atom.project.getPaths() when fs.existsSync(p+"/.ensime"))[0]
 
 
 
+withSbt = (callback) ->
+  sbtCmd = atom.config.get('Ensime.sbtExec')
+  if sbtCmd
+    callback(sbtCmd)
+  else
+    # TODO: try to check if on path, can we do this with fs?
+    dialog = remote.require('dialog')
+    dialog.showOpenDialog(
+      title: "Sorry, but we need you to point out your SBT executive"
+      properties:['openFile']
+      , (filenames) ->
+        sbtCmd = filenames[0]
+        atom.config.set('Ensime.sbtExec', sbtCmd)
+        callback(sbtCmd)
+      )
+
+# create classpath file name for ensime server startup
+mkClasspathFileName = (scalaVersion, ensimeServerVersion) ->
+  atom.packages.resolvePackagePath('Ensime') + path.sep + "classpath_#{scalaVersion}_#{ensimeServerVersion}"
+
+
+
+packageDir = () -> atom.packages.resolvePackagePath('Ensime')
 
 module.exports = {
   isScalaSource,
@@ -57,5 +84,8 @@ module.exports = {
   getElementsByClass,
   log,
   modalMsg,
-  projectPath
+  withSbt,
+  addModalPanel,
+  packageDir,
+  mkClasspathFileName
 }

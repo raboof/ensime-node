@@ -32,7 +32,7 @@ class ImplicitInfoView extends HTMLElement
     return unless @model?
     @subscriptions.add @model.onDidDispose(@dispose.bind(this))
     for info, index in @model.infos
-       @renderItem(info, index)
+      @renderItem(info, index)
     this
 
   renderItem: (info, index) ->
@@ -47,8 +47,8 @@ class ImplicitInfoView extends HTMLElement
 
 
   renderInnerText: (info) ->
-      formatImplicitInfo(info)
-  
+    formatImplicitInfo(info)
+
 
 
   addActiveClassToEditor: ->

@@ -2,212 +2,128 @@
 fs = require('fs')
 path = require('path')
 {exec, spawn} = require('child_process')
-{log, modalMsg, projectPath} = require('./utils')
+{log, modalMsg, projectPath, packageDir,
+ withSbt, mkClasspathFileName} = require('./utils')
 EnsimeServerUpdateLogView = require('./views/ensime-server-update-log-view')
-lisp = require './lisp/lisp'
-{sexpToJObject} = require './lisp/swank-extras'
+lisp = require './ensime-client/lisp/lisp'
+{sexpToJObject} = require './ensime-client/lisp/swank-extras'
 remote = require 'remote'
+{parseDotEnsime} = require './ensime-client/dotensime-utils'
+Client = require './client'
+{updateEnsimeServer} = require './ensime-server-update'
 
 
-createSbtClasspathBuild = (scalaVersion, ensimeServerVersion, classpathFile) ->
-  """
-  import sbt._
-  import IO._
-  import java.io._
 
-  scalaVersion := \"#{scalaVersion}\"
+###
+## Pseudo:
+This code is pretty complex with lots of continuation passing.
+Here is some kind of pseudo for easier understanding:
 
-  ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
+startClient(dotEnsime) ->
+  if(serverRunning(dotEnsime))
+    doStartClient(dotEnsime)
+  else
+    startServer(dotEnsime, () ->
+      doStartClient(dotEnsime)
+    )
 
-  // we don't need jcenter, so this speeds up resolution
-  fullResolvers -= Resolver.jcenterRepo
+startServer(dotEnsime, whenStarted) ->
+  if(classpathOk(dotEnsime))
+    doStartServer(dotEnsime, whenStarted)
+  else
+    updateServer(dotEnsime, () ->
+      doStartServer(dotEnsime, whenStarted)
+    )
 
-  // allows local builds of scala
-  resolvers += Resolver.mavenLocal
+###
 
-  // for java support
-  resolvers += \"NetBeans\" at \"http://bits.netbeans.org/nexus/content/groups/netbeans\"
-
-  // this is where the ensime-server snapshots are hosted
-  resolvers += Resolver.sonatypeRepo(\"snapshots\")
-
-  libraryDependencies ++= Seq(
-    \"org.ensime\" %% \"ensime\" % \"#{ensimeServerVersion}\"
-  )
-
-  dependencyOverrides ++= Set(
-    \"org.scala-lang\" % \"scala-compiler\" % scalaVersion.value,
-    \"org.scala-lang\" % \"scala-library\" % scalaVersion.value,
-    \"org.scala-lang\" % \"scala-reflect\" % scalaVersion.value,
-    \"org.scala-lang\" % \"scalap\" % scalaVersion.value
-  )
-
-  val saveClasspathTask = TaskKey[Unit](\"saveClasspath\", \"Save the classpath to a file\")
-
-  saveClasspathTask := {
-    val managed = (managedClasspath in Runtime).value.map(_.data.getAbsolutePath)
-    val unmanaged = (unmanagedClasspath in Runtime).value.map(_.data.getAbsolutePath)
-    val out = file(\"""#{classpathFile}\""")
-    IO.write(out, (unmanaged ++ managed).mkString(File.pathSeparator))
-  }
-  """
-
-
+# ensime server version from settings
 ensimeServerVersion = ->
   atom.config.get('Ensime.ensimeServerVersion')
 
 
-readDotEnsime = (path) ->
-  raw = fs.readFileSync(path)
-  rows = raw.toString().split(/\r?\n/);
-  filtered = rows.filter (l) -> l.indexOf(';;') != 0
-  filtered.join('\n')
 
-
-packageDir = atom.packages.resolvePackagePath('Ensime')
-tempdir =  packageDir + path.sep + "ensime_update_"
-
-
-dotEnsimeToCPFileName = ->
-  withDotEnsime (scalaVersion, javaHome) ->
-    mkClasspathFileName(scalaVersion, ensimeServerVersion())
-
-
-mkClasspathFileName = (scalaVersion, ensimeServerVersion) ->
-  atom.packages.resolvePackagePath('Ensime') + path.sep + "classpath_#{scalaVersion}_#{ensimeServerVersion}"
-
-
-ensimeCache = -> projectPath() + path.sep + '.ensime_cache'
-ensimeServerLogFile = -> ensimeCache() + path.sep + 'server.log'
-
-
-
-withDotEnsime = (callback) ->
-  dotEnsimePath = projectPath() + path.sep + '.ensime'
-  # scala version from .ensime config file of project
-  dotEnsime = readDotEnsime(dotEnsimePath)
-  dotEnsimeLisp = lisp.readFromString(dotEnsime)
-  dotEnsimeJs = sexpToJObject(dotEnsimeLisp)
-  scalaVersion = dotEnsimeJs[':scala-version']
-  javaHome = dotEnsimeJs[':java-home']
-  callback(scalaVersion, javaHome)
-
-
-updateEnsimeServerManually = ->
-  withDotEnsime (scalaVersion, javaHome) ->
-    if not projectPath()
-      modalMsg('No .ensime found', "You need to have a project open with a .ensime in root.")
-    else
-      withSbt (sbtCmd) ->
-        updateEnsimeServer(sbtCmd, scalaVersion, ensimeServerVersion())
-
-
-
-updateEnsimeServer = (sbtCmd, scalaVersion, ensimeServerVersion) ->
-  @serverUpdateLog = new EnsimeServerUpdateLogView()
-
-  pane = atom.workspace.getActivePane()
-  pane.addItem @serverUpdateLog
-  pane.activateItem @serverUpdateLog
-
-  if not fs.existsSync(tempdir)
-    fs.mkdirSync(tempdir)
-    fs.mkdirSync(tempdir + path.sep + 'project')
-
-  # write out a build.sbt in this dir
-  fs.writeFileSync(tempdir + path.sep + 'build.sbt', createSbtClasspathBuild(scalaVersion, ensimeServerVersion,
-    mkClasspathFileName(scalaVersion, ensimeServerVersion)))
-
-  fs.writeFileSync(tempdir + path.sep + 'project' + path.sep + 'build.properties', 'sbt.version=0.13.9\n')
-
-  # run sbt "saveClasspath" "clean"
-  pid = spawn("#{sbtCmd}", ['-Dsbt.log.noformat=true', 'saveClasspath', 'clean'], {cwd: tempdir})
-  pid.stdout.on 'data', (chunk) -> log(chunk.toString('utf8'))
-  pid.stderr.on 'data', (chunk) -> log(chunk.toString('utf8'))
-  pid.stdout.on 'data', (chunk) => @serverUpdateLog.addRow(chunk.toString('utf8'))
-  pid.stderr.on 'data', (chunk) => @serverUpdateLog.addRow(chunk.toString('utf8'))
-  pid.stdin.end()
-
-
-# Check that we have a classpath that is newer than atom ensime package.json (updated on release), otherwise delete it
+# Check that we have a classpath that is newer than atom
+# ensime package.json (updated on release), otherwise delete it
 classpathFileOk = (cpF) ->
   if not fs.existsSync(cpF)
     false
   else
     cpFStats = fs.statSync(cpF)
-    fine = cpFStats.isFile && cpFStats.ctime > fs.statSync(packageDir + path.sep + 'package.json').mtime
+    fine = cpFStats.isFile && cpFStats.ctime > fs.statSync(packageDir() + path.sep + 'package.json').mtime
     if not fine
       fs.unlinkSync(cpF)
     fine
 
+mkPortFilePath = (cacheDir) -> cacheDir + path.sep + "port"
 
-withSbt = (callback) =>
-  sbtCmd = atom.config.get('Ensime.sbtExec')
-  if sbtCmd
-    callback(sbtCmd)
+mkServerLogFilePath = (cacheDir) -> cacheDir + path.sep + 'server.log'
+
+
+# Start an ensime client given path to .ensime. If server already running, just use, else startup that too.
+startClient = (parsedDotEnsime, generalHandler, callback) ->
+  portFilePath = mkPortFilePath(parsedDotEnsime.cacheDir)
+
+  if fs.existsSync(portFilePath)
+    # server running, no need to start
+    port = fs.readFileSync(portFilePath).toString()
+    doStartClient(parsedDotEnsime, port, generalHandler, callback)
   else
-    # TODO: try to check if on path, can we do this with fs?
-    dialog = remote.require('dialog')
-    dialog.showOpenDialog({title: "Sorry, but we need you to point out your SBT executive", properties:['openFile']}, (filenames) =>
-        sbtCmd = filenames[0]
-        atom.config.set('Ensime.sbtExec', sbtCmd)
-        callback(sbtCmd)
-      )
+    # no server running, start that first
+    startEnsimeServer(parsedDotEnsime, (port) ->
+      doStartClient(parsedDotEnsime, port, generalHandler, callback)
+    )
+
+# Do start a client given that server is running
+doStartClient = (parsedDotEnsime, port, generalHandler, callback) ->
+  callback(new Client(port, generalHandler))
 
 
-startEnsimeServer = (pidCallback) ->
-  withDotEnsime (scalaVersion, javaHome) =>
-    if not fs.existsSync(ensimeCache())
-      fs.mkdirSync(ensimeCache())
 
-    toolsJar = "#{javaHome}#{path.sep}lib#{path.sep}tools.jar"
-    cpF = mkClasspathFileName(scalaVersion, ensimeServerVersion())
-    log("classpathfile name: #{cpF}")
+# Start ensime server. If classpath file is out of date, make an update first
+startEnsimeServer = (parsedDotEnsime, portCallback) ->
+  if not fs.existsSync(parsedDotEnsime.cacheDir)
+    fs.mkdirSync(parsedDotEnsime.cacheDir)
 
-    checkForServerCP = (trysLeft) =>
-      log("check for server classpath file #{cpF}. trys left: " + trysLeft)
-      if(trysLeft == 0)
-        modalMsg("Server hasn't been updated yet. If this is the first run, maybe you're downloading the internet. Check update
-        log and try again!")
-      else if not fs.existsSync(cpF)
-          @serverUpdateTimeout = setTimeout (=>
-            checkForServerCP(trysLeft - 1)
-          ), 2000
-      else
-        # Classpath file for running Ensime server is in place
-        classpath = toolsJar + path.delimiter + fs.readFileSync(cpF, {encoding: 'utf8'})
-        javaCmd = "#{javaHome}#{path.sep}bin#{path.sep}java"
-        ensimeServerFlags = "#{atom.config.get('Ensime.ensimeServerFlags')}"
-        ensimeConfigFile = projectPath() + path.sep + '.ensime'
-        args = ["-classpath", "#{classpath}", "-Densime.config=#{ensimeConfigFile}", "-Densime.protocol=jerk"]
-        if ensimeServerFlags.length > 0
-           args.push ensimeServerFlags  ## Weird, but extra " " broke everyting
+  cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
+  log("classpathfile name: #{cpF}")
 
-        args.push "org.ensime.server.Server"
+  pidCallback = (pid) -> portCallback(pid.port)
 
-        log("Starting ensime server with: #{javaCmd} #{args.join(' ')}")
+  if(not classpathFileOk(cpF))
+    # update server and start
+    withSbt (sbtCmd) ->
+      updateEnsimeServer(sbtCmd, parsedDotEnsime.scalaVersion, ensimeServerVersion(), () -> doStartEnsimeServer(parsedDotEnsime, pidCallback))
+  else
+    # just start server
+    doStartEnsimeServer(parsedDotEnsime, pidCallback)
 
-        serverLog = fs.createWriteStream(ensimeServerLogFile())
+# Start ensime server when classpath is up to date
+doStartEnsimeServer = (parsedDotEnsime, pidCallback) ->
+  cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
+  toolsJar = "#{parsedDotEnsime.javaHome}#{path.sep}lib#{path.sep}tools.jar"
+  classpath = toolsJar + path.delimiter + fs.readFileSync(cpF, {encoding: 'utf8'})
+  javaCmd = "#{parsedDotEnsime.javaHome}#{path.sep}bin#{path.sep}java"
+  ensimeServerFlags = "#{atom.config.get('Ensime.ensimeServerFlags')}"
+  args = ["-classpath", "#{classpath}", "-Densime.config=#{parsedDotEnsime.dotEnsimePath}", "-Densime.protocol=jerk"]
+  if ensimeServerFlags.length > 0
+    args.push ensimeServerFlags  ## Weird, but extra " " broke everyting
 
-        pid = spawn(javaCmd, args, {
-         detached: atom.config.get('Ensime.runServerDetached')
-        })
-        pid.stdout.pipe(serverLog) # TODO: have a screenbuffer tail -f this file.
-        pid.stderr.pipe(serverLog)
-        pid.stdin.end()
-        pidCallback(pid)
+  args.push "org.ensime.server.Server"
 
+  log("Starting ensime server with: #{javaCmd} #{args.join(' ')}")
 
-    if(not classpathFileOk(cpF))
-      withSbt (sbtCmd) =>
-        updateEnsimeServer(sbtCmd, scalaVersion, ensimeServerVersion())
-        checkForServerCP(20) # 40 sec should be enough?
-    else
-      checkForServerCP(20) # 40 sec should be enough?
+  serverLog = fs.createWriteStream(mkServerLogFilePath(parsedDotEnsime.cacheDir))
+
+  pid = spawn(javaCmd, args, {
+    detached: atom.config.get('Ensime.runServerDetached')
+  })
+  pid.stdout.pipe(serverLog) # TODO: have a screenbuffer tail -f this file.
+  pid.stderr.pipe(serverLog)
+  pid.stdin.end()
+  pidCallback(pid)
 
 
 module.exports = {
-  updateEnsimeServer: updateEnsimeServerManually,
-  startEnsimeServer: startEnsimeServer,
-  classpathFileName: dotEnsimeToCPFileName
+  startClient
 }
