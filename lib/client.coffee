@@ -33,6 +33,7 @@ class Client
     @socket.destroy()
 
   openSocket: (port) ->
+    console.log('connecting on port: ' + port)
     @socket = net.connect({port: port, allowHalfOpen: true} , ->
       console.log('client connected')
     )
@@ -45,14 +46,18 @@ class Client
       console.log("Ensime server disconnected")
     )
 
-    @socket.on('close', ->
-      console.log("Ensime server close event")
+    @socket.on('close', (data) ->
+      console.log("Ensime server close event: " + data)
     )
 
     @socket.on('error', (data) ->
       if (data.code == 'ECONNREFUSED')
         modalMsg("Connection refused connecting to ensime, it is probably not running. Remove .ensime_cache/port and .ensime_cache/http and try again.")
-      console.log("Ensime server error event: " + data)
+      else if (data.code == 'EADDRNOTAVAIL')
+        console.log(data)
+        # happens when connecting too soon I think
+      else
+        console.log("Ensime server error event: " + data)
     )
 
     @socket.on('timeout', ->
