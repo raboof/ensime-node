@@ -9,7 +9,7 @@ module.exports = class SelectDotEnsime
     vue = new Vue({
       template: """
         <div tabindex="0" id="select-file" class="select-list fuzzy-finder">
-          <div>Please choose which Ensime project to start up:</div>
+          <div>Please choose a .ensime file</div>
           <ol class="list-group">
             <li v-for="file in files" v-bind:class="{'selected': $index==selected}">
               <div class="primary-line file icon icon-file-text">{{file.path}}</div>

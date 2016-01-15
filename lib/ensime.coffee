@@ -94,9 +94,7 @@ module.exports = Ensime =
   addCommandsForStoppedState: ->
     # Need to have a started server and port file
     @stoppedCommands = new CompositeDisposable
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", -> updateEnsimeServer()
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
-
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
@@ -113,7 +111,6 @@ module.exports = Ensime =
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:go-to-definition", => @goToDefinitionOfCursor()
 
-    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:update-ensime-server", -> updateEnsimeServer()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:format-source", => @formatCurrentSourceFile()
 
@@ -142,9 +139,6 @@ module.exports = Ensime =
 
     @controlSubscription = atom.workspace.observeTextEditors (editor) =>
       if isScalaSource(editor)
-        # For now I'm doing least amount of change to support multiple ensime projects
-        # This way you have to re-open editors after an ensime i started to get a client for it
-        # client lookup could be pushed into the features so this is delayed
         clientLookup = => @instanceManager.instanceOfFile(editor.getPath())?.client
         if atom.config.get('Ensime.enableTypeTooltip')
           if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, clientLookup))
@@ -249,6 +243,10 @@ module.exports = Ensime =
         client: client
         statusbarView: statusbarView
         typechecking: typechecking
+        destroy: () ->
+          client.destroy()
+          statusbarView.destroy()
+          typechecking.destroy()
       }
 
       @instanceManager.registerInstance(instance)
@@ -278,17 +276,15 @@ module.exports = Ensime =
     for editor in atom.workspace.getTextEditors()
       @deleteControllers editor
 
-
-  # to start an ensime, first we need to to select a .ensime file under any project path
-  selectAndBootAnEnsime: ->
-
+  # Shows dialog to select a .ensime under this project paths and calls callback with parsed
+  selectDotEnsime: (callback) ->
     dirs = atom.project.getPaths()
     promises = dirs.map (dir) ->
       scanner = new PathScanner(dir,
-        inclusions: ['.ensime']
-        includeHidden: true
-        exclusions: ['node_modules', '.ensime_cache', '.git', 'target', '.idea']
-        )
+         inclusions: ['.ensime']
+         includeHidden: true
+         exclusions: ['node_modules', '.ensime_cache', '.git', 'target', '.idea']
+      )
       findings = []
       scanner.on 'path-found', (path) ->
         findings.push {path: path}
@@ -300,18 +296,22 @@ module.exports = Ensime =
 
     promise = Promise.all(promises)
 
-    promise.then (dotEnsimesUnflattened) =>
+    promise.then (dotEnsimesUnflattened) ->
       dotEnsimes = _.flatten(dotEnsimesUnflattened)
       console.log('dotEnsimes, ' + dotEnsimes)
-      new SelectFile(dotEnsimes, (selectedDotEnsime) =>
+      new SelectFile(dotEnsimes, (selectedDotEnsime) ->
         console.log(['selectedDotEnsime: ', selectedDotEnsime])
-        @startInstance(selectedDotEnsime.path)
+        callback(selectedDotEnsime)
       )
 
-  selectAndStopAnEnsime: ->
-    # delet controllers of this ensime
-    @deleteAllEditorsControllers()
+  selectAndBootAnEnsime:  ->
+    @selectDotEnsime (selectedDotEnsime) => @startInstance(selectedDotEnsime.path)
 
+  selectAndStopAnEnsime: ->
+    @selectDotEnsime (selectedDotEnsime) =>
+      dotEnsime = parseDotEnsime(selectedDotEnsime.path)
+      @instanceManager.stopInstance(dotEnsime)
+      @switchToInstance(undefined)
 
   typecheckAll: ->
     @clientOfActiveTextEditor()?.post( {"typehint": "TypecheckAllReq"}, (msg) ->)

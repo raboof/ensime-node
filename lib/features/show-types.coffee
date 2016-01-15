@@ -4,7 +4,7 @@ $ = require 'jquery'
 {formatType} = require '../formatting'
 SubAtom = require('sub-atom')
 
-
+# This one lives as one per file for all instances with an instanceLookup.
 class ShowTypes
   constructor: (@editor, @clientLookup) ->
     @disposables = new SubAtom
