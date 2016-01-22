@@ -4,7 +4,7 @@ Vue = require('vue')
 
 # TODO: Look at https://github.com/js-padavan/atom-enhanced-tabs/blob/master/lib/SimpleListView.coffee
 
-module.exports = class SelectDotEnsime
+module.exports = class SelectDotEnsimeView
   constructor: (files, onSelect, onCancel = -> ) ->
     vue = new Vue({
       template: """
@@ -40,8 +40,8 @@ module.exports = class SelectDotEnsime
           'core:confirm': (event) =>
             selected = files[@selected]
             console.log(["selected: ", selected])
-            done()
             onSelect(selected)
+            done()
             event.stopPropagation()
           'core:cancel': (event) ->
             onCancel()

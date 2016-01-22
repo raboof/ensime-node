@@ -21,7 +21,7 @@ AutocompletePlusProvider = require './features/autocomplete-plus'
 
 ImplicitInfo = require './model/implicit-info'
 ImplicitInfoView = require './views/implicit-info-view'
-SelectFile = require './views/select-file'
+SelectDotEnsimeView = require './views/select-dot-ensime-view'
 {parseDotEnsime, dotEnsimesFilter} = require './ensime-client/dotensime-utils'
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
@@ -299,7 +299,7 @@ module.exports = Ensime =
     promise.then (dotEnsimesUnflattened) ->
       dotEnsimes = _.flatten(dotEnsimesUnflattened)
       console.log('dotEnsimes, ' + dotEnsimes)
-      new SelectFile(dotEnsimes, (selectedDotEnsime) ->
+      new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->
         console.log(['selectedDotEnsime: ', selectedDotEnsime])
         callback(selectedDotEnsime)
       )
