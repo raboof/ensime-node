@@ -12,7 +12,7 @@ remote = require 'remote'
 Client = require './client'
 {updateEnsimeServer} = require './ensime-server-update'
 
-
+chokidar = require 'chokidar'
 
 ###
 ## Pseudo:
@@ -64,15 +64,28 @@ mkServerLogFilePath = (cacheDir) -> cacheDir + path.sep + 'server.log'
 startClient = (parsedDotEnsime, generalHandler, callback) ->
   portFilePath = mkPortFilePath(parsedDotEnsime.cacheDir)
 
+  log = console.log.bind(console)
+
   if fs.existsSync(portFilePath)
     # server running, no need to start
     port = fs.readFileSync(portFilePath).toString()
     doStartClient(parsedDotEnsime, port, generalHandler, callback)
   else
-    # no server running, start that first
-    startEnsimeServer(parsedDotEnsime, (port) ->
+    log('starting watching fort port file creation' + portFilePath)
+    watcher = chokidar.watch(portFilePath, {
+      persistent: true
+    }).on('add', (path) ->
+      console.log 'port file created. starting client'
+      port = fs.readFileSync(portFilePath).toString()
       doStartClient(parsedDotEnsime, port, generalHandler, callback)
+      watcher.close()
     )
+
+    console.log(['watcher: ', watcher])
+
+    # no server running, start that first
+    startEnsimeServer(parsedDotEnsime, ->)
+
 
 # Do start a client given that server is running
 doStartClient = (parsedDotEnsime, port, generalHandler, callback) ->
@@ -88,7 +101,8 @@ startEnsimeServer = (parsedDotEnsime, portCallback) ->
   cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
   log("classpathfile name: #{cpF}")
 
-  pidCallback = (pid) -> portCallback(pid.port)
+  pidCallback = (pid) ->
+    portCallback()
 
   if(not classpathFileOk(cpF))
     # update server and start

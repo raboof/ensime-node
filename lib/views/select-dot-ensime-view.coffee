@@ -4,12 +4,12 @@ Vue = require('vue')
 
 # TODO: Look at https://github.com/js-padavan/atom-enhanced-tabs/blob/master/lib/SimpleListView.coffee
 
-module.exports = class SelectDotEnsime
+module.exports = class SelectDotEnsimeView
   constructor: (files, onSelect, onCancel = -> ) ->
     vue = new Vue({
       template: """
         <div tabindex="0" id="select-file" class="select-list fuzzy-finder">
-          <div>Please choose which Ensime project to start up:</div>
+          <div>Please choose a .ensime file</div>
           <ol class="list-group">
             <li v-for="file in files" v-bind:class="{'selected': $index==selected}">
               <div class="primary-line file icon icon-file-text">{{file.path}}</div>
@@ -22,13 +22,11 @@ module.exports = class SelectDotEnsime
         files: files
 
       attached: () ->
-        console.log("attached called: " + this.$el)
-
         done = () =>
           @commands.dispose()
           @$emit('done')
 
-        @commands = atom.commands.add window,
+        @commands = atom.commands.add this.$el,
           'core:move-up': (event) =>
             if(@selected > 0)
               @selected -= 1
@@ -40,8 +38,8 @@ module.exports = class SelectDotEnsime
           'core:confirm': (event) =>
             selected = files[@selected]
             console.log(["selected: ", selected])
-            done()
             onSelect(selected)
+            done()
             event.stopPropagation()
           'core:cancel': (event) ->
             onCancel()
@@ -51,7 +49,6 @@ module.exports = class SelectDotEnsime
         @$on 'focusout', () ->
           done()
 
-        console.log("attached finished: " + @$el)
       })
 
     @container = addModalPanel(vue, true)
@@ -59,4 +56,3 @@ module.exports = class SelectDotEnsime
       @container.destroy()
 
     vue.$el.focus()
-    console.log("vue.el: " + vue.$el)

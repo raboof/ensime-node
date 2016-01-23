@@ -83,17 +83,6 @@ updateEnsimeServer = (sbtCmd, scalaVersion, ensimeServerVersion, whenUpdated = (
 
 
 
-
-updateEnsimeServerManually = (dotEnsime, javaHome) ->
-  # TODO:
-
-  if not projectPath()
-    modalMsg('No .ensime found', "You need to have a project open with a .ensime in root.")
-  else
-    withSbt (sbtCmd) ->
-      updateEnsimeServer(sbtCmd, scalaVersion, ensimeServerVersion())
-
-
 module.exports = {
   updateEnsimeServer
 }

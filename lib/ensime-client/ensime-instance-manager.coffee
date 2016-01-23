@@ -14,12 +14,13 @@ module.exports = class InstanceManager
     @instances.push(instance)
 
 
-  stopClient: (dotEnsime) ->
+  stopInstance: (dotEnsime) ->
     for instance in @instances when instance.rootDir == dotEnsime.rootDir
-      do (instance) ->
+      do (instance) =>
         instance.destroy()
-        @instances = _.without(instances, instance)
+        @instances = _.without(@instances, instance)
 
   # optional running ensime client of scala source path O(n)
   instanceOfFile: (path) ->
+    console.log(['instances: ', @instances])
     return _.find(@instances, (instance) -> path.startsWith(instance.rootDir))

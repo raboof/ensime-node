@@ -33,7 +33,7 @@ class TypeChecking
         addNoteToMessageView note for note in notes
 
   hide: ->
-    @messages.hide()
+    @messages?.hide()
 
   show: ->
     @messages.show()
@@ -43,6 +43,6 @@ class TypeChecking
 
   # cleanup
   destroy: ->
-    @messages.clear()
+    @messages?.clear()
     @messages?.close()
     @messages = null
