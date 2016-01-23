@@ -22,13 +22,11 @@ module.exports = class SelectDotEnsimeView
         files: files
 
       attached: () ->
-        console.log("attached called: " + this.$el)
-
         done = () =>
           @commands.dispose()
           @$emit('done')
 
-        @commands = atom.commands.add window,
+        @commands = atom.commands.add this.$el,
           'core:move-up': (event) =>
             if(@selected > 0)
               @selected -= 1
@@ -51,7 +49,6 @@ module.exports = class SelectDotEnsimeView
         @$on 'focusout', () ->
           done()
 
-        console.log("attached finished: " + @$el)
       })
 
     @container = addModalPanel(vue, true)
@@ -59,4 +56,3 @@ module.exports = class SelectDotEnsimeView
       @container.destroy()
 
     vue.$el.focus()
-    console.log("vue.el: " + vue.$el)
