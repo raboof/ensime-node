@@ -3,6 +3,8 @@ exec = require('child_process').exec
 fs = require 'fs'
 path = require('path')
 _ = require 'lodash'
+Promise = require 'bluebird'
+glob = require 'glob'
 
 {Subscriber} = require 'emissary'
 Client = require './client'
@@ -26,7 +28,6 @@ SelectDotEnsimeView = require './views/select-dot-ensime-view'
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 InstanceManager = require './ensime-client/ensime-instance-manager'
-{PathScanner} = require 'scandal'
 
 
 module.exports = Ensime =
@@ -279,26 +280,22 @@ module.exports = Ensime =
   # Shows dialog to select a .ensime under this project paths and calls callback with parsed
   selectDotEnsime: (callback) ->
     dirs = atom.project.getPaths()
+    globTask = Promise.promisify(glob)
     promises = dirs.map (dir) ->
-      scanner = new PathScanner(dir,
-         inclusions: ['.ensime']
-         includeHidden: true
-         exclusions: ['node_modules', '.ensime_cache', '.git', 'target', '.idea']
+      globTask(
+        '.ensime'
+          cwd: dir
+          matchBase: true
+          nodir: true
+          realpath: true
+          ignore: '**/{node_modules,.ensime_cache,.git,target,.idea}/**'
       )
-      findings = []
-      scanner.on 'path-found', (path) ->
-        findings.push {path: path}
-        # TODO: add extra info. .path exists? -> server started, client already started? (look in instance manager)
-      new Promise (resolve, reject) ->
-        scanner.on 'finished-scanning', ->
-          resolve findings
-        scanner.scan()
 
     promise = Promise.all(promises)
 
     promise.then (dotEnsimesUnflattened) ->
-      dotEnsimes = _.flatten(dotEnsimesUnflattened)
-      console.log('dotEnsimes, ' + dotEnsimes)
+      dotEnsimes = ({path: path} for path in _.flattenDeep(dotEnsimesUnflattened))
+      console.log('dotEnsimes %o', dotEnsimes)
       new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->
         console.log(['selectedDotEnsime: ', selectedDotEnsime])
         callback(selectedDotEnsime)
