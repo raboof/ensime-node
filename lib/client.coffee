@@ -6,7 +6,7 @@ _ = require 'lodash'
 
 module.exports =
 class Client
-  constructor: (port, generalMsgHandler) ->
+  constructor: (port, generalMsgHandler, @serverPid = undefined) ->
     @ensimeMessageCounter = 1
     @callbackMap = {}
 
@@ -29,8 +29,10 @@ class Client
 
     @openSocket(port)
 
+  # Kills server if it was spawned from here.
   destroy: ->
     @socket.destroy()
+    @serverPid?.kill()
 
   openSocket: (port) ->
     console.log('connecting on port: ' + port)

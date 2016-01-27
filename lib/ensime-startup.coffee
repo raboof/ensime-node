@@ -69,40 +69,33 @@ startClient = (parsedDotEnsime, generalHandler, callback) ->
   if fs.existsSync(portFilePath)
     # server running, no need to start
     port = fs.readFileSync(portFilePath).toString()
-    doStartClient(parsedDotEnsime, port, generalHandler, callback)
+    callback(new Client(port, generalHandler))
   else
+    serverPid = undefined
+
     log('starting watching fort port file creation' + portFilePath)
     watcher = chokidar.watch(portFilePath, {
       persistent: true
     }).on('add', (path) ->
       console.log 'port file created. starting client'
       port = fs.readFileSync(portFilePath).toString()
-      doStartClient(parsedDotEnsime, port, generalHandler, callback)
+      callback(new Client(port, generalHandler, serverPid))
       watcher.close()
     )
 
     console.log(['watcher: ', watcher])
 
     # no server running, start that first
-    startEnsimeServer(parsedDotEnsime, ->)
-
-
-# Do start a client given that server is running
-doStartClient = (parsedDotEnsime, port, generalHandler, callback) ->
-  callback(new Client(port, generalHandler))
-
+    startEnsimeServer(parsedDotEnsime, (pid) -> serverPid = pid)
 
 
 # Start ensime server. If classpath file is out of date, make an update first
-startEnsimeServer = (parsedDotEnsime, portCallback) ->
+startEnsimeServer = (parsedDotEnsime, pidCallback) ->
   if not fs.existsSync(parsedDotEnsime.cacheDir)
     fs.mkdirSync(parsedDotEnsime.cacheDir)
 
   cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
   log("classpathfile name: #{cpF}")
-
-  pidCallback = (pid) ->
-    portCallback()
 
   if(not classpathFileOk(cpF))
     # update server and start
