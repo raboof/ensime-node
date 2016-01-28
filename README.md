@@ -104,7 +104,7 @@ https://gitter.im/ensime/ensime-atom
 - code-links
 - https://github.com/atom/atom/blob/master/src/text-editor-component.coffee#L365
 - https://github.com/TypeStrong/atom-typescript/
-- https://github.com/chaika2013/ide-haskell/
+- https://github.com/atom-haskell/ide-haskell
 
 ## Links
 - https://github.com/ensime/
