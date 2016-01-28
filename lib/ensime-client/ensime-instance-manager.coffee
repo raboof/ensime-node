@@ -24,3 +24,6 @@ module.exports = class InstanceManager
   instanceOfFile: (path) ->
     console.log(['instances: ', @instances])
     return _.find(@instances, (instance) -> path.startsWith(instance.rootDir))
+
+  firstInstance: ->
+    return @instances[0]
