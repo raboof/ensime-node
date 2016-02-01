@@ -23,4 +23,9 @@ module.exports = class InstanceManager
   # optional running ensime client of scala source path O(n)
   instanceOfFile: (path) ->
     console.log(['instances: ', @instances])
-    return _.find(@instances, (instance) -> path.startsWith(instance.rootDir))
+    _.find(@instances, (instance) ->
+      _.some(instance.dotEnsime.sourceRoots, (sourceRoot) -> path.startsWith(sourceRoot))
+    )
+        
+  firstInstance: ->
+    return @instances[0]

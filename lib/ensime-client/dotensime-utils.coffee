@@ -1,6 +1,7 @@
 fs = require ('fs')
 lisp = require ('./lisp/lisp')
 {sexpToJObject} = require './lisp/swank-extras'
+_ = require 'lodash'
 
 readDotEnsime = (path) ->
   raw = fs.readFileSync(path)
@@ -13,6 +14,9 @@ parseDotEnsime = (path) ->
   dotEnsime = readDotEnsime(path)
   dotEnsimeLisp = lisp.readFromString(dotEnsime)
   dotEnsimeJs = sexpToJObject(dotEnsimeLisp)
+  subprojects = dotEnsimeJs[':subprojects']
+  sourceRoots = _.flattenDeep(_.map(subprojects, (sp) -> sp[':source-roots']))
+  
   {
     name: dotEnsimeJs[':name']
     scalaVersion: dotEnsimeJs[':scala-version']
@@ -21,6 +25,7 @@ parseDotEnsime = (path) ->
     rootDir: dotEnsimeJs[':root-dir']
     cacheDir: dotEnsimeJs[':cache-dir']
     dotEnsimePath: path
+    sourceRoots: sourceRoots
   }
 
 dotEnsimesFilter = (path, stats) ->
