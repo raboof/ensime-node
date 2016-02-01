@@ -112,6 +112,7 @@ module.exports = Ensime =
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:go-to-definition", => @goToDefinitionOfCursor()
 
+    @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:go-to-doc", => @goToDocOfCursor()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:format-source", => @formatCurrentSourceFile()
 
@@ -324,6 +325,12 @@ module.exports = Ensime =
   typecheckFile: ->
     b = atom.workspace.getActiveTextEditor()?.getBuffer()
     @clientOfEditor(b)?.typecheckFile(b)
+
+  goToDocOfCursor: ->
+    editor = atom.workspace.getActiveTextEditor()
+    textBuffer = editor.getBuffer()
+    pos = editor.getCursorBufferPosition()
+    @clientOfEditor(editor)?.goToDocAtPoint(textBuffer, pos)
 
   goToDefinitionOfCursor: ->
     editor = atom.workspace.getActiveTextEditor()

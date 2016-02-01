@@ -2,11 +2,11 @@ net = require('net')
 {log, modalMsg} = require './utils'
 Swank = require './ensime-client/lisp/swank-protocol'
 _ = require 'lodash'
-
+shell = require('shell')
 
 module.exports =
 class Client
-  constructor: (port, generalMsgHandler, @serverPid = undefined) ->
+  constructor: (port, @httpPort, generalMsgHandler, @serverPid = undefined) ->
     @ensimeMessageCounter = 1
     @callbackMap = {}
 
@@ -76,7 +76,26 @@ class Client
   post: (msg, callback) ->
     @postString(JSON.stringify(msg), callback)
 
+  goToDocAtPoint: (textBuffer, bufferPosition) =>
+    offset = textBuffer.characterIndexForPosition(bufferPosition)
+    file = textBuffer.getPath()
 
+    # Will only work if you position your cursor before the S in String! Hardcoded +5 chars below vvv
+    req =
+      typehint: "DocUriAtPointReq"
+      file: file
+      point:
+        from: offset
+        to: offset+5
+
+    @post(req, (msg) =>
+      log(msg)
+      # TODO: error checking
+      # https://github.com/ensime/ensime-server/blob/master/protocol-jerky/src/test/scala/org/ensime/jerk/JerkFormatsSpec.scala
+      url = "http://localhost:#{@httpPort}/#{msg.text}"
+      log(url)
+      shell.openExternal(url)
+    )
 
   goToTypeAtPoint: (textBuffer, bufferPosition) =>
     offset = textBuffer.characterIndexForPosition(bufferPosition)

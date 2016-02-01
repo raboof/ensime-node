@@ -57,29 +57,35 @@ classpathFileOk = (cpF) ->
 
 mkPortFilePath = (cacheDir) -> cacheDir + path.sep + "port"
 
+mkHttpPortFilePath = (cacheDir) -> cacheDir + path.sep + "http"
+
 mkServerLogFilePath = (cacheDir) -> cacheDir + path.sep + 'server.log'
 
+removeTrainingNewline = (str) -> str.replace(/^\s+|\s+$/g, '')
 
 # Start an ensime client given path to .ensime. If server already running, just use, else startup that too.
 startClient = (parsedDotEnsime, generalHandler, callback) ->
   portFilePath = mkPortFilePath(parsedDotEnsime.cacheDir)
+  httpPortFilePath = mkHttpPortFilePath(parsedDotEnsime.cacheDir)
 
   log = console.log.bind(console)
 
-  if fs.existsSync(portFilePath)
+  if fs.existsSync(portFilePath) && fs.existsSync(mkHttpPortFilePath)
     # server running, no need to start
     port = fs.readFileSync(portFilePath).toString()
-    callback(new Client(port, generalHandler))
+    httpPort = removeTrainingNewline(fs.readFileSync(httpPortFilePath).toString())
+    callback(new Client(port, httpPort, generalHandler))
   else
     serverPid = undefined
 
-    log('starting watching fort port file creation' + portFilePath)
-    watcher = chokidar.watch(portFilePath, {
+    log('starting watching for port file creation' + portFilePath)
+    watcher = chokidar.watch([portFilePath], {
       persistent: true
     }).on('add', (path) ->
-      console.log 'port file created. starting client'
+      console.log 'port a file created. starting client'
       port = fs.readFileSync(portFilePath).toString()
-      callback(new Client(port, generalHandler, serverPid))
+      httpPort = removeTrainingNewline(fs.readFileSync(httpPortFilePath).toString())
+      callback(new Client(port, httpPort, generalHandler, serverPid))
       watcher.close()
     )
 
