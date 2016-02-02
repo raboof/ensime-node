@@ -183,7 +183,10 @@ module.exports = Ensime =
 
 
   clientOfEditor: (editor) ->
-    @instanceManager.instanceOfFile(editor.getPath())?.client
+    if(editor)
+      @instanceManager.instanceOfFile(editor.getPath())?.client
+    else
+      @instanceManager.firstInstance().client
 
   clientOfActiveTextEditor: ->
     @clientOfEditor(atom.workspace.getActiveTextEditor())

@@ -1,8 +1,8 @@
 # Takes care of mapping project roots to Ensime clients for multiple Ensime project support under same Atom window
 # TODO: Should use sourdeDirs of .ensime to do mapping of files -> ensime instance
 
-_ = require ('lodash')
-
+_ = require 'lodash'
+path = require 'path'
 
 module.exports = class InstanceManager
 
@@ -23,4 +23,11 @@ module.exports = class InstanceManager
   # optional running ensime client of scala source path O(n)
   instanceOfFile: (path) ->
     console.log(['instances: ', @instances])
-    return _.find(@instances, (instance) -> path.startsWith(instance.rootDir))
+    
+    _.find(@instances, (instance) ->
+      path.startsWith(instance.dotEnsime.cacheDir) or
+        _.some(instance.dotEnsime.sourceRoots, (sourceRoot) -> path.startsWith(sourceRoot))
+    )
+        
+  firstInstance: ->
+    return @instances[0]
