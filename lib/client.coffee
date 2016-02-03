@@ -76,21 +76,45 @@ class Client
   post: (msg, callback) ->
     @postString(JSON.stringify(msg), callback)
 
-  goToDocAtPoint: (textBuffer, bufferPosition) =>
-    offset = textBuffer.characterIndexForPosition(bufferPosition)
+  goToDocAtPoint: (editor) =>
+
+    textBuffer = editor.getBuffer()
     file = textBuffer.getPath()
+
+    selectedPoint = () ->
+      log(editor.getSelectedText())
+      r = editor.getSelectedBufferRange()
+      log(r) # start and end
+      log(textBuffer.characterIndexForPosition(r.end)) # minus 1?
+      {
+        from: textBuffer.characterIndexForPosition(r.start)
+        to: textBuffer.characterIndexForPosition(r.end)
+      }
+
+    pointAroundCursor = () ->
+      bufferPosition = editor.getCursorBufferPosition()
+      offset = textBuffer.characterIndexForPosition(bufferPosition)
+      {
+        from: offset
+        to: offset+5
+      }
+
+    hasSelectedText = editor.getSelectedText() != ""
+    point = if hasSelectedText then selectedPoint() else pointAroundCursor()
+
+    console.log("has text?", hasSelectedText)
+    console.log("POINT", point)
 
     # Will only work if you position your cursor before the S in String! Hardcoded +5 chars below vvv
     req =
       typehint: "DocUriAtPointReq"
       file: file
-      point:
-        from: offset
-        to: offset+5
+      point: point
 
     @post(req, (msg) =>
       log(msg)
       # TODO: error checking
+      # incoming: {"callId":3,"payload":{"typehint":"FalseResponse"}}
       # https://github.com/ensime/ensime-server/blob/master/protocol-jerky/src/test/scala/org/ensime/jerk/JerkFormatsSpec.scala
       url = "http://localhost:#{@httpPort}/#{msg.text}"
       log(url)

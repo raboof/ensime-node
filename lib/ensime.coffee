@@ -331,9 +331,7 @@ module.exports = Ensime =
 
   goToDocOfCursor: ->
     editor = atom.workspace.getActiveTextEditor()
-    textBuffer = editor.getBuffer()
-    pos = editor.getCursorBufferPosition()
-    @clientOfEditor(editor)?.goToDocAtPoint(textBuffer, pos)
+    @clientOfEditor(editor)?.goToDocAtPoint(editor)
 
   goToDefinitionOfCursor: ->
     editor = atom.workspace.getActiveTextEditor()
