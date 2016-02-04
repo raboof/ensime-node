@@ -79,23 +79,18 @@ class Client
     @postString(JSON.stringify(msg), callback)
 
   goToDocAtPoint: (editor) =>
-
-    doc = new Documentation(editor)
-    point = doc.getPoint()
+    point = new Documentation(editor).getPoint()
 
     req =
       typehint: "DocUriAtPointReq"
       file: editor.getBuffer().getPath()
       point: point
 
-    openDoc = (text) ->
+    openDoc = (text) =>
       url = Documentation.formUrl("localhost", @httpPort, text)
-      log(url)
       shell.openExternal(url)
 
-    # https://github.com/ensime/ensime-server/blob/master/protocol-jerky/src/test/scala/org/ensime/jerk/JerkFormatsSpec.scala
     @post(req, (msg) =>
-      console.log(msg)
       switch msg.typehint
         when "FalseResponse" then log("no doc")
         else openDoc(msg.text)
