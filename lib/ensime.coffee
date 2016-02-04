@@ -89,8 +89,12 @@ module.exports = Ensime =
       type: 'integer'
       default: 5
       order: 11
-
-
+    documentationSplit:
+      description: "Where to open ScalaDoc"
+      type: 'string'
+      default: 'right'
+      enum: ['right', 'left', 'top', 'bottom', 'external-browser']
+      order: 12
 
   addCommandsForStoppedState: ->
     # Need to have a started server and port file

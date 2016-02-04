@@ -88,7 +88,11 @@ class Client
 
     openDoc = (text) =>
       url = Documentation.formUrl("localhost", @httpPort, text)
-      shell.openExternal(url)
+      split = atom.config.get('Ensime.documentationSplit')
+      #console.log("OPENING", url, split)
+      switch split
+        when 'external-browser' then shell.openExternal(url)
+        else atom.workspace.open(url, {split: split})
 
     @post(req, (msg) =>
       switch msg.typehint

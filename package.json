@@ -25,7 +25,8 @@
   },
   "package-dependencies": {
     "hyperclick": "whatever",
-    "language-scala": "whatever"
+    "language-scala": "whatever",
+    "browser-plus": "whatever"
   },
   "providedServices": {
     "autocomplete.provider": {
