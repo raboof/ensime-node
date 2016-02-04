@@ -1,8 +1,10 @@
 net = require('net')
 {log, modalMsg} = require './utils'
+Documentation = require './features/documentation'
 Swank = require './ensime-client/lisp/swank-protocol'
 _ = require 'lodash'
 shell = require('shell')
+
 
 module.exports =
 class Client
@@ -78,47 +80,25 @@ class Client
 
   goToDocAtPoint: (editor) =>
 
-    textBuffer = editor.getBuffer()
-    file = textBuffer.getPath()
+    doc = new Documentation(editor)
+    point = doc.getPoint()
 
-    selectedPoint = () ->
-      log(editor.getSelectedText())
-      r = editor.getSelectedBufferRange()
-      log(r) # start and end
-      log(textBuffer.characterIndexForPosition(r.end)) # minus 1?
-      {
-        from: textBuffer.characterIndexForPosition(r.start)
-        to: textBuffer.characterIndexForPosition(r.end)
-      }
-
-    pointAroundCursor = () ->
-      bufferPosition = editor.getCursorBufferPosition()
-      offset = textBuffer.characterIndexForPosition(bufferPosition)
-      {
-        from: offset
-        to: offset+5
-      }
-
-    hasSelectedText = editor.getSelectedText() != ""
-    point = if hasSelectedText then selectedPoint() else pointAroundCursor()
-
-    console.log("has text?", hasSelectedText)
-    console.log("POINT", point)
-
-    # Will only work if you position your cursor before the S in String! Hardcoded +5 chars below vvv
     req =
       typehint: "DocUriAtPointReq"
-      file: file
+      file: editor.getBuffer().getPath()
       point: point
 
-    @post(req, (msg) =>
-      log(msg)
-      # TODO: error checking
-      # incoming: {"callId":3,"payload":{"typehint":"FalseResponse"}}
-      # https://github.com/ensime/ensime-server/blob/master/protocol-jerky/src/test/scala/org/ensime/jerk/JerkFormatsSpec.scala
-      url = "http://localhost:#{@httpPort}/#{msg.text}"
+    openDoc = (text) ->
+      url = Documentation.formUrl("localhost", @httpPort, text)
       log(url)
       shell.openExternal(url)
+
+    # https://github.com/ensime/ensime-server/blob/master/protocol-jerky/src/test/scala/org/ensime/jerk/JerkFormatsSpec.scala
+    @post(req, (msg) =>
+      console.log(msg)
+      switch msg.typehint
+        when "FalseResponse" then log("no doc")
+        else openDoc(msg.text)
     )
 
   goToTypeAtPoint: (textBuffer, bufferPosition) =>
