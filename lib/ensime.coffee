@@ -89,8 +89,12 @@ module.exports = Ensime =
       type: 'integer'
       default: 5
       order: 11
-
-
+    documentationSplit:
+      description: "Where to open ScalaDoc"
+      type: 'string'
+      default: 'right'
+      enum: ['right', 'left', 'top', 'bottom', 'external-browser']
+      order: 12
 
   addCommandsForStoppedState: ->
     # Need to have a started server and port file
@@ -112,6 +116,7 @@ module.exports = Ensime =
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:go-to-definition", => @goToDefinitionOfCursor()
 
+    @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:go-to-doc", => @goToDocOfCursor()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:format-source", => @formatCurrentSourceFile()
 
@@ -327,6 +332,10 @@ module.exports = Ensime =
   typecheckFile: ->
     b = atom.workspace.getActiveTextEditor()?.getBuffer()
     @clientOfEditor(b)?.typecheckFile(b)
+
+  goToDocOfCursor: ->
+    editor = atom.workspace.getActiveTextEditor()
+    @clientOfEditor(editor)?.goToDocAtPoint(editor)
 
   goToDefinitionOfCursor: ->
     editor = atom.workspace.getActiveTextEditor()

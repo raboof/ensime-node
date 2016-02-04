@@ -1,12 +1,14 @@
 net = require('net')
 {log, modalMsg} = require './utils'
+Documentation = require './features/documentation'
 Swank = require './ensime-client/lisp/swank-protocol'
 _ = require 'lodash'
+shell = require('shell')
 
 
 module.exports =
 class Client
-  constructor: (port, generalMsgHandler, @serverPid = undefined) ->
+  constructor: (port, @httpPort, generalMsgHandler, @serverPid = undefined) ->
     @ensimeMessageCounter = 1
     @callbackMap = {}
 
@@ -76,7 +78,27 @@ class Client
   post: (msg, callback) ->
     @postString(JSON.stringify(msg), callback)
 
+  goToDocAtPoint: (editor) =>
+    point = new Documentation(editor).getPoint()
 
+    req =
+      typehint: "DocUriAtPointReq"
+      file: editor.getBuffer().getPath()
+      point: point
+
+    openDoc = (text) =>
+      url = Documentation.formUrl("localhost", @httpPort, text)
+      split = atom.config.get('Ensime.documentationSplit')
+      #console.log("OPENING", url, split)
+      switch split
+        when 'external-browser' then shell.openExternal(url)
+        else atom.workspace.open(url, {split: split})
+
+    @post(req, (msg) =>
+      switch msg.typehint
+        when "FalseResponse" then log("no doc")
+        else openDoc(msg.text)
+    )
 
   goToTypeAtPoint: (textBuffer, bufferPosition) =>
     offset = textBuffer.characterIndexForPosition(bufferPosition)
