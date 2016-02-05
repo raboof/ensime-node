@@ -78,18 +78,26 @@ startClient = (parsedDotEnsime, generalHandler, callback) ->
   else
     serverPid = undefined
 
-    log('starting watching for port file creation' + portFilePath)
-    watcher = chokidar.watch([portFilePath], {
-      persistent: true
-    }).on('add', (path) ->
-      console.log 'port a file created. starting client'
+    whenAllAdded = (files, f) ->
+      log('starting watching for: '+files)
+      file = files.pop() # NB: mutates files
+      watcher = chokidar.watch(file, {
+        persistent: true
+      }).on('add', (path) ->
+        console.log 'Seen: ', path
+        watcher.close()
+        if 0 == files.length
+          console.log('All files seen. Starting client')
+          f()
+        else
+          whenAllAdded(files, f)
+      )
+
+    whenAllAdded([portFilePath, httpPortFilePath], () ->
       port = fs.readFileSync(portFilePath).toString()
       httpPort = removeTrainingNewline(fs.readFileSync(httpPortFilePath).toString())
       callback(new Client(port, httpPort, generalHandler, serverPid))
-      watcher.close()
     )
-
-    console.log(['watcher: ', watcher])
 
     # no server running, start that first
     startEnsimeServer(parsedDotEnsime, (pid) -> serverPid = pid)
