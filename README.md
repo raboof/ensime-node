@@ -11,6 +11,7 @@ ENSIME integration includes the following features for Scala developers:
 - Format source file
 - Show implicits
 - Go to type
+- Go to documentation
 - Organize imports
 
 ## Full Documentation
