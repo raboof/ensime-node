@@ -31,4 +31,10 @@ class Documentation
     alreadyUrl = (path.indexOf("//") != -1)
     if alreadyUrl then path else "http://#{host}:#{port}/#{path}"
 
+  @openDoc = (url) =>
+    split = atom.config.get('Ensime.documentationSplit')
+    switch split
+      when 'external-browser' then shell.openExternal(url)
+      else atom.workspace.open(url, {split: split})
+
 module.exports = Documentation
