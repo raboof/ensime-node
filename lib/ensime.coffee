@@ -174,11 +174,9 @@ module.exports = Ensime =
     console.log(['changed from ', @activeInstance, ' to ', instance])
     if(instance != @activeInstance)
       # TODO: create "class" for instance
-      @activeInstance?.typechecking.hide()
       @activeInstance?.statusbarView.hide()
       @activeInstance = instance
       if(instance)
-        instance.typechecking.show()
         instance.statusbarView.show()
 
   deactivate: ->
@@ -246,7 +244,7 @@ module.exports = Ensime =
     @addCommandsForStartedState()
     dotEnsime = parseDotEnsime(dotEnsimePath)
 
-    typechecking = new TypeCheckingFeature()
+    typechecking = TypeCheckingFeature(@indieLinterRegistry.register("Ensime: #{dotEnsimePath}"))
     statusbarView = new StatusbarView()
     statusbarView.init()
 
@@ -409,7 +407,10 @@ module.exports = Ensime =
           undefined
 
     }
-
+    
+  # Just add registry to delegate registration on instances
+  consumeLinter: (@indieLinterRegistry) ->
+    
 
   formatCurrentSourceFile: ->
     editor = atom.workspace.getActiveTextEditor()
