@@ -103,8 +103,8 @@ module.exports = Ensime =
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
-    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @selectAndStopAnEnsime()
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
+    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @selectAndStopAnEnsime()
 
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:gen-ensime", => @genEnsime()
 
@@ -306,11 +306,14 @@ module.exports = Ensime =
 
     promise.then (dotEnsimesUnflattened) ->
       dotEnsimes = ({path: path} for path in _.flattenDeep(dotEnsimesUnflattened))
-      console.log('dotEnsimes %o', dotEnsimes)
-      new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->
-        console.log(['selectedDotEnsime: ', selectedDotEnsime])
-        callback(selectedDotEnsime)
-      )
+      if(dotEnsimes.length == 0)
+        modalMsg("No .ensime file found. Please generate with `sbt gen-ensime` or similar")
+      else if (dofEnsimes.length == 1)
+        callback(dotEnsimes[0])
+      else
+        new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->
+          callback(selectedDotEnsime)
+        )
 
   selectAndBootAnEnsime:  ->
     @selectDotEnsime (selectedDotEnsime) => @startInstance(selectedDotEnsime.path)
