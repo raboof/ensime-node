@@ -308,7 +308,7 @@ module.exports = Ensime =
       dotEnsimes = ({path: path} for path in _.flattenDeep(dotEnsimesUnflattened))
       if(dotEnsimes.length == 0)
         modalMsg("No .ensime file found. Please generate with `sbt gen-ensime` or similar")
-      else if (dofEnsimes.length == 1)
+      else if (dotEnsimes.length == 1)
         callback(dotEnsimes[0])
       else
         new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->

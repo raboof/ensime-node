@@ -18,7 +18,7 @@ module.exports = (indieLinter) ->
       when "NoteError" then "Error"
       when "NoteWarn" then "Warning"
       else ""
-      
+        
   addLints = (notes) ->
     for note in notes
       if(not note.file.includes('dep-src'))
