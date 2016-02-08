@@ -25,9 +25,9 @@ module.exports = class InstanceManager
     console.log(['instances: ', @instances])
     
     _.find(@instances, (instance) ->
-      path.startsWith(instance.dotEnsime.cacheDir) or
-        _.some(instance.dotEnsime.sourceRoots, (sourceRoot) -> path.startsWith(sourceRoot))
+      path.startsWith(instance.dotEnsime.cacheDir) or instance.isSourceOf(path)
     )
-        
+    
+
   firstInstance: ->
     return @instances[0]

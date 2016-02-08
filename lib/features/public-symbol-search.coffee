@@ -11,7 +11,6 @@ module.exports = ->
   client = undefined
   
   toggle = (newClient) ->
-    console.log ['public-symbol-search.toggle', newClient]
     if modalPanel.isVisible()
       modalPanel.hide()
     else

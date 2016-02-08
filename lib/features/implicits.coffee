@@ -2,7 +2,7 @@ ImplicitInfo = require '../model/implicit-info'
 SubAtom = require 'sub-atom'
 {log} = require '../utils'
 class Implicits
-  constructor: (@editor, @clientLookup) ->
+  constructor: (@editor, @instanceLookup) ->
     @disposables = new SubAtom
 
     @disposables.add atom.config.observe 'Ensime.markImplicitsAutomatically', (setting) => @handleSetting(setting)
@@ -21,7 +21,10 @@ class Implicits
   showImplicits: ->
     log("showImplicits this: " + this)
     b = @editor.getBuffer()
-    @clientLookup()?.typecheckBuffer(b, (typecheckResult) =>
+    
+    instance = @instanceLookup()
+        
+    continuation = =>
       range = b.getRange()
       startO = b.characterIndexForPosition(range.start)
       endO = b.characterIndexForPosition(range.end)
@@ -34,7 +37,7 @@ class Implicits
           "to": endO
 
       @clearMarkers()
-      @clientLookup()?.post(msg, (result) =>
+      instance.client.post(msg, (result) =>
         log(result)
 
         createMarker = (info) =>
@@ -60,8 +63,14 @@ class Implicits
 
         markers = (createMarker info for info in result.infos)
       )
-    )
-
+    
+    # If source path is under sourceRoots, typecheck it first
+    if(instance)
+      if(instance.isSourceOf(@editor.getPath()))
+        instance.client.typecheckBuffer(b, (typecheckResult) -> continuation())
+      else
+        continuation()
+        
   showImplicitsAtCursor: ->
     pos = @editor.getCursorBufferPosition()
     log("pos: " + pos)

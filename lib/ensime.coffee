@@ -28,7 +28,7 @@ SelectDotEnsimeView = require './views/select-dot-ensime-view'
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 InstanceManager = require './ensime-client/ensime-instance-manager'
-
+Instance = require './ensime-client/ensime-instance'
 
 module.exports = Ensime =
 
@@ -150,12 +150,13 @@ module.exports = Ensime =
 
     @controlSubscription = atom.workspace.observeTextEditors (editor) =>
       if isScalaSource(editor)
-        clientLookup = => @instanceManager.instanceOfFile(editor.getPath())?.client
+        instanceLookup = => @instanceManager.instanceOfFile(editor.getPath())
+        clientLookup = -> instanceLookup?.client
         if atom.config.get('Ensime.enableTypeTooltip')
           if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, clientLookup))
         if not @inlineErrorsControllers.get(editor) then @inlineErrorsControllers.set(editor, new InlineErrors(editor, clientLookup))
         if not @inlineWarningsControllers.get(editor) then @inlineWarningsControllers.set(editor, new InlineWarnings(editor, clientLookup))
-        if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, clientLookup))
+        if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, instanceLookup))
         if not @autotypecheckControllers.get(editor) then @autotypecheckControllers.set(editor, new AutoTypecheck(editor, clientLookup))
 
         @subscriptions.add editor.onDidDestroy () =>
@@ -249,17 +250,7 @@ module.exports = Ensime =
     statusbarView.init()
 
     startClient(dotEnsime, @statusbarOutput(statusbarView, typechecking), (client) =>
-      instance = {
-        rootDir: dotEnsime.rootDir
-        dotEnsime: dotEnsime
-        client: client
-        statusbarView: statusbarView
-        typechecking: typechecking
-        destroy: () ->
-          client.destroy()
-          statusbarView.destroy()
-          typechecking.destroy()
-      }
+      instance = Instance(dotEnsime, client, statusbarView, typechecking)
 
       @instanceManager.registerInstance(instance)
       if (not @activeInstance)
