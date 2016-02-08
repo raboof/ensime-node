@@ -86,19 +86,14 @@ class Client
       file: editor.getBuffer().getPath()
       point: point
 
-    openDoc = (text) =>
-      url = Documentation.formUrl("localhost", @httpPort, text)
-      split = atom.config.get('Ensime.documentationSplit')
-      #console.log("OPENING", url, split)
-      switch split
-        when 'external-browser' then shell.openExternal(url)
-        else atom.workspace.open(url, {split: split})
-
     @post(req, (msg) =>
       switch msg.typehint
         when "FalseResponse" then log("no doc")
-        else openDoc(msg.text)
+        else Documentation.openDoc(Documentation.formUrl("localhost", @httpPort, msg.text))
     )
+
+  goToDocIndex: () ->
+    Documentation.openDoc("http://localhost:#{@httpPort}/docs")
 
   goToTypeAtPoint: (textBuffer, bufferPosition) =>
     offset = textBuffer.characterIndexForPosition(bufferPosition)

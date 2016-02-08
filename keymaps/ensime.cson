@@ -8,3 +8,4 @@
   'cmd-ctrl-i': 'ensime:show-implicits'
   'cmd-shift-t': 'ensime:search-public-symbol'
   'ctrl-alt-d': 'ensime:go-to-doc'
+  'ctrl-alt-D': 'ensime:browse-doc'
