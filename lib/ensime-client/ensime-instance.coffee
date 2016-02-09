@@ -11,6 +11,6 @@ module.exports = (dotEnsime, client, statusbarView, typechecking) ->
     destroy: () ->
       client.destroy()
       statusbarView.destroy()
-      typechecking.destroy()
+      typechecking?.destroy()
     isSourceOf: (path) -> _.some(dotEnsime.sourceRoots, (sourceRoot) -> path.startsWith(sourceRoot))
   }

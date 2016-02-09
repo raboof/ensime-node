@@ -14,7 +14,6 @@ StatusbarView = require './views/statusbar-view'
 
 ShowTypes = require './features/show-types'
 Implicits = require './features/implicits'
-{InlineErrors, InlineWarnings} = require './features/inline-decorators'
 AutoTypecheck = require './features/auto-typecheck'
 
 TypeCheckingFeature = require './features/typechecking'
@@ -69,16 +68,6 @@ module.exports = Ensime =
       type: 'boolean'
       default: true
       order: 7
-    markErrorsInline:
-      description: "Mark compile errors in the text editor"
-      type: 'boolean'
-      default: true
-      order: 8
-    markWarningsInline:
-      description: "Mark compile warnings in the text editor"
-      type: 'boolean'
-      default: true
-      order: 9
     markImplicitsAutomatically:
       description: "Mark implicits on buffer load and save"
       type: 'boolean'
@@ -97,14 +86,13 @@ module.exports = Ensime =
       order: 12
 
   addCommandsForStoppedState: ->
-    # Need to have a started server and port file
     @stoppedCommands = new CompositeDisposable
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @selectAndStopAnEnsime()
+    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:gen-ensime", => @genEnsime()
 
@@ -139,23 +127,19 @@ module.exports = Ensime =
     # Feature controllers
     @showTypesControllers = new WeakMap
     @implicitControllers = new WeakMap
-    @inlineErrorsControllers = new WeakMap
-    @inlineWarningsControllers = new WeakMap
     @autotypecheckControllers = new WeakMap
 
     @instanceManager = new InstanceManager
 
     @addCommandsForStoppedState()
-
-
+    @someInstanceStarted = false
+    
     @controlSubscription = atom.workspace.observeTextEditors (editor) =>
       if isScalaSource(editor)
         instanceLookup = => @instanceManager.instanceOfFile(editor.getPath())
         clientLookup = -> instanceLookup()?.client
         if atom.config.get('Ensime.enableTypeTooltip')
           if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, clientLookup))
-        if not @inlineErrorsControllers.get(editor) then @inlineErrorsControllers.set(editor, new InlineErrors(editor, clientLookup))
-        if not @inlineWarningsControllers.get(editor) then @inlineWarningsControllers.set(editor, new InlineWarnings(editor, clientLookup))
         if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, instanceLookup))
         if not @autotypecheckControllers.get(editor) then @autotypecheckControllers.set(editor, new AutoTypecheck(editor, clientLookup))
 
@@ -180,8 +164,9 @@ module.exports = Ensime =
       if(instance)
         instance.statusbarView.show()
 
+    
   deactivate: ->
-    @stopAllEnsimes()
+    @instanceManager.destroyAll()
 
     @subscriptions.dispose()
     @controlSubscription.dispose()
@@ -200,7 +185,7 @@ module.exports = Ensime =
     @clientOfEditor(atom.workspace.getActiveTextEditor())
 
   # TODO: move out
-  statusbarOutput: (statusbarView, typechecking) -> (msg) =>
+  statusbarOutput: (statusbarView, typechecking) -> (msg) ->
     typehint = msg.typehint
 
     if(typehint == 'AnalyzerReadyEvent')
@@ -216,16 +201,10 @@ module.exports = Ensime =
       statusbarView.setText('Compiler restarted!')
 
     else if(typehint == 'ClearAllScalaNotesEvent')
-      typechecking.clearScalaNotes()
-      for e in atom.workspace.getTextEditors()
-        @inlineErrorsControllers.get(e)?.clearScalaNotes()
-        @inlineWarningsControllers.get(e)?.clearScalaNotes()
+      typechecking?.clearScalaNotes()
 
     else if(typehint == 'NewScalaNotesEvent')
-      typechecking.addScalaNotes(msg)
-      for e in atom.workspace.getTextEditors()
-        @inlineErrorsControllers.get(e)?.addScalaNotes(msg)
-        @inlineWarningsControllers.get(e)?.addScalaNotes(msg)
+      typechecking?.addScalaNotes(msg)
 
     else if(typehint.startsWith('SendBackgroundMessageEvent'))
       statusbarView.setText(msg.detail)
@@ -242,10 +221,18 @@ module.exports = Ensime =
 
     # remove start command and add others
     @stoppedCommands.dispose()
-    @addCommandsForStartedState()
+    
+    # FIXME: - we have had double commands for each instance :) This is a quick and dirty fix
+    if(not @someInstanceStarted)
+      @addCommandsForStartedState()
+      @someInstanceStarted = true
+      
     dotEnsime = parseDotEnsime(dotEnsimePath)
 
-    typechecking = TypeCheckingFeature(@indieLinterRegistry.register("Ensime: #{dotEnsimePath}"))
+    typechecking = undefined
+    if(@indieLinterRegistry)
+      typechecking = TypeCheckingFeature(@indieLinterRegistry.register("Ensime: #{dotEnsimePath}"))
+    
     statusbarView = new StatusbarView()
     statusbarView.init()
 
@@ -270,8 +257,6 @@ module.exports = Ensime =
 
     deactivateAndDelete(@showTypesControllers)
     deactivateAndDelete(@implicitControllers)
-    deactivateAndDelete(@inlineErrorsControllers)
-    deactivateAndDelete(@inlineWarningsControllers)
     deactivateAndDelete(@autotypecheckControllers)
 
 
@@ -280,7 +265,7 @@ module.exports = Ensime =
       @deleteControllers editor
 
   # Shows dialog to select a .ensime under this project paths and calls callback with parsed
-  selectDotEnsime: (callback) ->
+  selectDotEnsime: (callback, filter = -> true) ->
     dirs = atom.project.getPaths()
     globTask = Promise.promisify(glob)
     promises = dirs.map (dir) ->
@@ -297,23 +282,32 @@ module.exports = Ensime =
 
     promise.then (dotEnsimesUnflattened) ->
       dotEnsimes = ({path: path} for path in _.flattenDeep(dotEnsimesUnflattened))
-      if(dotEnsimes.length == 0)
+      filteredDotEnsime = _.filter(dotEnsimes, filter)
+      
+      if(filteredDotEnsime.length == 0)
         modalMsg("No .ensime file found. Please generate with `sbt gen-ensime` or similar")
-      else if (dotEnsimes.length == 1)
-        callback(dotEnsimes[0])
+      else if (filteredDotEnsime.length == 1)
+        callback(filteredDotEnsime[0])
       else
-        new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->
+        new SelectDotEnsimeView(filteredDotEnsime, (selectedDotEnsime) ->
           callback(selectedDotEnsime)
         )
 
-  selectAndBootAnEnsime:  ->
-    @selectDotEnsime (selectedDotEnsime) => @startInstance(selectedDotEnsime.path)
+  selectAndBootAnEnsime: ->
+    @selectDotEnsime(
+      (selectedDotEnsime) => @startInstance(selectedDotEnsime.path),
+      (dotEnsime) => not @instanceManager.isStarted(dotEnsime.path)
+    )
+
 
   selectAndStopAnEnsime: ->
-    @selectDotEnsime (selectedDotEnsime) =>
+    stopDotEnsime = (selectedDotEnsime) => 
       dotEnsime = parseDotEnsime(selectedDotEnsime.path)
       @instanceManager.stopInstance(dotEnsime)
       @switchToInstance(undefined)
+
+    @selectDotEnsime(stopDotEnsime, (dotEnsime) => @instanceManager.isStarted(dotEnsime.path))
+  
 
   typecheckAll: ->
     @clientOfActiveTextEditor()?.post( {"typehint": "TypecheckAllReq"}, (msg) ->)
@@ -405,19 +399,15 @@ module.exports = Ensime =
   # Just add registry to delegate registration on instances
   consumeLinter: (@indieLinterRegistry) ->
     
-
+    
   formatCurrentSourceFile: ->
     editor = atom.workspace.getActiveTextEditor()
     cursorPos = editor.getCursorBufferPosition()
-    req =
-      typehint: "FormatOneSourceReq"
-      file:
-        file: editor.getPath()
-        contents: editor.getText()
-    @clientOfEditor(editor)?.post(req, (msg) ->
+    callback = (msg) ->
       editor.setText(msg.text)
       editor.setCursorBufferPosition(cursorPos)
-    )
+    @clientOfEditor(editor)?.formatSourceFile(editor.getPath(), editor.getText(), callback)
+    
 
   searchPublicSymbol: ->
     unless @publicSymbolSearch

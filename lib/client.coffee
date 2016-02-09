@@ -1,11 +1,16 @@
 net = require('net')
-{log, modalMsg} = require './utils'
+{log, modalMsg, getTempDir} = require './utils'
 Documentation = require './features/documentation'
 Swank = require './ensime-client/lisp/swank-protocol'
 _ = require 'lodash'
 shell = require('shell')
+fs = require 'fs-extra'
+path = require 'path'
 
-
+# TODO:
+# Client should be stripped of everything Atom specific
+# to be a node ensime-node client ready to be separated into
+# npm module used bs vscode for instance
 module.exports =
 class Client
   constructor: (port, @httpPort, generalMsgHandler, @serverPid = undefined) ->
@@ -124,16 +129,41 @@ class Client
         editor.setCursorBufferPosition(targetEditorPos)
 
 
-  # TODO: Write out
+
+  getCompletions: (filePath, bufferText, offset, noOfAutocompleteSuggestions, callback) =>
+    tempFilePath = getTempDir() + filePath
+    fs.outputFile(tempFilePath, bufferText, (err) =>
+      if (err)
+        throw err
+      else
+        msg =
+          typehint: "CompletionsReq"
+          fileInfo:
+            file: filePath
+            contentsIn: tempFilePath
+          point: offset
+          maxResults: noOfAutocompleteSuggestions
+          caseSens: false
+          reload: true
+        @post(msg, callback)
+    )
+
   typecheckBuffer: (b, callback = () ->) =>
-    msg =
-      typehint: "TypecheckFileReq"
-      fileInfo:
-        file: b.getPath()
-        contents: b.getText()
+    tempFilePath = getTempDir() + b.getPath()
+    fs.outputFile(tempFilePath, b.getText(), (err) =>
+      if (err)
+        throw err
+      else
+        msg =
+          typehint: "TypecheckFileReq"
+          fileInfo:
+            file: b.getPath()
+            contentsIn: tempFilePath
+        @post(msg, callback)
+    )
 
-    @post(msg, callback)
 
+  
   typecheckFile: (b) =>
     msg =
       typehint: "TypecheckFileReq"
@@ -141,17 +171,28 @@ class Client
         file: b.getPath()
     @post(msg, (result) ->)
 
-  # TODO: make it incremental if perf. issue. Now this requests the whole thing every time
-  # Probably need to branch out code-links and make something more custom with control over life cycle.
-  # then we can ask for symbol-designations while typing incrementally
-  # TODO: Move out to symbol-designations module
+
+  formatSourceFile: (path, contents, callback) ->
+    tempFilePath = getTempDir() + b.getPath()
+    fs.outputFile(tempFilePath, b.getText(), (err) =>
+      if (err)
+        throw err
+      else
+        req =
+          typehint: "FormatOneSourceReq"
+          file: path
+          contentsIn: tempFilePath
+        @post(req, callback)
+    )
+        
+        
+
   getSymbolDesignations: (editor) ->
     b = editor.getBuffer()
     range = b.getRange()
     startO = b.characterIndexForPosition(range.start)
     endO = b.characterIndexForPosition(range.end)
 
-    # TODO: contents:
     msg = {
       "typehint":"SymbolDesignationsReq"
       "requestedTypes": symbolTypehints

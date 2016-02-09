@@ -1,6 +1,11 @@
 path = require 'path'
 fs = require 'fs'
+temp = require 'temp'
 
+
+tempDir = temp.mkdirSync()
+
+getTempDir = -> tempDir
 
 isScalaSource = (editor) ->
   buffer = editor.getBuffer()
@@ -87,5 +92,6 @@ module.exports = {
   withSbt,
   addModalPanel,
   packageDir,
-  mkClasspathFileName
+  mkClasspathFileName,
+  getTempDir
 }

@@ -12,8 +12,7 @@ module.exports = class InstanceManager
   # Just something with a rootDir for now
   registerInstance: (instance) ->
     @instances.push(instance)
-
-
+    
   stopInstance: (dotEnsime) ->
     for instance in @instances when instance.rootDir == dotEnsime.rootDir
       do (instance) =>
@@ -22,12 +21,18 @@ module.exports = class InstanceManager
 
   # optional running ensime client of scala source path O(n)
   instanceOfFile: (path) ->
-    console.log(['instances: ', @instances])
-    
     _.find(@instances, (instance) ->
       path.startsWith(instance.dotEnsime.cacheDir) or instance.isSourceOf(path)
     )
     
+  destroyAll: ->
+    _.foreach(@instances, (instance) ->
+      instance.destroy()
+    )
 
   firstInstance: ->
     return @instances[0]
+
+  isStarted: (dotEnsimePath) ->
+    console.log(['isStarted', @instances])
+    _.some(@instances, (instance) -> instance.dotEnsime.dotEnsimePath == dotEnsimePath)
