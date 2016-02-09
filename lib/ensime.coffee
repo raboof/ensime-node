@@ -86,14 +86,13 @@ module.exports = Ensime =
       order: 12
 
   addCommandsForStoppedState: ->
-    # Need to have a started server and port file
     @stoppedCommands = new CompositeDisposable
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
-    @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @selectAndStopAnEnsime()
+    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:gen-ensime", => @genEnsime()
 
@@ -133,8 +132,8 @@ module.exports = Ensime =
     @instanceManager = new InstanceManager
 
     @addCommandsForStoppedState()
-
-
+    @someInstanceStarted = false
+    
     @controlSubscription = atom.workspace.observeTextEditors (editor) =>
       if isScalaSource(editor)
         instanceLookup = => @instanceManager.instanceOfFile(editor.getPath())
@@ -202,10 +201,10 @@ module.exports = Ensime =
       statusbarView.setText('Compiler restarted!')
 
     else if(typehint == 'ClearAllScalaNotesEvent')
-      typechecking.clearScalaNotes()
+      typechecking?.clearScalaNotes()
 
     else if(typehint == 'NewScalaNotesEvent')
-      typechecking.addScalaNotes(msg)
+      typechecking?.addScalaNotes(msg)
 
     else if(typehint.startsWith('SendBackgroundMessageEvent'))
       statusbarView.setText(msg.detail)
@@ -222,10 +221,18 @@ module.exports = Ensime =
 
     # remove start command and add others
     @stoppedCommands.dispose()
-    @addCommandsForStartedState()
+    
+    # FIXME: - we have had double commands for each instance :) This is a quick and dirty fix
+    if(not @someInstanceStarted)
+      @addCommandsForStartedState()
+      @someInstanceStarted = true
+      
     dotEnsime = parseDotEnsime(dotEnsimePath)
 
-    typechecking = TypeCheckingFeature(@indieLinterRegistry.register("Ensime: #{dotEnsimePath}"))
+    typechecking = undefined
+    if(@indieLinterRegistry)
+      typechecking = TypeCheckingFeature(@indieLinterRegistry.register("Ensime: #{dotEnsimePath}"))
+    
     statusbarView = new StatusbarView()
     statusbarView.init()
 
@@ -292,12 +299,15 @@ module.exports = Ensime =
       (dotEnsime) => not @instanceManager.isStarted(dotEnsime.path)
     )
 
+
   selectAndStopAnEnsime: ->
-    stop = (selectedDotEnsime) =>
+    stopDotEnsime = (selectedDotEnsime) => 
       dotEnsime = parseDotEnsime(selectedDotEnsime.path)
       @instanceManager.stopInstance(dotEnsime)
       @switchToInstance(undefined)
-    @selectDotEnsime(stop, (dotEnsime) => @instanceManager.isStarted(dotEnsime.path))
+
+    @selectDotEnsime(stopDotEnsime, (dotEnsime) => @instanceManager.isStarted(dotEnsime.path))
+  
 
   typecheckAll: ->
     @clientOfActiveTextEditor()?.post( {"typehint": "TypecheckAllReq"}, (msg) ->)
