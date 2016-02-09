@@ -1,17 +1,6 @@
 @import "octicon-mixins";
 @import "octicon-utf-codes";
 
-@error-class: .error;
-@error-gutter-icon:  @stop;
-@error-gutter-background:  @background-color-error;
-@error-gutter-color: lighten(desaturate(@background-color-error, 50%), 50%);
-@error-underline-color:  fade(@background-color-error, 50%);
-
-@warn-class: .warn;
-@warn-gutter-icon:  @alert;
-@warn-gutter-background:  @background-color-warning;
-@warn-gutter-color: lighten(desaturate(@background-color-warning, 50%), 50%);
-@warn-underline-color:  fade(@background-color-warning, 50%);
 
 @implicit-class: .implicit;
 @implicit-gutter-icon:  @info;
@@ -45,8 +34,6 @@
 
 atom-text-editor, atom-text-editor::shadow {
   .inline-marker(@implicit-class,@implicit-underline-color, @implicit-gutter-background,@implicit-gutter-icon, @implicit-gutter-color);
-  .inline-marker(@error-class,@error-underline-color, @error-gutter-background,@error-gutter-icon, @error-gutter-color);
-  .inline-marker(@warn-class,@warn-underline-color, @warn-gutter-background,@warn-gutter-icon, @warn-gutter-color);
 }
 
 implicit-info.select-list.popover-list {
