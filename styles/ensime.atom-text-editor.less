@@ -1,6 +1,23 @@
 @import "octicon-mixins";
 @import "octicon-utf-codes";
 
+@error-class: .error;
+@error-gutter-icon:  @stop;
+@error-gutter-background:  @background-color-error;
+@error-gutter-color: lighten(desaturate(@background-color-error, 50%), 50%);
+@error-underline-color:  fade(@background-color-error, 50%);
+
+@warn-class: .warn;
+@warn-gutter-icon:  @alert;
+@warn-gutter-background:  @background-color-warning;
+@warn-gutter-color: lighten(desaturate(@background-color-warning, 50%), 50%);
+@warn-underline-color:  fade(@background-color-warning, 50%);
+
+@implicit-class: .implicit;
+@implicit-gutter-icon:  @info;
+@implicit-gutter-background:  inherit;
+@implicit-gutter-color: @text-color-info;
+@implicit-underline-color: fade(@text-color-info, 50%);
 
 .highlight.varField .region {
   color: @syntax-color-variable;
@@ -8,6 +25,28 @@
 
 .highlight.valField .region {
   color: @syntax-color-value;
+}
+
+.inline-marker(@name; @underline-color; @gutter-background-color; @gutter-icon; @gutter-icon-color) {
+  .highlight@{name} .region {
+    border-bottom: 1px dashed @underline-color;
+  }
+  .gutter .line-number@{name} {
+    background-color: @gutter-background-color;
+    .icon-right {
+      visibility: visible;
+      &:before {
+        content: @gutter-icon;
+        color: @gutter-icon-color;
+      }
+    }
+  }
+}
+
+atom-text-editor, atom-text-editor::shadow {
+  .inline-marker(@implicit-class,@implicit-underline-color, @implicit-gutter-background,@implicit-gutter-icon, @implicit-gutter-color);
+  .inline-marker(@error-class,@error-underline-color, @error-gutter-background,@error-gutter-icon, @error-gutter-color);
+  .inline-marker(@warn-class,@warn-underline-color, @warn-gutter-background,@warn-gutter-icon, @warn-gutter-color);
 }
 
 implicit-info.select-list.popover-list {

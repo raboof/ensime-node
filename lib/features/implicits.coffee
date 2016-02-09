@@ -64,9 +64,9 @@ class Implicits
         markers = (createMarker info for info in result.infos)
       )
     
-    # If source path is under sourceRoots, typecheck it first
+    # If source path is under sourceRoots and modified, typecheck it first
     if(instance)
-      if(instance.isSourceOf(@editor.getPath()))
+      if(instance.isSourceOf(@editor.getPath()) and @editor.isModified())
         instance.client.typecheckBuffer(b, (typecheckResult) -> continuation())
       else
         continuation()

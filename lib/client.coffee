@@ -124,6 +124,7 @@ class Client
         editor.setCursorBufferPosition(targetEditorPos)
 
 
+  # TODO: Write out
   typecheckBuffer: (b, callback = () ->) =>
     msg =
       typehint: "TypecheckFileReq"

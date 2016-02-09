@@ -151,7 +151,7 @@ module.exports = Ensime =
     @controlSubscription = atom.workspace.observeTextEditors (editor) =>
       if isScalaSource(editor)
         instanceLookup = => @instanceManager.instanceOfFile(editor.getPath())
-        clientLookup = -> instanceLookup?.client
+        clientLookup = -> instanceLookup()?.client
         if atom.config.get('Ensime.enableTypeTooltip')
           if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, clientLookup))
         if not @inlineErrorsControllers.get(editor) then @inlineErrorsControllers.set(editor, new InlineErrors(editor, clientLookup))
