@@ -383,19 +383,15 @@ module.exports = Ensime =
   # Just add registry to delegate registration on instances
   consumeLinter: (@indieLinterRegistry) ->
     
-
+    
   formatCurrentSourceFile: ->
     editor = atom.workspace.getActiveTextEditor()
     cursorPos = editor.getCursorBufferPosition()
-    req =
-      typehint: "FormatOneSourceReq"
-      file:
-        file: editor.getPath()
-        contents: editor.getText()
-    @clientOfEditor(editor)?.post(req, (msg) ->
+    callback = (msg) ->
       editor.setText(msg.text)
       editor.setCursorBufferPosition(cursorPos)
-    )
+    @clientOfEditor(editor)?.formatSourceFile(editor.getPath(), editor.getText(), callback)
+    
 
   searchPublicSymbol: ->
     unless @publicSymbolSearch

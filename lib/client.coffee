@@ -172,6 +172,21 @@ class Client
     @post(msg, (result) ->)
 
 
+  formatSourceFile: (path, contents, callback) ->
+    tempFilePath = getTempDir() + b.getPath()
+    fs.outputFile(tempFilePath, b.getText(), (err) =>
+      if (err)
+        throw err
+      else
+        req =
+          typehint: "FormatOneSourceReq"
+          file: path
+          contentsIn: tempFilePath
+        @post(req, callback)
+    )
+        
+        
+
   getSymbolDesignations: (editor) ->
     b = editor.getBuffer()
     range = b.getRange()
