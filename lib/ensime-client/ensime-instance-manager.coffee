@@ -28,6 +28,10 @@ module.exports = class InstanceManager
       path.startsWith(instance.dotEnsime.cacheDir) or instance.isSourceOf(path)
     )
     
+  destroyAll: ->
+    _.foreach(@instances, (instance) ->
+      instance.destroy()
+    )
 
   firstInstance: ->
     return @instances[0]

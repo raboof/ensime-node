@@ -165,8 +165,9 @@ module.exports = Ensime =
       if(instance)
         instance.statusbarView.show()
 
+    
   deactivate: ->
-    @stopAllEnsimes()
+    @instanceManager.destroyAll()
 
     @subscriptions.dispose()
     @controlSubscription.dispose()
