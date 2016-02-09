@@ -28,7 +28,7 @@ SelectDotEnsimeView = require './views/select-dot-ensime-view'
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 InstanceManager = require './ensime-client/ensime-instance-manager'
-
+Instance = require './ensime-client/ensime-instance'
 
 module.exports = Ensime =
 
@@ -103,8 +103,10 @@ module.exports = Ensime =
 
   addCommandsForStartedState: ->
     @startedCommands = new CompositeDisposable
-    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @selectAndStopAnEnsime()
     @stoppedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
+    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @selectAndStopAnEnsime()
+
+    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:gen-ensime", => @genEnsime()
 
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:mark-implicits", => @markImplicits()
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:unmark-implicits", => @unmarkImplicits()
@@ -124,6 +126,8 @@ module.exports = Ensime =
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:search-public-symbol", => @searchPublicSymbol()
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:import-suggestion", => @getImportSuggestions()
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:organize-imports", => @organizeImports()
+
+    
 
   activate: (state) ->
     # Install deps if not there
@@ -146,12 +150,13 @@ module.exports = Ensime =
 
     @controlSubscription = atom.workspace.observeTextEditors (editor) =>
       if isScalaSource(editor)
-        clientLookup = => @instanceManager.instanceOfFile(editor.getPath())?.client
+        instanceLookup = => @instanceManager.instanceOfFile(editor.getPath())
+        clientLookup = -> instanceLookup()?.client
         if atom.config.get('Ensime.enableTypeTooltip')
           if not @showTypesControllers.get(editor) then @showTypesControllers.set(editor, new ShowTypes(editor, clientLookup))
         if not @inlineErrorsControllers.get(editor) then @inlineErrorsControllers.set(editor, new InlineErrors(editor, clientLookup))
         if not @inlineWarningsControllers.get(editor) then @inlineWarningsControllers.set(editor, new InlineWarnings(editor, clientLookup))
-        if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, clientLookup))
+        if not @implicitControllers.get(editor) then @implicitControllers.set(editor, new Implicits(editor, instanceLookup))
         if not @autotypecheckControllers.get(editor) then @autotypecheckControllers.set(editor, new AutoTypecheck(editor, clientLookup))
 
         @subscriptions.add editor.onDidDestroy () =>
@@ -170,11 +175,9 @@ module.exports = Ensime =
     console.log(['changed from ', @activeInstance, ' to ', instance])
     if(instance != @activeInstance)
       # TODO: create "class" for instance
-      @activeInstance?.typechecking.hide()
       @activeInstance?.statusbarView.hide()
       @activeInstance = instance
       if(instance)
-        instance.typechecking.show()
         instance.statusbarView.show()
 
   deactivate: ->
@@ -242,22 +245,12 @@ module.exports = Ensime =
     @addCommandsForStartedState()
     dotEnsime = parseDotEnsime(dotEnsimePath)
 
-    typechecking = new TypeCheckingFeature()
+    typechecking = TypeCheckingFeature(@indieLinterRegistry.register("Ensime: #{dotEnsimePath}"))
     statusbarView = new StatusbarView()
     statusbarView.init()
 
     startClient(dotEnsime, @statusbarOutput(statusbarView, typechecking), (client) =>
-      instance = {
-        rootDir: dotEnsime.rootDir
-        dotEnsime: dotEnsime
-        client: client
-        statusbarView: statusbarView
-        typechecking: typechecking
-        destroy: () ->
-          client.destroy()
-          statusbarView.destroy()
-          typechecking.destroy()
-      }
+      instance = Instance(dotEnsime, client, statusbarView, typechecking)
 
       @instanceManager.registerInstance(instance)
       if (not @activeInstance)
@@ -304,11 +297,14 @@ module.exports = Ensime =
 
     promise.then (dotEnsimesUnflattened) ->
       dotEnsimes = ({path: path} for path in _.flattenDeep(dotEnsimesUnflattened))
-      console.log('dotEnsimes %o', dotEnsimes)
-      new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->
-        console.log(['selectedDotEnsime: ', selectedDotEnsime])
-        callback(selectedDotEnsime)
-      )
+      if(dotEnsimes.length == 0)
+        modalMsg("No .ensime file found. Please generate with `sbt gen-ensime` or similar")
+      else if (dotEnsimes.length == 1)
+        callback(dotEnsimes[0])
+      else
+        new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->
+          callback(selectedDotEnsime)
+        )
 
   selectAndBootAnEnsime:  ->
     @selectDotEnsime (selectedDotEnsime) => @startInstance(selectedDotEnsime.path)
@@ -405,7 +401,10 @@ module.exports = Ensime =
           undefined
 
     }
-
+    
+  # Just add registry to delegate registration on instances
+  consumeLinter: (@indieLinterRegistry) ->
+    
 
   formatCurrentSourceFile: ->
     editor = atom.workspace.getActiveTextEditor()

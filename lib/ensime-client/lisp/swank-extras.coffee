@@ -3,13 +3,13 @@
 {fromLisp} = require './lisp'
 
 
-typeIsArray = ( value ) ->
-    value and
-        typeof value is 'object' and
-        value instanceof Array and
-        typeof value.length is 'number' and
-        typeof value.splice is 'function' and
-        not ( value.propertyIsEnumerable 'length' )
+typeIsArray = (value) ->
+  value and
+    typeof value is 'object' and
+    value instanceof Array and
+    typeof value.length is 'number' and
+    typeof value.splice is 'function' and
+    not ( value.propertyIsEnumerable 'length' )
 
 arrToJObject = (x) ->
 
@@ -23,7 +23,7 @@ arrToJObject = (x) ->
       result
 
   parseArray = (arr) ->
-      arrToJObject elem for elem in arr
+    arrToJObject elem for elem in arr
 
   if typeIsArray(x)
     firstElem = x[0]

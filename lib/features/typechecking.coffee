@@ -2,74 +2,39 @@
 _ = require 'lodash'
 {log, isScalaSource} = require '../utils'
 
-class ErrorSummary
-  constructor: (@errors, @warnings) ->
-
-  @zero: new ErrorSummary 0, 0
-
-  add: (note) ->
-    switch note.severity.typehint
-      when "NoteError" then new ErrorSummary @errors + 1, @warnings
-      when "NoteWarn" then new ErrorSummary @errors, @warnings + 1
-      else new ErrorSummary @errors, @warnings
-
-  addNotes: (notes) ->
-    _.reduce notes,
-      (sum, note) -> sum.add note,
-      this
-
-  text: () ->
-    switch (@errors + @warnings)
-      when 0 then ''
-      else 'Errors: ' + @errors + ' Warnings: ' + @warnings
 
 
-module.exports =
-class TypeChecking
+module.exports = (indieLinter) ->
+  lints = []
 
-  constructor: ->
-    @messages = new MessagePanelView
-      title: 'Ensime'
-    @messages.attach()
-    @summary = ErrorSummary.zero
-
-  addScalaNotes: (msg) ->
-    notes = msg.notes
-
-    # Nah? We might already have stuff
-    @notesByFile = _.groupBy(notes, (note) -> note.file)
-
-    addNoteToMessageView = (note) =>
-      @messages.add new LineMessageView
-        file: note.file
-        line: note.line
-        character: note.col
-        message: note.msg
-        className: switch note.severity.typehint
-          when "NoteError" then "highlight-error"
-          when "NoteWarn" then "highlight-warning"
-          else ""
-
-    for file, notes of @notesByFile
-      if(not file.includes('dep-src')) # TODO: put under flag
-        addNoteToMessageView note for note in notes
-        @summary = @summary.addNotes(notes)
-
-    @messages.setSummary { summary: @summary.text() }
-
-  hide: ->
-    @messages?.hide()
-
-  show: ->
-    @messages.show()
-
-  clearScalaNotes: ->
-    @messages.clear()
-    @messages.setSummary { summary: '' }
-    @summary = ErrorSummary.zero
-
-  # cleanup
-  destroy: ->
-    @messages?.clear()
-    @messages?.close()
-    @messages = null
+  # API
+  noteToLint = (note) ->
+    filePath: note.file
+    # TODO: This is only true if error doesn't span two lines. Since we don't have buffer here it might be
+    # good enough? Or not?
+    range: [[note.line - 1, note.col - 1], [note.line - 1, note.col - 1 + (note.end - note.beg)]]
+    text: note.msg
+    type: switch note.severity.typehint
+      when "NoteError" then "Error"
+      when "NoteWarn" then "Warning"
+      else ""
+        
+  addLints = (notes) ->
+    for note in notes
+      if(not note.file.includes('dep-src'))
+        lints.push(noteToLint(note))
+    
+  {
+    addScalaNotes: (msg) ->
+      notes = msg.notes
+      addLints(notes)
+      console.log(['lints: ', lints])
+      indieLinter.setMessages(lints)
+      
+    clearScalaNotes: ->
+      lints = []
+      indieLinter.deleteMessages()
+        
+    destroy: ->
+      indieLinter.dispose()
+  }
