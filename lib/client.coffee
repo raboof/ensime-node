@@ -132,10 +132,8 @@ class Client
 
   getCompletions: (filePath, bufferText, offset, noOfAutocompleteSuggestions, callback) =>
     tempFilePath = getTempDir() + filePath
-    console.log(['client.getCompletions', filePath, bufferText, offset, noOfAutocompleteSuggestions, callback])
     fs.outputFile(tempFilePath, bufferText, (err) =>
       if (err)
-        consolelog(['client.getCompletions error'])
         throw err
       else
         msg =
