@@ -28,6 +28,7 @@
   "package-dependencies": {
     "hyperclick": "whatever",
     "language-scala": "whatever",
+    "linter": "whatever",
     "browser-plus": "whatever"
   },
   "providedServices": {
