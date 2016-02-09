@@ -258,7 +258,7 @@ module.exports = Ensime =
       @deleteControllers editor
 
   # Shows dialog to select a .ensime under this project paths and calls callback with parsed
-  selectDotEnsime: (callback) ->
+  selectDotEnsime: (callback, filter = -> true) ->
     dirs = atom.project.getPaths()
     globTask = Promise.promisify(glob)
     promises = dirs.map (dir) ->
@@ -275,23 +275,29 @@ module.exports = Ensime =
 
     promise.then (dotEnsimesUnflattened) ->
       dotEnsimes = ({path: path} for path in _.flattenDeep(dotEnsimesUnflattened))
-      if(dotEnsimes.length == 0)
+      filteredDotEnsime = _.filter(dotEnsimes, filter)
+      
+      if(filteredDotEnsime.length == 0)
         modalMsg("No .ensime file found. Please generate with `sbt gen-ensime` or similar")
-      else if (dotEnsimes.length == 1)
-        callback(dotEnsimes[0])
+      else if (filteredDotEnsime.length == 1)
+        callback(filteredDotEnsime[0])
       else
-        new SelectDotEnsimeView(dotEnsimes, (selectedDotEnsime) ->
+        new SelectDotEnsimeView(filteredDotEnsime, (selectedDotEnsime) ->
           callback(selectedDotEnsime)
         )
 
-  selectAndBootAnEnsime:  ->
-    @selectDotEnsime (selectedDotEnsime) => @startInstance(selectedDotEnsime.path)
+  selectAndBootAnEnsime: ->
+    @selectDotEnsime(
+      (selectedDotEnsime) => @startInstance(selectedDotEnsime.path),
+      (dotEnsime) => not @instanceManager.isStarted(dotEnsime.path)
+    )
 
   selectAndStopAnEnsime: ->
-    @selectDotEnsime (selectedDotEnsime) =>
+    stop = (selectedDotEnsime) =>
       dotEnsime = parseDotEnsime(selectedDotEnsime.path)
       @instanceManager.stopInstance(dotEnsime)
       @switchToInstance(undefined)
+    @selectDotEnsime(stop, (dotEnsime) => @instanceManager.isStarted(dotEnsime.path))
 
   typecheckAll: ->
     @clientOfActiveTextEditor()?.post( {"typehint": "TypecheckAllReq"}, (msg) ->)
