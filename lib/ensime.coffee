@@ -76,7 +76,7 @@ module.exports = Ensime =
     noOfAutocompleteSuggestions:
       description: "Number of autocomplete suggestions requested of server"
       type: 'integer'
-      default: 5
+      default: 10
       order: 11
     documentationSplit:
       description: "Where to open ScalaDoc"
