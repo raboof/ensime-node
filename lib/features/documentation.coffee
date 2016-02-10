@@ -34,7 +34,9 @@ class Documentation
   @openDoc = (url) ->
     split = atom.config.get('Ensime.documentationSplit')
     switch split
-      when 'external-browser' then shell.openExternal(url)
+      when 'external-browser'
+        @shell = require 'shell' if (not @shell)
+        @shell.openExternal(url)
       else atom.workspace.open(url, {split: split})
 
 module.exports = Documentation
