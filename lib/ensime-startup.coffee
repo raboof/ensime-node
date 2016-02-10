@@ -1,6 +1,7 @@
 # Download and startup of ensime server
-fs = require('fs')
-path = require('path')
+fs = require 'fs'
+path = require 'path'
+_ = require 'lodash'
 {exec, spawn} = require('child_process')
 {log, modalMsg, projectPath, packageDir,
  withSbt, mkClasspathFileName} = require('./utils')
@@ -11,7 +12,6 @@ remote = require 'remote'
 {parseDotEnsime} = require './ensime-client/dotensime-utils'
 Client = require './client'
 {updateEnsimeServer} = require './ensime-server-update'
-
 chokidar = require 'chokidar'
 
 ###
@@ -70,7 +70,7 @@ startClient = (parsedDotEnsime, generalHandler, callback) ->
 
   log = console.log.bind(console)
 
-  if fs.existsSync(portFilePath) && fs.existsSync(mkHttpPortFilePath)
+  if fs.existsSync(portFilePath) && fs.existsSync(httpPortFilePath)
     # server running, no need to start
     port = fs.readFileSync(portFilePath).toString()
     httpPort = removeTrainingNewline(fs.readFileSync(httpPortFilePath).toString())
@@ -123,26 +123,42 @@ startEnsimeServer = (parsedDotEnsime, pidCallback) ->
 doStartEnsimeServer = (parsedDotEnsime, pidCallback) ->
   cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
   toolsJar = "#{parsedDotEnsime.javaHome}#{path.sep}lib#{path.sep}tools.jar"
-  classpath = toolsJar + path.delimiter + fs.readFileSync(cpF, {encoding: 'utf8'})
-  javaCmd = "#{parsedDotEnsime.javaHome}#{path.sep}bin#{path.sep}java"
-  ensimeServerFlags = "#{atom.config.get('Ensime.ensimeServerFlags')}"
-  args = ["-classpath", "#{classpath}", "-Densime.config=#{parsedDotEnsime.dotEnsimePath}", "-Densime.protocol=jerk"]
-  if ensimeServerFlags.length > 0
-    args.push ensimeServerFlags  ## Weird, but extra " " broke everyting
+  
+  fs.readFile(cpF, {encoding: 'utf8'}, (err, classpathFileContents) ->
+    if(err)
+      throw err
+      
+    console.log ['classpathFileContents', classpathFileContents]
+    
+    classpathList = _.split(classpathFileContents, path.delimiter)
+    # Sort classpath so any jar containing monkey comes first
+    sorter = (jarPath) -> not /monkey/.test(jarPath)
+    tokenizedClasspathEntries = _.split(classpathFileContents, path.delimiter)
+    tokenizedClasspathEntries.push(toolsJar)
+    console.log ['tokenizedClasspathEntries', tokenizedClasspathEntries]
+    
+    classpath = _.sortBy(tokenizedClasspathEntries, sorter).join(path.delimiter)
+    console.log("classpath: #{classpath}")
+    javaCmd = "#{parsedDotEnsime.javaHome}#{path.sep}bin#{path.sep}java"
+    ensimeServerFlags = "#{atom.config.get('Ensime.ensimeServerFlags')}"
+    args = ["-classpath", "#{classpath}", "-Densime.config=#{parsedDotEnsime.dotEnsimePath}", "-Densime.protocol=jerk"]
+    if ensimeServerFlags.length > 0
+      args.push ensimeServerFlags  ## Weird, but extra " " broke everyting
 
-  args.push "org.ensime.server.Server"
+    args.push "org.ensime.server.Server"
 
-  log("Starting ensime server with: #{javaCmd} #{args.join(' ')}")
+    log("Starting ensime server with: #{javaCmd} #{args.join(' ')}")
 
-  serverLog = fs.createWriteStream(mkServerLogFilePath(parsedDotEnsime.cacheDir))
+    serverLog = fs.createWriteStream(mkServerLogFilePath(parsedDotEnsime.cacheDir))
 
-  pid = spawn(javaCmd, args, {
-    detached: atom.config.get('Ensime.runServerDetached')
-  })
-  pid.stdout.pipe(serverLog) # TODO: have a screenbuffer tail -f this file.
-  pid.stderr.pipe(serverLog)
-  pid.stdin.end()
-  pidCallback(pid)
+    pid = spawn(javaCmd, args, {
+      detached: atom.config.get('Ensime.runServerDetached')
+    })
+    pid.stdout.pipe(serverLog) # TODO: have a screenbuffer tail -f this file.
+    pid.stderr.pipe(serverLog)
+    pid.stdin.end()
+    pidCallback(pid)
+  )
 
 
 module.exports = {
