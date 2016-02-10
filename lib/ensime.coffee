@@ -94,8 +94,6 @@ module.exports = Ensime =
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:stop", => @selectAndStopAnEnsime()
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:start", => @selectAndBootAnEnsime()
 
-    @startedCommands.add atom.commands.add 'atom-workspace', "ensime:gen-ensime", => @genEnsime()
-
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:mark-implicits", => @markImplicits()
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:unmark-implicits", => @unmarkImplicits()
     @startedCommands.add atom.commands.add scalaSourceSelector, "ensime:show-implicits", => @showImplicits()
@@ -307,7 +305,6 @@ module.exports = Ensime =
       @switchToInstance(undefined)
 
     @selectDotEnsime(stopDotEnsime, (dotEnsime) => @instanceManager.isStarted(dotEnsime.path))
-  
 
   typecheckAll: ->
     @clientOfActiveTextEditor()?.post( {"typehint": "TypecheckAllReq"}, (msg) ->)
