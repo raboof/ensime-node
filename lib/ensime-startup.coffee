@@ -70,7 +70,7 @@ startClient = (parsedDotEnsime, generalHandler, callback) ->
 
   log = console.log.bind(console)
 
-  if fs.existsSync(portFilePath) && fs.existsSync(mkHttpPortFilePath)
+  if fs.existsSync(portFilePath) && fs.existsSync(httpPortFilePath)
     # server running, no need to start
     port = fs.readFileSync(portFilePath).toString()
     httpPort = removeTrainingNewline(fs.readFileSync(httpPortFilePath).toString())
