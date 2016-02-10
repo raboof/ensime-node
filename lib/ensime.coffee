@@ -82,7 +82,7 @@ module.exports = Ensime =
       description: "Where to open ScalaDoc"
       type: 'string'
       default: 'right'
-      enum: ['right', 'left', 'top', 'bottom', 'external-browser']
+      enum: ['right', 'external-browser']
       order: 12
 
   addCommandsForStoppedState: ->
