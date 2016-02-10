@@ -3,7 +3,6 @@ net = require('net')
 Documentation = require './features/documentation'
 Swank = require './ensime-client/lisp/swank-protocol'
 _ = require 'lodash'
-shell = require('shell')
 fs = require 'fs-extra'
 path = require 'path'
 
