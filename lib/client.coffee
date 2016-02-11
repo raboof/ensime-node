@@ -92,7 +92,7 @@ class Client
 
     @post(req, (msg) =>
       switch msg.typehint
-        when "FalseResponse" then log("no doc")
+        when "FalseResponse" then atom.notifications.addError("No documentation found")
         else Documentation.openDoc(Documentation.formUrl("localhost", @httpPort, msg.text))
     )
 
@@ -114,7 +114,7 @@ class Client
       if(pos)
         @goToPosition(pos)
       else
-        log("No declPos in response from Ensime, cannot go anywhere")
+        atom.notifications.addError("No declPos in response from Ensime server, cannot go anywhere :(")
     )
 
 
@@ -172,15 +172,16 @@ class Client
 
 
   formatSourceFile: (path, contents, callback) ->
-    tempFilePath = getTempDir() + b.getPath()
-    fs.outputFile(tempFilePath, b.getText(), (err) =>
+    tempFilePath = getTempDir() + path
+    fs.outputFile(tempFilePath, contents, (err) =>
       if (err)
         throw err
       else
         req =
           typehint: "FormatOneSourceReq"
-          file: path
-          contentsIn: tempFilePath
+          file:
+            file: path
+            contentsIn: tempFilePath
         @post(req, callback)
     )
         
