@@ -114,7 +114,7 @@ class Client
       if(pos)
         @goToPosition(pos)
       else
-        log("No declPos in response from Ensime, cannot go anywhere")
+        atom.notifications.addError("No declPos in response from Ensime server, cannot go anywhere :(")
     )
 
 
