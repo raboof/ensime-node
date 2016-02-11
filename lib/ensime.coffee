@@ -117,8 +117,8 @@ module.exports = Ensime =
 
   activate: (state) ->
     # Install deps if not there
-    apd = require('atom-package-dependencies')
-    apd.install()
+    (require 'atom-package-deps').install().then ->
+      console.log('Ensime dependencies installed, good to go!')
 
     @subscriptions = new CompositeDisposable
 
@@ -299,7 +299,7 @@ module.exports = Ensime =
 
 
   selectAndStopAnEnsime: ->
-    stopDotEnsime = (selectedDotEnsime) => 
+    stopDotEnsime = (selectedDotEnsime) =>
       dotEnsime = parseDotEnsime(selectedDotEnsime.path)
       @instanceManager.stopInstance(dotEnsime)
       @switchToInstance(undefined)
