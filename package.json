@@ -1,7 +1,7 @@
 {
   "name": "Ensime",
   "main": "./lib/ensime",
-  "version": "0.35.1",
+  "version": "0.35.2",
   "description": "Ensime integration for atom",
   "repository": "https://github.com/ensime/ensime-atom",
   "license": "MIT",
@@ -25,7 +25,12 @@
     "temp": "^0.8.3",
     "vue": "1.0.0-csp"
   },
-  "package-deps": ["hyperclick", "language-scala", "linter", "browser-plus"],
+  "package-deps": [
+    "hyperclick",
+    "language-scala",
+    "linter",
+    "browser-plus"
+  ],
   "providedServices": {
     "autocomplete.provider": {
       "versions": {
