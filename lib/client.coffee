@@ -92,7 +92,7 @@ class Client
 
     @post(req, (msg) =>
       switch msg.typehint
-        when "FalseResponse" then log("no doc")
+        when "FalseResponse" then atom.notifications.addError("No documentation found")
         else Documentation.openDoc(Documentation.formUrl("localhost", @httpPort, msg.text))
     )
 
