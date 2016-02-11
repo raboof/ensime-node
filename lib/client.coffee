@@ -172,15 +172,16 @@ class Client
 
 
   formatSourceFile: (path, contents, callback) ->
-    tempFilePath = getTempDir() + b.getPath()
-    fs.outputFile(tempFilePath, b.getText(), (err) =>
+    tempFilePath = getTempDir() + path
+    fs.outputFile(tempFilePath, contents, (err) =>
       if (err)
         throw err
       else
         req =
           typehint: "FormatOneSourceReq"
-          file: path
-          contentsIn: tempFilePath
+          file:
+            file: path
+            contentsIn: tempFilePath
         @post(req, callback)
     )
         
