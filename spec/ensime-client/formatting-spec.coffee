@@ -107,7 +107,49 @@ describe 'formatType', ->
       }
     expect(formatType(type)).toBe("=> T")
 
-
+  it "should format <repeated>[X] as X*", ->
+    type =
+      "name": "<repeated>",
+      "fullName": "scala.<repeated>",
+      "typehint": "BasicTypeInfo",
+      "typeArgs": [
+        {
+          "name": "ColumnOption",
+          "fullName": "slick.ast.ColumnOption",
+          "typehint": "BasicTypeInfo",
+          "typeArgs": [
+            {
+              "name": "C",
+              "fullName": "slick.profile.C",
+              "typehint": "BasicTypeInfo",
+              "typeArgs": [
+                
+              ],
+              "members": [
+                
+              ],
+              "declAs": {
+                "typehint": "Nil"
+              }
+            }
+          ],
+          "members": [
+            
+          ],
+          "declAs": {
+            "typehint": "Class"
+          }
+        }
+      ],
+      "members": [
+        
+      ],
+      "declAs": {
+        "typehint": "Class"
+      }
+    expect(formatType(type)).toBe("slick.ast.ColumnOption[C]*")
+              
+              
   it "should format implicit params", ->
     input = {
       "params": [

@@ -117,7 +117,7 @@ module.exports = Ensime =
 
   activate: (state) ->
     # Install deps if not there
-    (require 'atom-package-deps').install().then ->
+    (require 'atom-package-deps').install('Ensime').then ->
       console.log('Ensime dependencies installed, good to go!')
 
     @subscriptions = new CompositeDisposable
