@@ -57,6 +57,8 @@ formatType = (theType) ->
       formattedTypeArgs = (formatType(typeArg) for typeArg in typeArgs)
       if theType.fullName == 'scala.<byname>'
         "=> " + formattedTypeArgs.join(", ")
+      else if theType.fullName == 'scala.<repeated>'
+        formattedTypeArgs.join(", ") + "*"
       else if theType.fullName == "scala.Function1"
         [i, o] = formattedTypeArgs
         i + " => " + o
@@ -70,10 +72,10 @@ formatType = (theType) ->
 
 
 formatImplicitInfo = (info) ->
-    if info.typehint == 'ImplicitParamInfo'
-        "Implicit parameters added to call of #{info.fun.localName}: (#{_.map(info.params, (p) -> p.localName).join(", ")})"
-    else if info.typehint == 'ImplicitConversionInfo'
-      "Implicit conversion: #{info.fun.localName}"
+  if info.typehint == 'ImplicitParamInfo'
+    "Implicit parameters added to call of #{info.fun.localName}: (#{_.map(info.params, (p) -> p.localName).join(", ")})"
+  else if info.typehint == 'ImplicitConversionInfo'
+    "Implicit conversion: #{info.fun.localName}"
 
 module.exports = {
   formatCompletionsSignature,
