@@ -101,14 +101,8 @@ class Client
 
   goToTypeAtPoint: (textBuffer, bufferPosition) =>
     offset = textBuffer.characterIndexForPosition(bufferPosition)
-    file = textBuffer.getPath()
-
-    req =
-      typehint: "SymbolAtPointReq"
-      file: file
-      point: offset
-
-    @post(req, (msg) =>
+  
+    getSymbolAtPoint(textBuffer.getPath(), offset, (msg) =>
       pos = msg.declPos
       # Sometimes no pos
       if(pos)
@@ -146,6 +140,22 @@ class Client
           reload: true
         @post(msg, callback)
     )
+    
+    
+ 
+  getSymbolAtPoint: (path, offset, callback) ->
+    req =
+      typehint: "SymbolAtPointReq"
+      file: path
+      point: offset
+    @post(req, (msg) ->
+      if msg.typehint == 'SymbolInfo'
+        callback(msg)
+      else
+        # if msg.typehint == 'FalseResponse'
+        # do nothing
+    )
+    
 
   typecheckBuffer: (b, callback = () ->) =>
     tempFilePath = getTempDir() + b.getPath()

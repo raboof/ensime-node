@@ -51,8 +51,6 @@ module.exports = class ImplicitInfo
     @addKeyboardInteraction()
     @active = true
 
-
-
   cancel: =>
     @emitter.emit('did-cancel')
     @dispose()
@@ -60,9 +58,7 @@ module.exports = class ImplicitInfo
   onDidCancel: (fn) ->
     @emitter.on('did-cancel', fn)
 
-  dispose: =>
-    @emitter.emit('did-dispose')
-
+  
   onDidDispose: (fn) ->
     @emitter.on('did-dispose', fn)
 
@@ -72,8 +68,7 @@ module.exports = class ImplicitInfo
   onDidConfirmSelection: =>
     @emitter.on('did-confirm', fn)
 
-
-  dispose: ->
+  dispose: =>
     @subscriptions.dispose()
     @movementCommandSubscriptions?.dispose()
     @emitter.emit('did-dispose')

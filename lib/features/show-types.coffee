@@ -1,4 +1,4 @@
-{TooltipView} = require '../views/tooltip-view'
+TypeHoverElement = require '../views/tooltip-view'
 $ = require 'jquery'
 {bufferPositionFromMouseEvent, pixelPositionFromMouseEvent, getElementsByClass} = require '../utils'
 {formatType} = require '../formatting'
@@ -24,44 +24,20 @@ class ShowTypes
     @disposables.add @editor.onDidDestroy =>
       @deactivate()
 
-
   # get expression type under mouse cursor and show it
   showExpressionType: (e) ->
-    return if @exprTypeTooltip?
+    return if @marker?
 
     pixelPt = pixelPositionFromMouseEvent(@editor, e)
     bufferPt = bufferPositionFromMouseEvent(@editor, e)
-    nextCharPixelPt = @editorView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column + 1])
+    
+    offset = @editor.getBuffer().characterIndexForPosition(bufferPt)
 
-    return if pixelPt.left >= nextCharPixelPt.left
-
-    # find out show position
-    rectOffset = @editor.getLineHeightInPixels() * 0.7
-    tooltipRect =
-      left: e.clientX
-      right: e.clientX
-      top: e.clientY - rectOffset
-      bottom: e.clientY + rectOffset
-
-    # create tooltip with pending
-    @exprTypeTooltip = new TooltipView(tooltipRect)
-
-
-    textBuffer = @editor.getBuffer()
-    offset = textBuffer.characterIndexForPosition(bufferPt)
-
-    req =
-      typehint: "SymbolAtPointReq"
-      #typehint: "TypeAtPointReq"
-      file: @editor.getPath()
-      point: offset
-
-    @clientLookup()?.post(req, (msg) =>
-      if msg.typehint == 'SymbolInfo'
-        @exprTypeTooltip?.updateText(formatType(msg.type))
-      else
-        # if msg.typehint == 'FalseResponse'
-        # do nothing
+    @clientLookup()?.getSymbolAtPoint(@editor.getPath(), offset, (msg) =>
+      @marker = @editor.markBufferPosition(bufferPt)
+      if(@marker)
+        @overlayDecoration = @editor.decorateMarker(@marker, {type: 'overlay', item: new TypeHoverElement().initialize(formatType(msg.type)), class: "blabla"})
+        console.log(['overlay: ', @overlayDecoration])
     )
 
   deactivate: ->
@@ -76,8 +52,10 @@ class ShowTypes
     @hideExpressionType()
 
   hideExpressionType: ->
-    if @exprTypeTooltip?
-      @exprTypeTooltip.remove()
-      @exprTypeTooltip = null
+    if(@firstMarker)
+      @marker?.destroy()
+    @firstMarker = true
+    @marker = null
+    
 
 module.exports = ShowTypes
