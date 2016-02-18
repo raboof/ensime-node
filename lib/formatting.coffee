@@ -21,54 +21,73 @@ formatCompletionsSignature = (paramLists) ->
 
 
 
-formatParam = (param) ->
-  result = formatType(param[1])
-  "#{param[0]}: #{result}"
 
-formatParamSection = (paramSection) ->
-  p = (formatParam(param) for param in paramSection.params)
-  p.join(", ")
-
-formatParamSections = (paramSections) ->
-  sections = (formatParamSection(paramSection) for paramSection in paramSections)
-  "(" + sections.join(")(") + ")"
 
 
 functionMatcher = /scala\.Function\d{1,2}/
 scalaPackageMatcher = /scala\.([\s\S]*)/
 
+
+formatTypeNameAsString = (theType) ->
+  scalaPackage = scalaPackageMatcher.exec(theType.fullName)
+  if(scalaPackage)
+    scalaPackage[1]
+  else
+    if theType.declAs.typehint in ['Class', 'Trait', 'Object', 'Interface'] then theType.fullName else theType.name
+
+formatTypeNameAsHtml = (theType) ->
+  # TODO: Add links
+  scalaPackage = scalaPackageMatcher.exec(theType.fullName)
+  if(scalaPackage)
+    scalaPackage[1]
+  else
+    if theType.declAs.typehint in ['Class', 'Trait', 'Object', 'Interface'] then theType.fullName else theType.name
+    
+    
 # For hover
-formatType = (theType) ->
-  if(theType.typehint == "ArrowTypeInfo")
-    formatParamSections(theType.paramSections) + ": " + formatType(theType.resultType)
-  else if(theType.typehint == "BasicTypeInfo")
-    typeArgs = theType.typeArgs
+formatType = (typeNameFormatter) -> (theType) ->
+  recur = (theType) ->
+    formatParam = (param) ->
+      type = recur(param[1])
+      "#{param[0]}: #{type}"
+        
+    formatParamSection = (paramSection) ->
+      p = (formatParam(param) for param in paramSection.params)
+      p.join(", ")
 
-    scalaPackage = scalaPackageMatcher.exec(theType.fullName)
-    name =
-      if(scalaPackage)
-        scalaPackage[1]
+    formatParamSections = (paramSections) ->
+      sections = (formatParamSection(paramSection) for paramSection in paramSections)
+      "(" + sections.join(")(") + ")"
+
+      
+    formatBasicType = (theType) ->
+      name = typeNameFormatter(theType)
+        
+      typeArgs = theType.typeArgs
+      if not typeArgs || typeArgs.length == 0
+        name
       else
-        if theType.declAs.typehint in ['Class', 'Trait', 'Object', 'Interface'] then theType.fullName else theType.name
+        formattedTypeArgs = (recur(typeArg) for typeArg in typeArgs)
+        if theType.fullName == 'scala.<byname>'
+          "=> " + formattedTypeArgs.join(", ")
+        else if theType.fullName == 'scala.<repeated>'
+          formattedTypeArgs.join(", ") + "*"
+        else if theType.fullName == "scala.Function1"
+          [i, o] = formattedTypeArgs
+          i + " => " + o
+        else if functionMatcher.test(theType.fullName)
+          [params..., result] = formattedTypeArgs
+          "(#{params.join(", ")}) => #{result}"
+        else
+          name + "[#{formattedTypeArgs.join(", ")}]"
 
-    if not typeArgs || typeArgs.length == 0
-      name
-    else
-      formattedTypeArgs = (formatType(typeArg) for typeArg in typeArgs)
-      if theType.fullName == 'scala.<byname>'
-        "=> " + formattedTypeArgs.join(", ")
-      else if theType.fullName == 'scala.<repeated>'
-        formattedTypeArgs.join(", ") + "*"
-      else if theType.fullName == "scala.Function1"
-        [i, o] = formattedTypeArgs
-        i + " => " + o
-      else if functionMatcher.test(theType.fullName)
-        [params..., result] = formattedTypeArgs
-        "(#{params.join(", ")}) => #{result}"
-      else
-        name + "[#{formattedTypeArgs.join(", ")}]"
-
-
+    if(theType.typehint == "ArrowTypeInfo")
+      formatParamSections(theType.paramSections) + ": " + recur(theType.resultType)
+    else if(theType.typehint == "BasicTypeInfo")
+      formatBasicType(theType)
+  
+  recur(theType)
+  
 
 
 formatImplicitInfo = (info) ->
@@ -79,6 +98,7 @@ formatImplicitInfo = (info) ->
 
 module.exports = {
   formatCompletionsSignature,
-  formatType,
+  formatType: formatType(formatTypeNameAsString),
+  formatTypeAsHtml: formatType(formatTypeNameAsHtml),
   formatImplicitInfo
 }

@@ -102,7 +102,7 @@ class Client
   goToTypeAtPoint: (textBuffer, bufferPosition) =>
     offset = textBuffer.characterIndexForPosition(bufferPosition)
   
-    getSymbolAtPoint(textBuffer.getPath(), offset, (msg) =>
+    @getSymbolAtPoint(textBuffer.getPath(), offset, (msg) =>
       pos = msg.declPos
       # Sometimes no pos
       if(pos)

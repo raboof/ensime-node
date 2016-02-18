@@ -1,4 +1,4 @@
-TypeHoverElement = require '../../lib/views/tooltip-view'
+TypeHoverElement = require '../../lib/views/type-hover-element'
 
 describe "when we add a tooltip view", ->
   [typeHoverElement] = []

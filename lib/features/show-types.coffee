@@ -1,4 +1,4 @@
-TypeHoverElement = require '../views/tooltip-view'
+TypeHoverElement = require '../views/type-hover-element'
 $ = require 'jquery'
 {bufferPositionFromMouseEvent, pixelPositionFromMouseEvent, getElementsByClass} = require '../utils'
 {formatType} = require '../formatting'
@@ -34,10 +34,10 @@ class ShowTypes
     offset = @editor.getBuffer().characterIndexForPosition(bufferPt)
 
     @clientLookup()?.getSymbolAtPoint(@editor.getPath(), offset, (msg) =>
+      @marker?.destroy()
       @marker = @editor.markBufferPosition(bufferPt)
       if(@marker)
         @overlayDecoration = @editor.decorateMarker(@marker, {type: 'overlay', item: new TypeHoverElement().initialize(formatType(msg.type)), class: "blabla"})
-        console.log(['overlay: ', @overlayDecoration])
     )
 
   deactivate: ->
@@ -52,9 +52,7 @@ class ShowTypes
     @hideExpressionType()
 
   hideExpressionType: ->
-    if(@firstMarker)
-      @marker?.destroy()
-    @firstMarker = true
+    @marker?.destroy()
     @marker = null
     
 
