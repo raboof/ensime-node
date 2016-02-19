@@ -1,6 +1,6 @@
 {CompositeDisposable} = require 'atom'
 _ = require 'lodash'
-{formatImplicitInfo} = require '../formatting'
+{formatImplicitInfo} = require '../ensime-client/formatting'
 
 ListTemplate = """
   <div class="list-scroller">
@@ -21,7 +21,6 @@ class ImplicitInfoView extends HTMLElement
     @classList.add('popover-list', 'select-list')
 
   attachedCallback: ->
-    # @parentElement.classList.add('implicit-infos')
     @addActiveClassToEditor()
 
   renderList: ->

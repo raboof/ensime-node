@@ -19,15 +19,26 @@ formatCompletionsSignature = (paramLists) ->
     ""
 
 
-
-
-
-
-
 functionMatcher = /scala\.Function\d{1,2}/
 scalaPackageMatcher = /scala\.([\s\S]*)/
 
+refinementMatcher = /(.*)\$<refinement>/ # scalaz.syntax.ApplyOps$<refinement>
 
+fixQualifiedTypeName = (theType) ->
+  refinementMatch = refinementMatcher.exec(theType.fullName)
+  if(refinementMatch)
+    refinementMatch[1]
+  else
+    theType.fullName
+    
+fixShortTypeName = (theType) ->
+  refinementMatch = refinementMatcher.exec(theType.fullName)
+  if(refinementMatch)
+    _.last(_.split(theType.fullName, "."))
+  else
+    theType.name
+    
+    
 formatTypeNameAsString = (theType) ->
   scalaPackage = scalaPackageMatcher.exec(theType.fullName)
   if(scalaPackage)
@@ -35,16 +46,10 @@ formatTypeNameAsString = (theType) ->
   else
     if theType.declAs.typehint in ['Class', 'Trait', 'Object', 'Interface'] then theType.fullName else theType.name
 
-formatTypeNameAsHtml = (theType) ->
-  # TODO: Add links
-  scalaPackage = scalaPackageMatcher.exec(theType.fullName)
-  if(scalaPackage)
-    scalaPackage[1]
-  else
-    if theType.declAs.typehint in ['Class', 'Trait', 'Object', 'Interface'] then theType.fullName else theType.name
-    
+
     
 # For hover
+# typeNameFormatter: function from {name, fullName} -> Html/String
 formatType = (typeNameFormatter) -> (theType) ->
   recur = (theType) ->
     formatParam = (param) ->
@@ -99,6 +104,8 @@ formatImplicitInfo = (info) ->
 module.exports = {
   formatCompletionsSignature,
   formatType: formatType(formatTypeNameAsString),
-  formatTypeAsHtml: formatType(formatTypeNameAsHtml),
-  formatImplicitInfo
+  formatTypeWith: formatType,
+  formatImplicitInfo,
+  fixQualifiedTypeName,
+  fixShortTypeName
 }

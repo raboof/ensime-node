@@ -8,7 +8,7 @@ module.exports = class ImplicitInfo
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.commands.add 'atom-text-editor.ensime-implicits-active',
       'ensime:applyImplicit': @confirmSelection,
-      'ensime:cancel': @cancel
+      'core:cancel': @cancel
 
     @overlayMarker = @editor.markBufferPosition(pos)
     overlayDecoration = @editor.decorateMarker(@overlayMarker, {type: 'overlay', item: this, position: 'head'})

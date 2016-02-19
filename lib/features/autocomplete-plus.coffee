@@ -1,4 +1,4 @@
-{formatCompletionsSignature} = require '../formatting'
+{formatCompletionsSignature} = require '../ensime-client/formatting'
 SubAtom = require 'sub-atom'
 
 module.exports = (clientLookup) ->

@@ -1,4 +1,3 @@
-
 _ = require 'lodash'
 
 module.exports = (dotEnsime, client, statusbarView, typechecking) ->
@@ -8,6 +7,7 @@ module.exports = (dotEnsime, client, statusbarView, typechecking) ->
     client: client
     statusbarView: statusbarView
     typechecking: typechecking
+    
     destroy: () ->
       client.destroy()
       statusbarView.destroy()

@@ -181,6 +181,13 @@ class Client
     @post(msg, (result) ->)
 
 
+  symbolByName: (qualifiedName, callback) ->
+    msg =
+      typehint: 'SymbolByNameReq'
+      typeFullName: qualifiedName
+    @post(msg, callback)
+    
+    
   formatSourceFile: (path, contents, callback) ->
     tempFilePath = getTempDir() + path
     fs.outputFile(tempFilePath, contents, (err) =>

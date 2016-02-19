@@ -6,7 +6,6 @@ class AutoTypecheck
 
     buffer = @editor.getBuffer()
     @disposables.add buffer.onDidSave () =>
-      console.log('onDidSave')
       # typecheck file on save
       if atom.config.get('Ensime.typecheckWhen') in ['save', 'typing']
         @clientLookup()?.typecheckFile(@editor.getBuffer())

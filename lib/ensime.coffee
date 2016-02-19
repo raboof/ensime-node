@@ -25,10 +25,10 @@ ImplicitInfoView = require './views/implicit-info-view'
 SelectDotEnsimeView = require './views/select-dot-ensime-view'
 {parseDotEnsime, dotEnsimesFilter} = require './ensime-client/dotensime-utils'
 
-scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 InstanceManager = require './ensime-client/ensime-instance-manager'
 Instance = require './ensime-client/ensime-instance'
 
+scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 module.exports = Ensime =
 
   config:
@@ -68,6 +68,11 @@ module.exports = Ensime =
       type: 'boolean'
       default: true
       order: 7
+    richTypeTooltip:
+      description: "Use rich type tooltip with hrefs"
+      type: 'boolean'
+      default: true
+      order: 8
     markImplicitsAutomatically:
       description: "Mark implicits on buffer load and save"
       type: 'boolean'
