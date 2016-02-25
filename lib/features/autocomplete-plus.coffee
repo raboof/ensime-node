@@ -33,4 +33,6 @@ module.exports = (clientLookup) ->
           autocompletions = (translate c for c in completions)
           callback(autocompletions)
       )
+    onDidInsertSuggestion: (thang) ->
+      console.log(['inserted suggestion', thang])
   }

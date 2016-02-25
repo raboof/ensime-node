@@ -36,59 +36,64 @@ module.exports = Ensime =
       description: 'Version of Ensime server',
       type: 'string',
       default: "0.9.10-SNAPSHOT",
-      order: 1
+      order: 10
     sbtExec:
       description: "Full path to sbt. 'which sbt'"
       type: 'string'
       default: ''
-      order: 2
+      order: 20
+    useCoursierToBootstrapServer:
+      description: "User Coursier for bootstrapping server (experimental)'"
+      type: 'boolean'
+      default: false
+      order: 30
     ensimeServerFlags:
       description: 'java flags for ensime server startup'
       type: 'string'
       default: ''
-      order: 3
+      order: 40
     devMode:
       description: 'Turn on for extra console logging during development'
       type: 'boolean'
       default: false
-      order: 4
+      order: 50
     runServersDetached:
       description: "Run the Ensime servers as a detached processes. Useful while developing"
       type: 'boolean'
       default: false
-      order: 5
+      order: 60
     typecheckWhen:
       description: "When to typecheck"
       type: 'string'
       default: 'typing'
       enum: ['command', 'save', 'typing']
-      order: 6
+      order: 70
     enableTypeTooltip:
       description: "Enable tooltip that shows type when hovering"
       type: 'boolean'
       default: true
-      order: 7
+      order: 80
     richTypeTooltip:
       description: "Use rich type tooltip with hrefs"
       type: 'boolean'
       default: true
-      order: 8
+      order: 90
     markImplicitsAutomatically:
       description: "Mark implicits on buffer load and save"
       type: 'boolean'
       default: true
-      order: 10
+      order: 100
     noOfAutocompleteSuggestions:
       description: "Number of autocomplete suggestions requested of server"
       type: 'integer'
       default: 10
-      order: 11
+      order: 110
     documentationSplit:
       description: "Where to open ScalaDoc"
       type: 'string'
       default: 'right'
       enum: ['right', 'external-browser']
-      order: 12
+      order: 120
 
   addCommandsForStoppedState: ->
     @stoppedCommands = new CompositeDisposable
@@ -123,7 +128,7 @@ module.exports = Ensime =
   activate: (state) ->
     # Install deps if not there
     (require 'atom-package-deps').install('Ensime').then ->
-      console.log('Ensime dependencies installed, good to go!')
+      log('Ensime dependencies installed, good to go!')
 
     @subscriptions = new CompositeDisposable
 
@@ -159,7 +164,7 @@ module.exports = Ensime =
 
 
   switchToInstance: (instance) ->
-    console.log(['changed from ', @activeInstance, ' to ', instance])
+    log(['changed from ', @activeInstance, ' to ', instance])
     if(instance != @activeInstance)
       # TODO: create "class" for instance
       @activeInstance?.statusbarView.hide()
@@ -373,6 +378,10 @@ module.exports = Ensime =
             provider.getCompletions(editor.getBuffer(), bufferPosition, resolve)
         else
           []
+          
+      onDidInsertSuggestion: (x) ->
+        provider = getProvider()
+        provider.onDidInsertSuggestion x
     }
 
   provideHyperclick: ->
@@ -381,7 +390,6 @@ module.exports = Ensime =
       getSuggestionForWord: (textEditor, text, range) =>
         if isScalaSource(textEditor)
           client = @clientOfEditor(textEditor)
-          console.log("client " + client)
           {
             range: range
             callback: () ->

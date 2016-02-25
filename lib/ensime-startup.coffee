@@ -12,6 +12,7 @@ remote = require 'remote'
 {parseDotEnsime} = require './ensime-client/dotensime-utils'
 Client = require './client'
 {updateEnsimeServer} = require './ensime-server-update'
+updateEnsimeServerWithCoursier = require './ensime-server-update-coursier'
 chokidar = require 'chokidar'
 
 ###
@@ -94,6 +95,7 @@ startClient = (parsedDotEnsime, generalHandler, callback) ->
       )
 
     whenAllAdded([portFilePath, httpPortFilePath], () ->
+      atom.notifications.addSuccess("Ensime server started!")
       port = fs.readFileSync(portFilePath).toString()
       httpPort = removeTrainingNewline(fs.readFileSync(httpPortFilePath).toString())
       callback(new Client(port, httpPort, generalHandler, serverPid))
@@ -108,20 +110,28 @@ startEnsimeServer = (parsedDotEnsime, pidCallback) ->
   if not fs.existsSync(parsedDotEnsime.cacheDir)
     fs.mkdirSync(parsedDotEnsime.cacheDir)
 
-  cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
-  log("classpathfile name: #{cpF}")
-
-  if(not classpathFileOk(cpF))
-    # update server and start
-    withSbt (sbtCmd) ->
-      updateEnsimeServer(sbtCmd, parsedDotEnsime.scalaVersion, ensimeServerVersion(), () -> doStartEnsimeServer(parsedDotEnsime, pidCallback))
+    
+  # update server and start
+  if atom.config.get('Ensime.useCoursierToBootstrapServer')
+    # Pull out so coursier can have different classpath file name
+    cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
+    log("classpathfile name: #{cpF}")
+    if(not classpathFileOk(cpF))
+      updateEnsimeServerWithCoursier(parsedDotEnsime, ensimeServerVersion(), cpF,
+        () -> doStartEnsimeServer(cpF, parsedDotEnsime, pidCallback))
+    else
+      doStartEnsimeServer(cpF, parsedDotEnsime, pidCallback)
   else
-    # just start server
-    doStartEnsimeServer(parsedDotEnsime, pidCallback)
+    withSbt (sbtCmd) ->
+      cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
+      if(not classpathFileOk(cpF))
+        updateEnsimeServer(sbtCmd, parsedDotEnsime.scalaVersion, ensimeServerVersion(),
+          () -> doStartEnsimeServer(cpF, parsedDotEnsime, pidCallback))
+      else
+        doStartEnsimeServer(cpF, parsedDotEnsime, pidCallback)
 
 # Start ensime server when classpath is up to date
-doStartEnsimeServer = (parsedDotEnsime, pidCallback) ->
-  cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
+doStartEnsimeServer = (cpF, parsedDotEnsime, pidCallback) ->
   toolsJar = "#{parsedDotEnsime.javaHome}#{path.sep}lib#{path.sep}tools.jar"
   
   fs.readFile(cpF, {encoding: 'utf8'}, (err, classpathFileContents) ->

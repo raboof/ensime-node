@@ -81,7 +81,7 @@ updateEnsimeServer = (sbtCmd, scalaVersion, ensimeServerVersion, whenUpdated = (
     else
       atom.notifications.addError("Ensime server update failed", {
         dismissable: true
-        detail: "Exit code: + exitCode"
+        detail: "Exit code: " + exitCode
       })
       
 
