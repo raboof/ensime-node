@@ -34,5 +34,4 @@ module.exports = class InstanceManager
     return @instances[0]
 
   isStarted: (dotEnsimePath) ->
-    console.log(['isStarted', @instances])
     _.some(@instances, (instance) -> instance.dotEnsime.dotEnsimePath == dotEnsimePath)

@@ -1,6 +1,7 @@
 {MessagePanelView, LineMessageView} = require 'atom-message-panel'
 _ = require 'lodash'
-{log, isScalaSource} = require '../utils'
+{isScalaSource} = require '../utils'
+log = require('loglevel').getLogger('ensime.typechecking')
 
 
 
@@ -28,7 +29,7 @@ module.exports = (indieLinter) ->
     addScalaNotes: (msg) ->
       notes = msg.notes
       addLints(notes)
-      console.log(['lints: ', lints])
+      log.trace(['lints: ', lints])
       # https://github.com/atom-community/linter/issues/1075
       indieLinter.setMessages(JSON.parse(JSON.stringify(lints)))
       

@@ -10,7 +10,6 @@ class TypeHoverElement extends HTMLElement
   initialize: (html) ->
     @innerHTML = Template
     @container = @querySelector('.ensime-tooltip-inner')
-    console.log("@container: " + [@container])
     @container.innerHTML = html
     this
 

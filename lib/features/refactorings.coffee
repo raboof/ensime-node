@@ -1,5 +1,6 @@
 fs = require 'fs'
 JsDiff = require 'diff'
+log = require('loglevel').getLogger('ensime.refactorings')
 
 # Refactorings should be cleaned of Atom stuff and put in client module. Add callback for what to do with patches
 module.exports = class Refactorings
@@ -49,7 +50,7 @@ module.exports = class Refactorings
           if not err
             callback()
           else
-            console.log(err)
+            log.trace(err)
       JsDiff.applyPatches(unifiedDiff, options)
 
     )
@@ -60,13 +61,13 @@ module.exports = class Refactorings
     fs.readFile(patchPath, 'utf8', (err, unifiedDiff) ->
       patches = JsDiff.parsePatch(unifiedDiff)
       for patch in patches
-        console.log(patch)
+        log.trace(patch)
         if(patch.oldFileName == patch.newFileName)
           atom.workspace.open(patch.newFileName).then (editor) ->
             b = editor.getBuffer()
             for hunk in patch.hunks
               range = [[hunk.oldStart - 1, 0], [hunk.oldStart + hunk.oldLines - 2, 0]]
-              console.log ['range', range]
+              log.trace ['range', range]
               newLines = _.filter(hunk.lines, (l) -> not l.startsWith('-'))
               newLines = _.map(newLines, (l) -> if(l.length == 1) then l else l.substring(1, l.length))
               toInsert = _.join(newLines, '\n')
@@ -79,7 +80,7 @@ module.exports = class Refactorings
     if(result.typehint == 'RefactorDiffEffect')
       @applyPatchInEditors(client, result.diff, callback)
     else
-      console.log(res)
+      log.trace(res)
 
 
   organizeImports: (client, file, callback = -> ) ->

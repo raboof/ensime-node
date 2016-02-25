@@ -1,8 +1,9 @@
-{packageDir, mkClasspathFileName, log} = require './utils'
+{packageDir, mkClasspathFileName} = require './utils'
 EnsimeServerUpdateLogView = require './views/ensime-server-update-log-view'
 {spawn} = require('child_process')
 fs = require('fs')
 path = require('path')
+log = require('loglevel').getLogger('ensime.server-update')
 
 createSbtClasspathBuild = (scalaVersion, ensimeServerVersion, classpathFile) ->
   """
@@ -70,8 +71,8 @@ updateEnsimeServer = (sbtCmd, scalaVersion, ensimeServerVersion, whenUpdated = (
 
   # run sbt "saveClasspath" "clean"
   pid = spawn("#{sbtCmd}", ['-Dsbt.log.noformat=true', 'saveClasspath', 'clean'], {cwd: tempdir})
-  pid.stdout.on 'data', (chunk) -> log(chunk.toString('utf8'))
-  pid.stderr.on 'data', (chunk) -> log(chunk.toString('utf8'))
+  pid.stdout.on 'data', (chunk) -> log.trace(chunk.toString('utf8'))
+  pid.stderr.on 'data', (chunk) -> log.trace(chunk.toString('utf8'))
   pid.stdout.on 'data', (chunk) => @serverUpdateLog.addRow(chunk.toString('utf8'))
   pid.stderr.on 'data', (chunk) => @serverUpdateLog.addRow(chunk.toString('utf8'))
   pid.stdin.end()

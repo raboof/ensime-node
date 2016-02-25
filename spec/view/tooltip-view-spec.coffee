@@ -9,4 +9,3 @@ describe "when we add a tooltip view", ->
     
   it "should be in DOM", ->
     typeHoverElement.initialize("foo")
-    console.log(typeHoverElement)

@@ -1,5 +1,6 @@
 {formatCompletionsSignature} = require '../ensime-client/formatting'
 SubAtom = require 'sub-atom'
+log = require('loglevel').getLogger('ensime.autocomplete-plus-provider')
 
 module.exports = (clientLookup) ->
   disposables = new SubAtom
@@ -34,5 +35,5 @@ module.exports = (clientLookup) ->
           callback(autocompletions)
       )
     onDidInsertSuggestion: (thang) ->
-      console.log(['inserted suggestion', thang])
+      log.trace(['inserted suggestion', thang])
   }

@@ -18,7 +18,7 @@ AutoTypecheck = require './features/auto-typecheck'
 
 TypeCheckingFeature = require './features/typechecking'
 AutocompletePlusProvider = require './features/autocomplete-plus'
-{log, modalMsg, isScalaSource, projectPath} = require './utils'
+{modalMsg, isScalaSource, projectPath} = require './utils'
 
 ImplicitInfo = require './model/implicit-info'
 ImplicitInfoView = require './views/implicit-info-view'
@@ -27,6 +27,9 @@ SelectDotEnsimeView = require './views/select-dot-ensime-view'
 
 InstanceManager = require './ensime-client/ensime-instance-manager'
 Instance = require './ensime-client/ensime-instance'
+
+log = require('loglevel')
+
 
 scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 module.exports = Ensime =
@@ -52,10 +55,11 @@ module.exports = Ensime =
       type: 'string'
       default: ''
       order: 40
-    devMode:
-      description: 'Turn on for extra console logging during development'
-      type: 'boolean'
-      default: false
+    logLevel:
+      description: 'Console log level. Turn up for troubleshooting'
+      type: 'string'
+      default: 'trace'
+      enum: ['trace', 'debug', 'info', 'warn', 'error']
       order: 50
     runServersDetached:
       description: "Run the Ensime servers as a detached processes. Useful while developing"
@@ -126,9 +130,19 @@ module.exports = Ensime =
     
 
   activate: (state) ->
+    logLevel = atom.config.get('Ensime.logLevel')
+    
+    log.getLogger('ensime.client').setLevel(logLevel)
+    log.getLogger('ensime.server-update').setLevel(logLevel)
+    log.getLogger('ensime.startup').setLevel(logLevel)
+    log.getLogger('ensime.autocomplete-plus-provider').setLevel(logLevel)
+    log.getLogger('ensime.refactorings').setLevel(logLevel)
+    log = log.getLogger('ensime.main')
+    log.setLevel(logLevel)
+    
     # Install deps if not there
     (require 'atom-package-deps').install('Ensime').then ->
-      log('Ensime dependencies installed, good to go!')
+      log.trace('Ensime dependencies installed, good to go!')
 
     @subscriptions = new CompositeDisposable
 
@@ -164,7 +178,7 @@ module.exports = Ensime =
 
 
   switchToInstance: (instance) ->
-    log(['changed from ', @activeInstance, ' to ', instance])
+    log.trace(['changed from ', @activeInstance, ' to ', instance])
     if(instance != @activeInstance)
       # TODO: create "class" for instance
       @activeInstance?.statusbarView.hide()
@@ -359,7 +373,7 @@ module.exports = Ensime =
 
 
   provideAutocomplete: ->
-    log('provideAutocomplete called')
+    log.trace('provideAutocomplete called')
 
     getProvider = =>
       @autocompletePlusProvider
@@ -374,7 +388,7 @@ module.exports = Ensime =
         provider = getProvider()
         if(provider)
           new Promise (resolve) ->
-            log('ensime.getSuggestions')
+            log.trace('ensime.getSuggestions')
             provider.getCompletions(editor.getBuffer(), bufferPosition, resolve)
         else
           []

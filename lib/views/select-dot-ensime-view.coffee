@@ -37,7 +37,6 @@ module.exports = class SelectDotEnsimeView
             event.stopPropagation()
           'core:confirm': (event) =>
             selected = files[@selected]
-            console.log(["selected: ", selected])
             onSelect(selected)
             done()
             event.stopPropagation()

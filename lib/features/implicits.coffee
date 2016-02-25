@@ -1,6 +1,7 @@
 ImplicitInfo = require '../model/implicit-info'
 SubAtom = require 'sub-atom'
-{log} = require '../utils'
+
+
 class Implicits
   constructor: (@editor, @instanceLookup) ->
     @disposables = new SubAtom
@@ -19,7 +20,6 @@ class Implicits
 
 
   showImplicits: ->
-    log("showImplicits this: " + this)
     b = @editor.getBuffer()
     
     instance = @instanceLookup()
@@ -38,7 +38,6 @@ class Implicits
 
       @clearMarkers()
       instance.client.post(msg, (result) =>
-        log(result)
 
         createMarker = (info) =>
           range = [b.positionForCharacterIndex(parseInt(info.start)), b.positionForCharacterIndex(parseInt(info.end))]
@@ -73,8 +72,6 @@ class Implicits
         
   showImplicitsAtCursor: ->
     pos = @editor.getCursorBufferPosition()
-    log("pos: " + pos)
-    markers = @findMarkers({type: 'implicit', containsPoint: pos})
     infos = markers.map (marker) -> marker.properties.info
     implicitInfo = new ImplicitInfo(infos, @editor, pos)
 

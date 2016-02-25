@@ -1,6 +1,7 @@
 path = require 'path'
 fs = require 'fs'
 temp = require 'temp'
+log = require('loglevel').getLogger('ensime')
 
 
 tempDir = temp.mkdirSync()
@@ -34,12 +35,6 @@ bufferPositionFromMouseEvent = (editor, event) ->
 getElementsByClass = (elem,klass) ->
   elem.rootElement.querySelectorAll(klass)
 
-devMode = atom.config.get('Ensime.devMode')
-
-log = (toLog) ->
-  if devMode
-    console.log(toLog.toString())
-
 modalMsg = (title, msg) ->
   atom.confirm
     message: title
@@ -53,9 +48,6 @@ addModalPanel = (vue, visible = false) ->
     item: element, visible: visible
   vue.$mount(element)
   modalPanel
-
-
-
 
 withSbt = (callback) ->
   sbtCmd = atom.config.get('Ensime.sbtExec')
@@ -87,7 +79,7 @@ module.exports = {
   screenPositionFromMouseEvent,
   bufferPositionFromMouseEvent,
   getElementsByClass,
-  log,
+  log: log.trace,
   modalMsg,
   withSbt,
   addModalPanel,

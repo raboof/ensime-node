@@ -3,6 +3,7 @@ EnsimeServerUpdateLogView = require './views/ensime-server-update-log-view'
 {spawn} = require('child_process')
 fs = require('fs')
 path = require('path')
+log = require('loglevel').getLogger('ensime.server-update')
 
 # Updates ensime server, invoke callback when done
 updateEnsimeServer = (parsedDotEnsime, ensimeServerVersion, classpathFile, whenUpdated = () -> ) ->
@@ -71,10 +72,10 @@ updateEnsimeServer = (parsedDotEnsime, ensimeServerVersion, classpathFile, whenU
 
     spaceSeparatedClassPath = ""
     
-    console.log([javaCmd], args, tempdir)
+    log.trace([javaCmd], args, tempdir)
     pid = spawn(javaCmd, args, {cwd: tempdir})
     pid.stdout.on 'data', (chunk) ->
-      log(chunk.toString('utf8'))
+      log.trace(chunk.toString('utf8'))
       spaceSeparatedClassPath += chunk.toString('utf8')
     logPid(pid)
     pid.stdin.end()
