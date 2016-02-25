@@ -98,6 +98,11 @@ module.exports = Ensime =
       default: 'right'
       enum: ['right', 'external-browser']
       order: 120
+    enableAutoInstallOfDependencies:
+      description: "Enable auto install of dependencies"
+      type: boolean
+      default: true
+      order: 130
 
   addCommandsForStoppedState: ->
     @stoppedCommands = new CompositeDisposable
@@ -141,8 +146,9 @@ module.exports = Ensime =
     log.setLevel(logLevel)
     
     # Install deps if not there
-    (require 'atom-package-deps').install('Ensime').then ->
-      log.trace('Ensime dependencies installed, good to go!')
+    if(atom.config.get('Ensime.eenableAutoInstallOfDependencies')
+      (require 'atom-package-deps').install('Ensime').then ->
+        log.trace('Ensime dependencies installed, good to go!')
 
     @subscriptions = new CompositeDisposable
 
