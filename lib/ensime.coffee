@@ -146,7 +146,7 @@ module.exports = Ensime =
     log.setLevel(logLevel)
 
     # Install deps if not there
-    if(atom.config.get('Ensime.eenableAutoInstallOfDependencies'))
+    if(atom.config.get('Ensime.enableAutoInstallOfDependencies'))
       (require 'atom-package-deps').install('Ensime').then ->
         log.trace('Ensime dependencies installed, good to go!')
 
