@@ -1,6 +1,4 @@
 # Super quick one that just adds the first in list
-# TODO: make ui for selecting
-
 module.exports = class ImportSuggestions
   constructor: ->
     @refactorings = new (require('./refactorings'))
@@ -16,9 +14,8 @@ module.exports = class ImportSuggestions
       maxResults: 10
 
     client.post(req, (res) =>
-      @refactorings.getAddImportPatch(client, res.symLists[0][0].name, file, (importResponse) =>
-        @refactorings.maybeApplyPatch(client, importResponse, () ->
-          client.typecheckBuffer(buffer)
-        )
-      )
+      # TODO: Add ui for selection
+      name = res.symLists[0][0].name
+      
+      @refactorings.doImport(client, name, file, buffer)
     )

@@ -1,13 +1,14 @@
-{TooltipView} = require '../views/tooltip-view'
-$ = require 'jquery'
+TypeHoverElement = require '../views/type-hover-element'
 {bufferPositionFromMouseEvent, pixelPositionFromMouseEvent, getElementsByClass} = require '../utils'
-{formatType} = require '../formatting'
+{formatTypeAsString, formatTypeAsHtml} = require '../atom-formatting'
 SubAtom = require('sub-atom')
+DOMListener = require 'dom-listener'
 
 # This one lives as one per file for all instances with an instanceLookup.
 class ShowTypes
   constructor: (@editor, @clientLookup) ->
     @disposables = new SubAtom
+    @locked = false
 
     @editorView = atom.views.getView(@editor)
     @editorElement = @editorView.rootElement
@@ -23,50 +24,68 @@ class ShowTypes
 
     @disposables.add @editor.onDidDestroy =>
       @deactivate()
-
+      
+    @disposables.add atom.config.observe 'Ensime.richTypeTooltip', (@richTypeTooltip) =>
 
   # get expression type under mouse cursor and show it
   showExpressionType: (e) ->
-    return if @exprTypeTooltip?
+    return if @marker? or @locked
 
     pixelPt = pixelPositionFromMouseEvent(@editor, e)
     bufferPt = bufferPositionFromMouseEvent(@editor, e)
-    nextCharPixelPt = @editorView.pixelPositionForBufferPosition([bufferPt.row, bufferPt.column + 1])
+    
+    offset = @editor.getBuffer().characterIndexForPosition(bufferPt)
 
-    return if pixelPt.left >= nextCharPixelPt.left
-
-    # find out show position
-    rectOffset = @editor.getLineHeightInPixels() * 0.7
-    tooltipRect =
-      left: e.clientX
-      right: e.clientX
-      top: e.clientY - rectOffset
-      bottom: e.clientY + rectOffset
-
-    # create tooltip with pending
-    @exprTypeTooltip = new TooltipView(tooltipRect)
-
-
-    textBuffer = @editor.getBuffer()
-    offset = textBuffer.characterIndexForPosition(bufferPt)
-
-    req =
-      typehint: "SymbolAtPointReq"
-      #typehint: "TypeAtPointReq"
-      file: @editor.getPath()
-      point: offset
-
-    @clientLookup()?.post(req, (msg) =>
-      if msg.typehint == 'SymbolInfo'
-        @exprTypeTooltip?.updateText(formatType(msg.type))
-      else
-        # if msg.typehint == 'FalseResponse'
-        # do nothing
+    client = @clientLookup()
+    client?.getSymbolAtPoint(@editor.getPath(), offset, (msg) =>
+      @marker?.destroy()
+      
+      return if(msg.type.fullName == "<none>")
+    
+      @marker = @editor.markBufferPosition(bufferPt)
+      if(@marker)
+        typeFormatter =
+          if @richTypeTooltip then formatTypeAsHtml else formatTypeAsString
+        
+        element = new TypeHoverElement().initialize(typeFormatter(msg.type))
+        
+        @domListener?.destroy()
+        @domListener = new DOMListener(element)
+        @domListener.add "a", 'click', (event) =>
+          a = event.target
+          qualifiedName = decodeURIComponent(a.dataset.qualifiedName)
+          client.symbolByName(qualifiedName, (response) =>
+            if(response.declPos)
+              client.goToPosition(response.declPos)
+              @unstickAndHide()
+          )
+          
+        @overlayDecoration = @editor.decorateMarker(@marker, {
+          type: 'overlay'
+          item: element
+          class: "ensime"
+        })
+        
+        @stickCommand?.dispose()
+        @stickCommand = atom.commands.add 'atom-workspace', "ensime:lock-type-hover", =>
+          @locked = true
+          @stickCommand.dispose()
+          @unstickCommand?.dispose()
+          @unstickCommand = atom.commands.add 'atom-workspace', "core:cancel", =>
+            @unstickAndHide()
     )
+      
+  unstickAndHide: ->
+    @unstickCommand.dispose()
+    @locked = false
+    @hideExpressionType()
 
   deactivate: ->
     @clearExprTypeTimeout()
     @disposables.dispose()
+    @stickCommand?.dispose()
+    @unstickCommand?.dispose()
+    @domListener?.destroy()
 
   # helper function to hide tooltip and stop timeout
   clearExprTypeTimeout: ->
@@ -76,8 +95,9 @@ class ShowTypes
     @hideExpressionType()
 
   hideExpressionType: ->
-    if @exprTypeTooltip?
-      @exprTypeTooltip.remove()
-      @exprTypeTooltip = null
+    return if @locked or not @marker
+    @marker?.destroy()
+    @marker = null
+    @openerDisposable?.dispose()
 
 module.exports = ShowTypes

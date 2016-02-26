@@ -18,17 +18,20 @@ AutoTypecheck = require './features/auto-typecheck'
 
 TypeCheckingFeature = require './features/typechecking'
 AutocompletePlusProvider = require './features/autocomplete-plus'
-{log, modalMsg, isScalaSource, projectPath} = require './utils'
+{modalMsg, isScalaSource, projectPath} = require './utils'
 
 ImplicitInfo = require './model/implicit-info'
 ImplicitInfoView = require './views/implicit-info-view'
 SelectDotEnsimeView = require './views/select-dot-ensime-view'
 {parseDotEnsime, dotEnsimesFilter} = require './ensime-client/dotensime-utils'
 
-scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 InstanceManager = require './ensime-client/ensime-instance-manager'
 Instance = require './ensime-client/ensime-instance'
 
+log = require('loglevel')
+
+
+scalaSourceSelector = """atom-text-editor[data-grammar="source scala"]"""
 module.exports = Ensime =
 
   config:
@@ -36,54 +39,70 @@ module.exports = Ensime =
       description: 'Version of Ensime server',
       type: 'string',
       default: "0.9.10-SNAPSHOT",
-      order: 1
+      order: 10
     sbtExec:
       description: "Full path to sbt. 'which sbt'"
       type: 'string'
       default: ''
-      order: 2
+      order: 20
+    useCoursierToBootstrapServer:
+      description: "User Coursier for bootstrapping server (experimental)'"
+      type: 'boolean'
+      default: false
+      order: 30
     ensimeServerFlags:
       description: 'java flags for ensime server startup'
       type: 'string'
       default: ''
-      order: 3
-    devMode:
-      description: 'Turn on for extra console logging during development'
-      type: 'boolean'
-      default: false
-      order: 4
+      order: 40
+    logLevel:
+      description: 'Console log level. Turn up for troubleshooting'
+      type: 'string'
+      default: 'trace'
+      enum: ['trace', 'debug', 'info', 'warn', 'error']
+      order: 50
     runServersDetached:
       description: "Run the Ensime servers as a detached processes. Useful while developing"
       type: 'boolean'
       default: false
-      order: 5
+      order: 60
     typecheckWhen:
       description: "When to typecheck"
       type: 'string'
       default: 'typing'
       enum: ['command', 'save', 'typing']
-      order: 6
+      order: 70
     enableTypeTooltip:
       description: "Enable tooltip that shows type when hovering"
       type: 'boolean'
       default: true
-      order: 7
+      order: 80
+    richTypeTooltip:
+      description: "Use rich type tooltip with hrefs"
+      type: 'boolean'
+      default: true
+      order: 90
     markImplicitsAutomatically:
       description: "Mark implicits on buffer load and save"
       type: 'boolean'
       default: true
-      order: 10
+      order: 100
     noOfAutocompleteSuggestions:
       description: "Number of autocomplete suggestions requested of server"
       type: 'integer'
       default: 10
-      order: 11
+      order: 110
     documentationSplit:
       description: "Where to open ScalaDoc"
       type: 'string'
       default: 'right'
       enum: ['right', 'external-browser']
-      order: 12
+      order: 120
+    enableAutoInstallOfDependencies:
+      description: "Enable auto install of dependencies"
+      type: boolean
+      default: true
+      order: 130
 
   addCommandsForStoppedState: ->
     @stoppedCommands = new CompositeDisposable
@@ -116,9 +135,20 @@ module.exports = Ensime =
     
 
   activate: (state) ->
+    logLevel = atom.config.get('Ensime.logLevel')
+    
+    log.getLogger('ensime.client').setLevel(logLevel)
+    log.getLogger('ensime.server-update').setLevel(logLevel)
+    log.getLogger('ensime.startup').setLevel(logLevel)
+    log.getLogger('ensime.autocomplete-plus-provider').setLevel(logLevel)
+    log.getLogger('ensime.refactorings').setLevel(logLevel)
+    log = log.getLogger('ensime.main')
+    log.setLevel(logLevel)
+    
     # Install deps if not there
-    (require 'atom-package-deps').install('Ensime').then ->
-      console.log('Ensime dependencies installed, good to go!')
+    if(atom.config.get('Ensime.eenableAutoInstallOfDependencies')
+      (require 'atom-package-deps').install('Ensime').then ->
+        log.trace('Ensime dependencies installed, good to go!')
 
     @subscriptions = new CompositeDisposable
 
@@ -154,7 +184,7 @@ module.exports = Ensime =
 
 
   switchToInstance: (instance) ->
-    console.log(['changed from ', @activeInstance, ' to ', instance])
+    log.trace(['changed from ', @activeInstance, ' to ', instance])
     if(instance != @activeInstance)
       # TODO: create "class" for instance
       @activeInstance?.statusbarView.hide()
@@ -349,7 +379,7 @@ module.exports = Ensime =
 
 
   provideAutocomplete: ->
-    log('provideAutocomplete called')
+    log.trace('provideAutocomplete called')
 
     getProvider = =>
       @autocompletePlusProvider
@@ -364,10 +394,14 @@ module.exports = Ensime =
         provider = getProvider()
         if(provider)
           new Promise (resolve) ->
-            log('ensime.getSuggestions')
+            log.trace('ensime.getSuggestions')
             provider.getCompletions(editor.getBuffer(), bufferPosition, resolve)
         else
           []
+          
+      onDidInsertSuggestion: (x) ->
+        provider = getProvider()
+        provider.onDidInsertSuggestion x
     }
 
   provideHyperclick: ->
@@ -376,7 +410,6 @@ module.exports = Ensime =
       getSuggestionForWord: (textEditor, text, range) =>
         if isScalaSource(textEditor)
           client = @clientOfEditor(textEditor)
-          console.log("client " + client)
           {
             range: range
             callback: () ->

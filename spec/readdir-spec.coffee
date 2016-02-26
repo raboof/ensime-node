@@ -12,5 +12,4 @@ describe 'read-dir depdendency should work', ->
       stats.isFile() && ! path.endsWith('.ensime')
 
     recread(root, [], (err, files) ->
-      console.log(files)
       )

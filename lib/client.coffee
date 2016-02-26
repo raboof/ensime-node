@@ -1,10 +1,11 @@
 net = require('net')
-{log, modalMsg, getTempDir} = require './utils'
+{modalMsg, getTempDir} = require './utils'
 Documentation = require './features/documentation'
 Swank = require './ensime-client/lisp/swank-protocol'
 _ = require 'lodash'
 fs = require 'fs-extra'
 path = require 'path'
+log = require('loglevel').getLogger('ensime.client')
 
 # TODO:
 # Client should be stripped of everything Atom specific
@@ -17,7 +18,7 @@ class Client
     @callbackMap = {}
 
     @parser = new Swank.SwankParser( (env) =>
-      log("incoming: #{env}")
+      log.trace("incoming: #{env}")
       json = JSON.parse(env)
       callId = json.callId
       # If RpcResponse - lookup in map, otherwise use some general function for handling general msgs
@@ -26,7 +27,7 @@ class Client
         try
           @callbackMap[callId](json.payload)
         catch error
-          log("error in callback: #{error}")
+          log.trace("error in callback: #{error}")
         finally
           delete @callbackMap[callId]
       else
@@ -41,9 +42,9 @@ class Client
     @serverPid?.kill()
 
   openSocket: (port) ->
-    console.log('connecting on port: ' + port)
+    log.trace('connecting on port: ' + port)
     @socket = net.connect({port: port, allowHalfOpen: true} , ->
-      console.log('client connected')
+      log.trace('client connected')
     )
 
     @socket.on('data', (data) =>
@@ -51,31 +52,31 @@ class Client
     )
 
     @socket.on('end', ->
-      console.log("Ensime server disconnected")
+      log.trace("Ensime server disconnected")
     )
 
     @socket.on('close', (data) ->
-      console.log("Ensime server close event: " + data)
+      log.trace("Ensime server close event: " + data)
     )
 
     @socket.on('error', (data) ->
       if (data.code == 'ECONNREFUSED')
         modalMsg("Connection refused connecting to ensime, it is probably not running. Remove .ensime_cache/port and .ensime_cache/http and try again.")
       else if (data.code == 'EADDRNOTAVAIL')
-        console.log(data)
+        log.trace(data)
         # happens when connecting too soon I think
       else
-        console.log("Ensime server error event: " + data)
+        log.trace("Ensime server error event: " + data)
     )
 
     @socket.on('timeout', ->
-      console.log("Ensime server timeout event")
+      log.trace("Ensime server timeout event")
     )
 
   postString: (msg, callback) =>
     swankMsg = Swank.buildMessage """{"req": #{msg}, "callId": #{@ensimeMessageCounter}}"""
     @callbackMap[@ensimeMessageCounter++] = callback
-    log("outgoing: " + swankMsg)
+    log.trace("outgoing: " + swankMsg)
     @socket.write(swankMsg, "UTF8")
 
   # Public:
@@ -101,14 +102,8 @@ class Client
 
   goToTypeAtPoint: (textBuffer, bufferPosition) =>
     offset = textBuffer.characterIndexForPosition(bufferPosition)
-    file = textBuffer.getPath()
-
-    req =
-      typehint: "SymbolAtPointReq"
-      file: file
-      point: offset
-
-    @post(req, (msg) =>
+  
+    @getSymbolAtPoint(textBuffer.getPath(), offset, (msg) =>
       pos = msg.declPos
       # Sometimes no pos
       if(pos)
@@ -146,6 +141,22 @@ class Client
           reload: true
         @post(msg, callback)
     )
+    
+    
+ 
+  getSymbolAtPoint: (path, offset, callback) ->
+    req =
+      typehint: "SymbolAtPointReq"
+      file: path
+      point: offset
+    @post(req, (msg) ->
+      if msg.typehint == 'SymbolInfo'
+        callback(msg)
+      else
+        # if msg.typehint == 'FalseResponse'
+        # do nothing
+    )
+    
 
   typecheckBuffer: (b, callback = () ->) =>
     tempFilePath = getTempDir() + b.getPath()
@@ -171,6 +182,13 @@ class Client
     @post(msg, (result) ->)
 
 
+  symbolByName: (qualifiedName, callback) ->
+    msg =
+      typehint: 'SymbolByNameReq'
+      typeFullName: qualifiedName
+    @post(msg, callback)
+    
+    
   formatSourceFile: (path, contents, callback) ->
     tempFilePath = getTempDir() + path
     fs.outputFile(tempFilePath, contents, (err) =>

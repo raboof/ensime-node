@@ -1,5 +1,5 @@
 root = '../..'
-{formatType, formatCompletionsSignature, formatImplicitInfo} = require "#{root}/lib/formatting"
+{formatType, formatCompletionsSignature, formatImplicitInfo} = require "#{root}/lib/ensime-client/formatting"
 {readFromString, fromLisp} = require "#{root}/lib/ensime-client/lisp/lisp"
 
 

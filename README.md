@@ -1,6 +1,10 @@
 # Atom ENSIME
 
 [![Join the chat at https://gitter.im/ensime/ensime-atom](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ensime/ensime-atom?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![APM Downloads](https://img.shields.io/apm/dm/ensime.svg)](https://atom.io/packages/ensime)
+[![Build Status](https://travis-ci.org/ensime/ensime-atom.svg?branch=master)](https://travis-ci.org/ensime/ensime-atom)
+[![Build status](https://ci.appveyor.com/api/projects/status/lyocvjp5tt27abo5?svg=true)](https://ci.appveyor.com/project/hedefalk/ensime-atom)
+
 
 ENSIME integration includes the following features for Scala developers:
 
@@ -26,4 +30,3 @@ Documentation is available at [ensime.org](http://ensime.org/editors/atom/)
 3.  cmd-shift-P Ensime: Start
 
 See the full documentation for more details.
-

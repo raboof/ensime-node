@@ -3,7 +3,7 @@ fs = require 'fs'
 path = require 'path'
 _ = require 'lodash'
 {exec, spawn} = require('child_process')
-{log, modalMsg, projectPath, packageDir,
+{modalMsg, projectPath, packageDir,
  withSbt, mkClasspathFileName} = require('./utils')
 EnsimeServerUpdateLogView = require('./views/ensime-server-update-log-view')
 lisp = require './ensime-client/lisp/lisp'
@@ -12,7 +12,9 @@ remote = require 'remote'
 {parseDotEnsime} = require './ensime-client/dotensime-utils'
 Client = require './client'
 {updateEnsimeServer} = require './ensime-server-update'
+updateEnsimeServerWithCoursier = require './ensime-server-update-coursier'
 chokidar = require 'chokidar'
+log = require('loglevel').getLogger('ensime.startup')
 
 ###
 ## Pseudo:
@@ -68,8 +70,6 @@ startClient = (parsedDotEnsime, generalHandler, callback) ->
   portFilePath = mkPortFilePath(parsedDotEnsime.cacheDir)
   httpPortFilePath = mkHttpPortFilePath(parsedDotEnsime.cacheDir)
 
-  log = console.log.bind(console)
-
   if fs.existsSync(portFilePath) && fs.existsSync(httpPortFilePath)
     # server running, no need to start
     port = fs.readFileSync(portFilePath).toString()
@@ -79,21 +79,22 @@ startClient = (parsedDotEnsime, generalHandler, callback) ->
     serverPid = undefined
 
     whenAllAdded = (files, f) ->
-      log('starting watching for: '+files)
+      log.trace('starting watching for: '+files)
       file = files.pop() # NB: mutates files
       watcher = chokidar.watch(file, {
         persistent: true
       }).on('add', (path) ->
-        console.log 'Seen: ', path
+        log.trace 'Seen: ', path
         watcher.close()
         if 0 == files.length
-          console.log('All files seen. Starting client')
+          log.trace('All files seen. Starting client')
           f()
         else
           whenAllAdded(files, f)
       )
 
     whenAllAdded([portFilePath, httpPortFilePath], () ->
+      atom.notifications.addSuccess("Ensime server started!")
       port = fs.readFileSync(portFilePath).toString()
       httpPort = removeTrainingNewline(fs.readFileSync(httpPortFilePath).toString())
       callback(new Client(port, httpPort, generalHandler, serverPid))
@@ -108,37 +109,45 @@ startEnsimeServer = (parsedDotEnsime, pidCallback) ->
   if not fs.existsSync(parsedDotEnsime.cacheDir)
     fs.mkdirSync(parsedDotEnsime.cacheDir)
 
-  cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
-  log("classpathfile name: #{cpF}")
-
-  if(not classpathFileOk(cpF))
-    # update server and start
-    withSbt (sbtCmd) ->
-      updateEnsimeServer(sbtCmd, parsedDotEnsime.scalaVersion, ensimeServerVersion(), () -> doStartEnsimeServer(parsedDotEnsime, pidCallback))
+    
+  # update server and start
+  if atom.config.get('Ensime.useCoursierToBootstrapServer')
+    # Pull out so coursier can have different classpath file name
+    cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
+    log.trace("classpathfile name: #{cpF}")
+    if(not classpathFileOk(cpF))
+      updateEnsimeServerWithCoursier(parsedDotEnsime, ensimeServerVersion(), cpF,
+        () -> doStartEnsimeServer(cpF, parsedDotEnsime, pidCallback))
+    else
+      doStartEnsimeServer(cpF, parsedDotEnsime, pidCallback)
   else
-    # just start server
-    doStartEnsimeServer(parsedDotEnsime, pidCallback)
+    withSbt (sbtCmd) ->
+      cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
+      if(not classpathFileOk(cpF))
+        updateEnsimeServer(sbtCmd, parsedDotEnsime.scalaVersion, ensimeServerVersion(),
+          () -> doStartEnsimeServer(cpF, parsedDotEnsime, pidCallback))
+      else
+        doStartEnsimeServer(cpF, parsedDotEnsime, pidCallback)
 
 # Start ensime server when classpath is up to date
-doStartEnsimeServer = (parsedDotEnsime, pidCallback) ->
-  cpF = mkClasspathFileName(parsedDotEnsime.scalaVersion, ensimeServerVersion())
+doStartEnsimeServer = (cpF, parsedDotEnsime, pidCallback) ->
   toolsJar = "#{parsedDotEnsime.javaHome}#{path.sep}lib#{path.sep}tools.jar"
   
   fs.readFile(cpF, {encoding: 'utf8'}, (err, classpathFileContents) ->
     if(err)
       throw err
       
-    console.log ['classpathFileContents', classpathFileContents]
+    log.trace ['classpathFileContents', classpathFileContents]
     
     classpathList = _.split(classpathFileContents, path.delimiter)
     # Sort classpath so any jar containing monkey comes first
     sorter = (jarPath) -> not /monkey/.test(jarPath)
     tokenizedClasspathEntries = _.split(classpathFileContents, path.delimiter)
     tokenizedClasspathEntries.push(toolsJar)
-    console.log ['tokenizedClasspathEntries', tokenizedClasspathEntries]
+    log.trace ['tokenizedClasspathEntries', tokenizedClasspathEntries]
     
     classpath = _.sortBy(tokenizedClasspathEntries, sorter).join(path.delimiter)
-    console.log("classpath: #{classpath}")
+    log.trace("classpath: #{classpath}")
     javaCmd = "#{parsedDotEnsime.javaHome}#{path.sep}bin#{path.sep}java"
     ensimeServerFlags = "#{atom.config.get('Ensime.ensimeServerFlags')}"
     args = ["-classpath", "#{classpath}", "-Densime.config=#{parsedDotEnsime.dotEnsimePath}", "-Densime.protocol=jerk"]
@@ -147,7 +156,7 @@ doStartEnsimeServer = (parsedDotEnsime, pidCallback) ->
 
     args.push "org.ensime.server.Server"
 
-    log("Starting ensime server with: #{javaCmd} #{args.join(' ')}")
+    log.trace("Starting ensime server with: #{javaCmd} #{args.join(' ')}")
 
     serverLog = fs.createWriteStream(mkServerLogFilePath(parsedDotEnsime.cacheDir))
 

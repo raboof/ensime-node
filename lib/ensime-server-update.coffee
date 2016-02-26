@@ -1,8 +1,9 @@
-{packageDir, mkClasspathFileName, log} = require './utils'
+{packageDir, mkClasspathFileName} = require './utils'
 EnsimeServerUpdateLogView = require './views/ensime-server-update-log-view'
 {spawn} = require('child_process')
 fs = require('fs')
 path = require('path')
+log = require('loglevel').getLogger('ensime.server-update')
 
 createSbtClasspathBuild = (scalaVersion, ensimeServerVersion, classpathFile) ->
   """
@@ -60,18 +61,22 @@ updateEnsimeServer = (sbtCmd, scalaVersion, ensimeServerVersion, whenUpdated = (
 
   if not fs.existsSync(tempdir)
     fs.mkdirSync(tempdir)
-    fs.mkdirSync(tempdir + path.sep + 'project')
+    
+  projectDir = tempdir + path.sep + 'project'
+  
+  if not fs.existsSync(projectDir)
+    fs.mkdirSync(projectDir)
 
   # write out a build.sbt in this dir
   fs.writeFileSync(tempdir + path.sep + 'build.sbt', createSbtClasspathBuild(scalaVersion, ensimeServerVersion,
     mkClasspathFileName(scalaVersion, ensimeServerVersion)))
 
-  fs.writeFileSync(tempdir + path.sep + 'project' + path.sep + 'build.properties', 'sbt.version=0.13.9\n')
+  fs.writeFileSync(projectDir + path.sep + 'build.properties', 'sbt.version=0.13.9\n')
 
   # run sbt "saveClasspath" "clean"
   pid = spawn("#{sbtCmd}", ['-Dsbt.log.noformat=true', 'saveClasspath', 'clean'], {cwd: tempdir})
-  pid.stdout.on 'data', (chunk) -> log(chunk.toString('utf8'))
-  pid.stderr.on 'data', (chunk) -> log(chunk.toString('utf8'))
+  pid.stdout.on 'data', (chunk) -> log.trace(chunk.toString('utf8'))
+  pid.stderr.on 'data', (chunk) -> log.trace(chunk.toString('utf8'))
   pid.stdout.on 'data', (chunk) => @serverUpdateLog.addRow(chunk.toString('utf8'))
   pid.stderr.on 'data', (chunk) => @serverUpdateLog.addRow(chunk.toString('utf8'))
   pid.stdin.end()
@@ -81,7 +86,7 @@ updateEnsimeServer = (sbtCmd, scalaVersion, ensimeServerVersion, whenUpdated = (
     else
       atom.notifications.addError("Ensime server update failed", {
         dismissable: true
-        detail: "Exit code: + exitCode"
+        detail: "Exit code: " + exitCode
       })
       
 

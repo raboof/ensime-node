@@ -3,6 +3,8 @@ npm-debug.log
 node_modules
 ensime_port
 ensime_update_
+ensime_update_coursier
+coursier
 classpath_*
 **/target
 .vscode
