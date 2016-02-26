@@ -100,7 +100,7 @@ module.exports = Ensime =
       order: 120
     enableAutoInstallOfDependencies:
       description: "Enable auto install of dependencies"
-      type: boolean
+      type: 'boolean'
       default: true
       order: 130
 
@@ -132,11 +132,11 @@ module.exports = Ensime =
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:import-suggestion", => @getImportSuggestions()
     @startedCommands.add atom.commands.add 'atom-workspace', "ensime:organize-imports", => @organizeImports()
 
-    
+
 
   activate: (state) ->
     logLevel = atom.config.get('Ensime.logLevel')
-    
+
     log.getLogger('ensime.client').setLevel(logLevel)
     log.getLogger('ensime.server-update').setLevel(logLevel)
     log.getLogger('ensime.startup').setLevel(logLevel)
@@ -144,9 +144,9 @@ module.exports = Ensime =
     log.getLogger('ensime.refactorings').setLevel(logLevel)
     log = log.getLogger('ensime.main')
     log.setLevel(logLevel)
-    
+
     # Install deps if not there
-    if(atom.config.get('Ensime.eenableAutoInstallOfDependencies')
+    if(atom.config.get('Ensime.eenableAutoInstallOfDependencies'))
       (require 'atom-package-deps').install('Ensime').then ->
         log.trace('Ensime dependencies installed, good to go!')
 
@@ -161,7 +161,7 @@ module.exports = Ensime =
 
     @addCommandsForStoppedState()
     @someInstanceStarted = false
-    
+
     @controlSubscription = atom.workspace.observeTextEditors (editor) =>
       if isScalaSource(editor)
         instanceLookup = => @instanceManager.instanceOfFile(editor.getPath())
@@ -182,7 +182,6 @@ module.exports = Ensime =
         instance = @instanceManager.instanceOfFile(pane.getPath())
         @switchToInstance(instance)
 
-
   switchToInstance: (instance) ->
     log.trace(['changed from ', @activeInstance, ' to ', instance])
     if(instance != @activeInstance)
@@ -192,7 +191,7 @@ module.exports = Ensime =
       if(instance)
         instance.statusbarView.show()
 
-    
+
   deactivate: ->
     @instanceManager.destroyAll()
 
@@ -249,18 +248,18 @@ module.exports = Ensime =
 
     # remove start command and add others
     @stoppedCommands.dispose()
-    
+
     # FIXME: - we have had double commands for each instance :) This is a quick and dirty fix
     if(not @someInstanceStarted)
       @addCommandsForStartedState()
       @someInstanceStarted = true
-      
+
     dotEnsime = parseDotEnsime(dotEnsimePath)
 
     typechecking = undefined
     if(@indieLinterRegistry)
       typechecking = TypeCheckingFeature(@indieLinterRegistry.register("Ensime: #{dotEnsimePath}"))
-    
+
     statusbarView = new StatusbarView()
     statusbarView.init()
 
@@ -311,7 +310,7 @@ module.exports = Ensime =
     promise.then (dotEnsimesUnflattened) ->
       dotEnsimes = ({path: path} for path in _.flattenDeep(dotEnsimesUnflattened))
       filteredDotEnsime = _.filter(dotEnsimes, filter)
-      
+
       if(filteredDotEnsime.length == 0)
         modalMsg("No .ensime file found. Please generate with `sbt gen-ensime` or similar")
       else if (filteredDotEnsime.length == 1)
@@ -398,7 +397,7 @@ module.exports = Ensime =
             provider.getCompletions(editor.getBuffer(), bufferPosition, resolve)
         else
           []
-          
+
       onDidInsertSuggestion: (x) ->
         provider = getProvider()
         provider.onDidInsertSuggestion x
@@ -425,11 +424,11 @@ module.exports = Ensime =
           undefined
 
     }
-    
+
   # Just add registry to delegate registration on instances
   consumeLinter: (@indieLinterRegistry) ->
-    
-    
+
+
   formatCurrentSourceFile: ->
     editor = atom.workspace.getActiveTextEditor()
     cursorPos = editor.getCursorBufferPosition()
@@ -437,7 +436,7 @@ module.exports = Ensime =
       editor.setText(msg.text)
       editor.setCursorBufferPosition(cursorPos)
     @clientOfEditor(editor)?.formatSourceFile(editor.getPath(), editor.getText(), callback)
-    
+
 
   searchPublicSymbol: ->
     unless @publicSymbolSearch
