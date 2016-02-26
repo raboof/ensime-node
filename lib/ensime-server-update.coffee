@@ -61,13 +61,17 @@ updateEnsimeServer = (sbtCmd, scalaVersion, ensimeServerVersion, whenUpdated = (
 
   if not fs.existsSync(tempdir)
     fs.mkdirSync(tempdir)
-    fs.mkdirSync(tempdir + path.sep + 'project')
+    
+  projectDir = tempdir + path.sep + 'project'
+  
+  if not fs.existsSync(projectDir)
+    fs.mkdirSync(projectDir)
 
   # write out a build.sbt in this dir
   fs.writeFileSync(tempdir + path.sep + 'build.sbt', createSbtClasspathBuild(scalaVersion, ensimeServerVersion,
     mkClasspathFileName(scalaVersion, ensimeServerVersion)))
 
-  fs.writeFileSync(tempdir + path.sep + 'project' + path.sep + 'build.properties', 'sbt.version=0.13.9\n')
+  fs.writeFileSync(projectDir + path.sep + 'build.properties', 'sbt.version=0.13.9\n')
 
   # run sbt "saveClasspath" "clean"
   pid = spawn("#{sbtCmd}", ['-Dsbt.log.noformat=true', 'saveClasspath', 'clean'], {cwd: tempdir})
