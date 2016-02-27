@@ -8,7 +8,7 @@ glob = require 'glob'
 
 {Subscriber} = require 'emissary'
 StatusbarView = require './views/statusbar-view'
-{CompositeDisposable, TextEditor} = require 'atom'
+{CompositeDisposable} = require 'atom'
 {startClient} = require './ensime-startup'
 
 ShowTypes = require './features/show-types'
@@ -179,7 +179,7 @@ module.exports = Ensime =
     @autocompletePlusProvider = new AutocompletePlusProvider(clientLookup)
 
     atom.workspace.onDidStopChangingActivePaneItem (pane) =>
-      if(pane instanceof TextEditor and isScalaSource(pane))
+      if(atom.workspace.isTextEditor(pane) and isScalaSource(pane))
         instance = @instanceManager.instanceOfFile(pane.getPath())
         @switchToInstance(instance)
 
