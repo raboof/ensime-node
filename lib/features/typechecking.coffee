@@ -7,6 +7,7 @@ log = require('loglevel').getLogger('ensime.typechecking')
 
 module.exports = (indieLinter) ->
   lints = []
+  timeout = undefined
 
   # API
   noteToLint = (note) ->
@@ -30,8 +31,14 @@ module.exports = (indieLinter) ->
       notes = msg.notes
       addLints(notes)
       log.trace(['lints: ', lints])
-      # https://github.com/atom-community/linter/issues/1075
-      indieLinter.setMessages(JSON.parse(JSON.stringify(lints)))
+      
+      doit = ->
+        # https://github.com/atom-community/linter/issues/1075
+        indieLinter.setMessages(JSON.parse(JSON.stringify(lints)))
+        
+      if timeout
+        clearTimeout(timeout)
+      timeout = setTimeout(doit, 100)
       
     clearScalaNotes: ->
       lints = []
