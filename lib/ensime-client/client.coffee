@@ -1,11 +1,12 @@
 net = require('net')
-{modalMsg, getTempDir} = require './utils'
-Documentation = require './features/documentation'
-Swank = require './ensime-client/lisp/swank-protocol'
-_ = require 'lodash'
+Swank = require './lisp/swank-protocol'
 fs = require 'fs-extra'
 path = require 'path'
 log = require('loglevel').getLogger('ensime.client')
+temp = require 'temp'
+
+tempDir = temp.mkdirSync()
+getTempDir = -> tempDir
 
 # TODO:
 # Client should be stripped of everything Atom specific
@@ -61,7 +62,7 @@ class Client
 
     @socket.on('error', (data) ->
       if (data.code == 'ECONNREFUSED')
-        modalMsg("Connection refused connecting to ensime, it is probably not running. Remove .ensime_cache/port and .ensime_cache/http and try again.")
+        log.error("Connection refused connecting to ensime, it is probably not running. Remove .ensime_cache/port and .ensime_cache/http and try again.")
       else if (data.code == 'EADDRNOTAVAIL')
         log.trace(data)
         # happens when connecting too soon I think
@@ -82,46 +83,6 @@ class Client
   # Public:
   post: (msg, callback) ->
     @postString(JSON.stringify(msg), callback)
-
-  goToDocAtPoint: (editor) =>
-    point = new Documentation(editor).getPoint()
-
-    req =
-      typehint: "DocUriAtPointReq"
-      file: editor.getBuffer().getPath()
-      point: point
-
-    @post(req, (msg) =>
-      switch msg.typehint
-        when "FalseResponse" then atom.notifications.addError("No documentation found")
-        else Documentation.openDoc(Documentation.formUrl("localhost", @httpPort, msg.text))
-    )
-
-  goToDocIndex: () ->
-    Documentation.openDoc("http://localhost:#{@httpPort}/docs")
-
-  goToTypeAtPoint: (textBuffer, bufferPosition) =>
-    offset = textBuffer.characterIndexForPosition(bufferPosition)
-  
-    @getSymbolAtPoint(textBuffer.getPath(), offset, (msg) =>
-      pos = msg.declPos
-      # Sometimes no pos
-      if(pos)
-        @goToPosition(pos)
-      else
-        atom.notifications.addError("No declPos in response from Ensime server, cannot go anywhere :(")
-    )
-
-
-  goToPosition: (pos) ->
-    if(pos.typehint == "LineSourcePosition")
-      atom.workspace.open(pos.file).then (editor) ->
-        editor.setCursorBufferPosition([parseInt(pos.line), 0])
-    else
-      atom.workspace.open(pos.file).then (editor) ->
-        targetEditorPos = editor.getBuffer().positionForCharacterIndex(parseInt(pos.offset))
-        editor.setCursorBufferPosition(targetEditorPos)
-
 
 
   getCompletions: (filePath, bufferText, offset, noOfAutocompleteSuggestions, callback) =>
@@ -158,27 +119,27 @@ class Client
     )
     
 
-  typecheckBuffer: (b, callback = () ->) =>
-    tempFilePath = getTempDir() + b.getPath()
-    fs.outputFile(tempFilePath, b.getText(), (err) =>
+  typecheckBuffer: (path, text, callback = () ->) =>
+    tempFilePath = getTempDir() + path
+    fs.outputFile(tempFilePath, text, (err) =>
       if (err)
         throw err
       else
         msg =
           typehint: "TypecheckFileReq"
           fileInfo:
-            file: b.getPath()
+            file: path
             contentsIn: tempFilePath
         @post(msg, callback)
     )
 
 
   
-  typecheckFile: (b) =>
+  typecheckFile: (path) =>
     msg =
       typehint: "TypecheckFileReq"
       fileInfo:
-        file: b.getPath()
+        file: path
     @post(msg, (result) ->)
 
 
@@ -204,63 +165,3 @@ class Client
     )
         
         
-
-  getSymbolDesignations: (editor) ->
-    b = editor.getBuffer()
-    range = b.getRange()
-    startO = b.characterIndexForPosition(range.start)
-    endO = b.characterIndexForPosition(range.end)
-
-    msg = {
-      "typehint":"SymbolDesignationsReq"
-      "requestedTypes": symbolTypehints
-      "file": b.getPath()
-      "start": startO
-      "end": endO
-    }
-
-
-    new Promise (resolve, reject) =>
-      @post(msg, (result) ->
-        syms = result.syms
-
-        markers = (sym) ->
-          startPos = b.positionForCharacterIndex(parseInt(sym[1]))
-          endPos = b.positionForCharacterIndex(parseInt(sym[2]))
-          marker = editor.markBufferRange([startPos, endPos],
-                  invalidate: 'inside',
-                  class: "scala #{sym[0]}"
-                  )
-          decoration = editor.decorateMarker(marker,
-            type: 'highlight',
-            class: sym[0]
-          )
-          marker
-
-        makeCodeLink = (marker) ->
-          range: marker.getBufferRange()
-
-        makers = (markers sym for sym in syms)
-        codeLinks = (makeCodeLink marker for maker in makers)
-
-        resolve(codeLinks)
-      )
-
-
-
-symbols = ["ObjectSymbol"
-,"ClassSymbol"
-,"TraitSymbol"
-,"PackageSymbol"
-,"ConstructorSymbol"
-,"ImportedNameSymbol"
-,"TypeParamSymbol"
-,"ParamSymbol"
-,"VarFieldSymbol"
-,"ValFieldSymbol"
-,"OperatorFieldSymbol"
-,"VarSymbol"
-,"ValSymbol"
-,"FunctionCallSymbol"]
-
-symbolTypehints = _.map(symbols, (symbol) -> {"typehint": "#{symbol}"})

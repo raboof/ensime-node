@@ -1,16 +1,16 @@
 _ = require 'lodash'
 
-module.exports = (dotEnsime, client, statusbarView, typechecking) ->
+module.exports = (dotEnsime, client, ui) ->
   {
     rootDir: dotEnsime.rootDir
     dotEnsime: dotEnsime
     client: client
-    statusbarView: statusbarView
-    typechecking: typechecking
+    ui: ui # client ui with a destroy cleanup function to call on termination
+    #statusbarView: statusbarView
+    #typechecking: typechecking
     
     destroy: () ->
       client.destroy()
-      statusbarView.destroy()
-      typechecking?.destroy()
+      ui?.destroy()
     isSourceOf: (path) -> _.some(dotEnsime.sourceRoots, (sourceRoot) -> path.startsWith(sourceRoot))
   }

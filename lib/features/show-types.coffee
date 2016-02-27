@@ -3,6 +3,7 @@ TypeHoverElement = require '../views/type-hover-element'
 {formatTypeAsString, formatTypeAsHtml} = require '../atom-formatting'
 SubAtom = require('sub-atom')
 DOMListener = require 'dom-listener'
+{goToPosition} = require './go-to'
 
 # This one lives as one per file for all instances with an instanceLookup.
 class ShowTypes
@@ -56,7 +57,7 @@ class ShowTypes
           qualifiedName = decodeURIComponent(a.dataset.qualifiedName)
           client.symbolByName(qualifiedName, (response) =>
             if(response.declPos)
-              client.goToPosition(response.declPos)
+              goToPosition(response.declPos)
               @unstickAndHide()
           )
           

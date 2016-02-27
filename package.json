@@ -16,6 +16,7 @@
     "chokidar": "^1.4.2",
     "diff": "^2.2.1",
     "dom-listener": "^0.1.2",
+    "download": "^4.4.3",
     "emissary": "1.x",
     "fs-extra": "^0.26.5",
     "glob": "~6.0.4",

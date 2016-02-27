@@ -8,13 +8,14 @@ class AutoTypecheck
     @disposables.add buffer.onDidSave () =>
       # typecheck file on save
       if atom.config.get('Ensime.typecheckWhen') in ['save', 'typing']
-        @clientLookup()?.typecheckFile(@editor.getBuffer())
+        @clientLookup()?.typecheckFile(@editor.getPath())
 
      # Typecheck buffer while typing
     @disposables.add atom.config.observe 'Ensime.typecheckWhen', (value) =>
       if(value == 'typing')
         @typecheckWhileTypingDisposable = @editor.onDidStopChanging () =>
-          @clientLookup()?.typecheckBuffer(@editor.getBuffer())
+          b = @editor.getBuffer()
+          @clientLookup()?.typecheckBuffer(b.getPath(), b.getText())
         @disposables.add @typecheckWhileTypingDisposable
       else
         @disposables.remove @typecheckWhileTypingDisposable

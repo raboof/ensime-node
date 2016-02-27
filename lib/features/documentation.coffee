@@ -39,4 +39,28 @@ class Documentation
         @shell.openExternal(url)
       else atom.workspace.open(url, {split: split})
 
-module.exports = Documentation
+
+
+goToDocAtPoint = (client, editor) ->
+  if(client)
+    point = new Documentation(editor).getPoint()
+
+    req =
+      typehint: "DocUriAtPointReq"
+      file: editor.getBuffer().getPath()
+      point: point
+
+    client.post(req, (msg) ->
+      switch msg.typehint
+        when "FalseResponse" then atom.notifications.addError("No documentation found")
+        else Documentation.openDoc(Documentation.formUrl("localhost", client.httpPort, msg.text))
+  )
+
+goToDocIndex = ->
+  Documentation.openDoc("http://localhost:#{client.httpPort}/docs")
+
+
+module.exports = {
+  goToDocAtPoint
+  goToDocIndex
+}

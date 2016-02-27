@@ -1,5 +1,6 @@
 SymbolSearchVue = require('../views/public-symbol-search-vue')
 {addModalPanel} = require('../utils')
+{goToPosition} = require './go-to'
 
 maxSymbols = 5
 
@@ -47,7 +48,7 @@ module.exports = ->
       selected = vue.getSelected()
       if(selected)
         if(selected.pos)
-          client.goToPosition(selected.pos)
+          goToPosition(selected.pos)
         else
           atom.notifications.addError("Got no position from Ensime server :(", {
             dismissable: true

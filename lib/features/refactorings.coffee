@@ -92,7 +92,7 @@ module.exports = class Refactorings
   doImport: (client, name, file, buffer, callback = ->) ->
     @getAddImportPatch(client, name, file, (importResponse) =>
       @maybeApplyPatch(client, importResponse, () ->
-        client.typecheckBuffer(buffer, callback)
+        client.typecheckBuffer(buffer.getPath(), buffer.getText(), callback)
       )
     )
   

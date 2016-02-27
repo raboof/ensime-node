@@ -1,6 +1,4 @@
-
-
-patch = 
+patch =
   """
   --- /Users/viktor/dev/projects/ensime-test-project/src/main/scala/Bar.scala	2016-02-21 09:13:19 +0100
   +++ /Users/viktor/dev/projects/ensime-test-project/src/main/scala/Bar.scala	2016-02-21 09:13:19 +0100

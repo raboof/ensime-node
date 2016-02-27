@@ -1,7 +1,5 @@
 # Some parsing utilities, propbably buggy as hell, but works for the use cases I've seen so far
-
 {fromLisp} = require './lisp'
-
 
 typeIsArray = (value) ->
   value and
@@ -45,5 +43,7 @@ sexpToJObject = (msg) ->
 
 
 module.exports =
-  sexpToJObject: sexpToJObject
-  arrToJObject: arrToJObject
+  {
+    sexpToJObject
+    arrToJObject
+  }
