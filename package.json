@@ -9,7 +9,12 @@
   },
   "repository": "https://github.com/hedefalk/ensime-node",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "chokidar": "^1.4.3",
+    "fs": "0.0.2",
+    "lodash": "^4.5.1",
+    "loglevel": "^1.4.0"
+  },
   "coffeelintConfig": {
     "indentation": {
       "level": "error",
