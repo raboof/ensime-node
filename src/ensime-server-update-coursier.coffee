@@ -7,7 +7,7 @@ _ = require 'lodash'
   
 # Updates ensime server, invoke callback when done
 updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
-  (parsedDotEnsime, ensimeServerVersion, classpathFile, whenUpdated = () -> ) ->
+  (parsedDotEnsime, ensimeServerVersion, classpathFile, whenUpdated = -> ) ->
     scalaVersion = parsedDotEnsime.scalaVersion
     javaCmd = if(parsedDotEnsime.javaHome)
       "#{parsedDotEnsime.javaHome}#{path.sep}bin#{path.sep}java"
@@ -41,7 +41,7 @@ updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
           failure("Failed to get Coursier", exitCode)
     
     
-    runCoursier = () ->
+    runCoursier = ->
       scalaEdition = scalaVersion.substring(0, 4)
       args =
         [

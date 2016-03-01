@@ -119,7 +119,7 @@ class Client
     )
     
 
-  typecheckBuffer: (path, text, callback = () ->) =>
+  typecheckBuffer: (path, text, callback = ->) =>
     tempFilePath = getTempDir() + path
     fs.outputFile(tempFilePath, text, (err) =>
       if (err)

@@ -34,7 +34,7 @@ module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalH
           whenAllAdded(files, f)
       )
 
-    whenAllAdded([portFilePath, httpPortFilePath], () ->
+    whenAllAdded([portFilePath, httpPortFilePath], ->
       atom?.notifications.addSuccess("Ensime server started!") # quickfix :)
       port = fs.readFileSync(portFilePath).toString()
       httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())

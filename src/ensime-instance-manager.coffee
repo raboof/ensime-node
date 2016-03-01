@@ -6,7 +6,7 @@ path = require 'path'
 
 module.exports = class InstanceManager
 
-  constructor: () ->
+  constructor: ->
     @instances = []
 
   # Just something with a rootDir for now
