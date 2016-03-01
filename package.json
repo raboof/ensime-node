@@ -5,7 +5,8 @@
   "description": "Ensime integration for node.js",
   "scripts": {
     "prepublish": "grunt prepublish",
-    "test": "grunt test"
+    "test": "grunt test",
+    "watch": "grunt watch"
   },
   "repository": "https://github.com/hedefalk/ensime-node",
   "license": "MIT",
