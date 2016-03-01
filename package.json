@@ -1,6 +1,6 @@
 {
   "name": "ensime-client",
-  "main": "./lib/ensime",
+  "main": "./lib/index",
   "version": "0.1.0",
   "description": "Ensime integration for node.js",
   "scripts": {
@@ -26,10 +26,13 @@
   },
   "devDependencies": {
     "coffee-script": "^1.10.0",
+    "fs-extra": "^0.26.5",
     "grunt": "^0.4.1",
     "grunt-coffeelint": "0.0.15",
     "grunt-contrib-coffee": "^1.0.0",
+    "grunt-contrib-copy": "^0.8.2",
     "grunt-contrib-watch": "^0.6.1",
-    "grunt-shell": "^0.2.2"
+    "grunt-shell": "^0.2.2",
+    "jasmine-focused": "^1.0.7"
   }
 }

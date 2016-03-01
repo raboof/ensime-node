@@ -1,6 +1,6 @@
-root = '../..'
-{sexpToJObject, arrToJObject} = require "#{root}/lib/ensime-client/lisp/swank-extras"
-{readFromString, fromLisp} = require "#{root}/lib/ensime-client/lisp/lisp"
+lib = '../lib'
+{sexpToJObject, arrToJObject} = require "#{lib}/lisp/swank-extras"
+{readFromString, fromLisp} = require "#{lib}/lisp/lisp"
 
 describe 'sexpToJObject', ->
   it "should parse the problematic part of completion response", ->

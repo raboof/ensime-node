@@ -1,6 +1,6 @@
-root = '../..'
-{formatType, formatCompletionsSignature, formatImplicitInfo} = require "#{root}/lib/ensime-client/formatting"
-{readFromString, fromLisp} = require "#{root}/lib/ensime-client/lisp/lisp"
+lib = '../lib'
+{formatType, formatCompletionsSignature, formatImplicitInfo} = require "#{lib}/formatting"
+{readFromString, fromLisp} = require "#{lib}/lisp/lisp"
 
 
 describe 'formatCompletionsSignature', ->
