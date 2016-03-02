@@ -39,7 +39,7 @@ module.exports = (grunt) ->
           failOnError: true
       
       integration:
-        command: 'node --harmony node_modules/.bin/jasmine-focused --coffee --captureExceptions --verbose --forceexit spec-integration'
+        command: 'node --harmony node_modules/.bin/jasmine-focused --coffee --captureExceptions --forceexit spec-integration'
         options:
           stdout: true
           stderr: true
@@ -63,7 +63,8 @@ module.exports = (grunt) ->
     require('rimraf').sync('lib')
 
   grunt.registerTask('lint', ['coffeelint'])
-  grunt.registerTask('default', ['lint', 'copy', 'coffee'])
-  grunt.registerTask('test', ['copy', 'coffee', 'lint', 'shell:test', 'shell:integration'])
-  grunt.registerTask('integration', ['copy', 'coffee', 'lint', 'shell:integration'])
-  grunt.registerTask('prepublish', ['clean', 'lint', 'copy', 'coffee', 'test', ['integration']])
+  grunt.registerTask('build', ['lint', 'copy', 'coffee'])
+  grunt.registerTask('default', ['build'])
+  grunt.registerTask('test', ['build', 'shell:test'])
+  grunt.registerTask('integration', ['build', 'shell:integration'])
+  grunt.registerTask('prepublish', ['clean', 'build', 'test', 'integration'])

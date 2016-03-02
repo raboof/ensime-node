@@ -6,6 +6,7 @@
   "scripts": {
     "prepublish": "grunt prepublish",
     "test": "grunt test",
+    "integration": "grunt integration",
     "watch": "grunt watch"
   },
   "repository": "https://github.com/hedefalk/ensime-node",
