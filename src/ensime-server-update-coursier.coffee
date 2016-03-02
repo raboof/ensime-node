@@ -7,41 +7,19 @@ _ = require 'lodash'
   
 # Updates ensime server, invoke callback when done
 updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
+  log.info('update ensime server, tempdir: ' + tempdir)
+
   (parsedDotEnsime, ensimeServerVersion, classpathFile, whenUpdated = -> ) ->
     scalaVersion = parsedDotEnsime.scalaVersion
-    javaCmd = if(parsedDotEnsime.javaHome)
-      "#{parsedDotEnsime.javaHome}#{path.sep}bin#{path.sep}java"
-    else
-      "java"
-
+    
     logPid = getPidLogger()
     
-    if not fs.existsSync(tempdir)
-      fs.mkdirSync(tempdir)
-
-      
-      
-    if fs.existsSync(tempdir + path.sep + tempdir)
-      runCoursier()
-    else
-      # """curl -L -o coursier https://git.io/vgvpD && chmod +x coursier"""
-      coursierUrl = 'https://git.io/vgvpD'
-      getCoursier = spawn('curl', ['-L', '-o', 'coursier', coursierUrl], {cwd: tempdir})
-      logPid(getCoursier)
-      getCoursier.on 'close', (exitCode) ->
-        if(exitCode == 0)
-          chmod = spawn('chmod', ['+x', 'coursier'], {cwd: tempdir})
-          logPid(chmod)
-          chmod.on 'close', (chmodExitCode) ->
-            if(chmodExitCode == 0)
-              runCoursier()
-            else
-              failure("Failed to chmod coursier", chmodExitCode)
-        else
-          failure("Failed to get Coursier", exitCode)
-    
-    
     runCoursier = ->
+      javaCmd = if(parsedDotEnsime.javaHome)
+        "#{parsedDotEnsime.javaHome}#{path.sep}bin#{path.sep}java"
+      else
+        "java"
+        
       scalaEdition = scalaVersion.substring(0, 4)
       args =
         [
@@ -74,6 +52,32 @@ updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
           fs.writeFile(classpathFile, classpath, whenUpdated)
         else
           failure("Ensime server update failed", exitCode)
+        
+
+
+    if not fs.existsSync(tempdir)
+      fs.mkdirSync(tempdir)
+
+    if fs.existsSync(tempdir + path.sep + 'coursier')
+      runCoursier()
+    else
+      # """curl -L -o coursier https://git.io/vgvpD && chmod +x coursier"""
+      coursierUrl = 'https://git.io/vgvpD'
+      getCoursier = spawn('curl', ['-L', '-o', 'coursier', coursierUrl], {cwd: tempdir})
+      logPid(getCoursier)
+      getCoursier.on 'close', (exitCode) ->
+        if(exitCode == 0)
+          chmod = spawn('chmod', ['+x', 'coursier'], {cwd: tempdir})
+          logPid(chmod)
+          chmod.on 'close', (chmodExitCode) ->
+            if(chmodExitCode == 0)
+              runCoursier()
+            else
+              failure("Failed to chmod coursier", chmodExitCode)
+        else
+          failure("Failed to get Coursier", exitCode)
+    
+    
           
 
 module.exports = updateEnsimeServer
