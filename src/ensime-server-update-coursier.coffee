@@ -1,12 +1,13 @@
 {spawn} = require('child_process')
 fs = require('fs')
 path = require('path')
-log = require('loglevel').getLogger('ensime.server-update')
+loglevel = require 'loglevel'
 _ = require 'lodash'
 
   
 # Updates ensime server, invoke callback when done
 updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
+  log = loglevel.getLogger('ensime.server-update')
   log.info('update ensime server, tempdir: ' + tempdir)
 
   (parsedDotEnsime, ensimeServerVersion, classpathFile, whenUpdated = -> ) ->
@@ -54,7 +55,7 @@ updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
           failure("Ensime server update failed", exitCode)
         
 
-
+    log.info("checking tempdir: " + tempdir)
     if not fs.existsSync(tempdir)
       fs.mkdirSync(tempdir)
 

@@ -37,6 +37,15 @@ module.exports = (grunt) ->
           stdout: true
           stderr: true
           failOnError: true
+      
+      integration:
+        command: 'node --harmony node_modules/.bin/jasmine-focused --coffee --captureExceptions --verbose --forceexit spec-integration'
+        options:
+          stdout: true
+          stderr: true
+          failOnError: true
+          execOptions:
+            maxBuffer: 500*1024
     
     watch:
       files: ['**/*.coffee'],
@@ -55,5 +64,6 @@ module.exports = (grunt) ->
 
   grunt.registerTask('lint', ['coffeelint'])
   grunt.registerTask('default', ['lint', 'copy', 'coffee'])
-  grunt.registerTask('test', ['copy', 'coffee', 'lint', 'shell:test'])
-  grunt.registerTask('prepublish', ['clean', 'lint', 'copy', 'coffee'])
+  grunt.registerTask('test', ['copy', 'coffee', 'lint', 'shell:test', 'shell:integration'])
+  grunt.registerTask('integration', ['copy', 'coffee', 'lint', 'shell:integration'])
+  grunt.registerTask('prepublish', ['clean', 'lint', 'copy', 'coffee', 'test', ['integration']])
