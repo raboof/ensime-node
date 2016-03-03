@@ -17,7 +17,8 @@ module.exports = {
   formatting
   ensimeServerUpdate
   dotEnsimeUtils
-  ensimeServerStartup
+  startServerFromAssemblyJar: ensimeServerStartup.startServerFromAssemblyJar
+  startServerFromFile: ensimeServerStartup.startServerFromFile
   ensimeClientStartup
 }
   

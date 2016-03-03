@@ -5,8 +5,9 @@ loglevel = require 'loglevel'
 _ = require 'lodash'
 
 
-javaArgs = (scalaVersion, updateChanging = false) ->
-  scalaEdition = scalaVersion.substring(0, 4)
+javaArgs = (dotEnsime, updateChanging = false) ->
+  scalaVersion = dotEnsime.scalaVersion
+  scalaEdition = dotEnsime.scalaEdition
   args =
     [
       '-noverify', # https://github.com/alexarchambault/coursier/issues/176#issuecomment-188772685
@@ -45,7 +46,7 @@ updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
     
       spaceSeparatedClassPath = ""
       
-      args = javaArgs(parsedDotEnsime.scalaVersion, false)
+      args = javaArgs(parsedDotEnsime, false)
       
       log.trace([javaCmd], args, tempdir)
       pid = spawn(javaCmd, args, {cwd: tempdir})

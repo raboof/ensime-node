@@ -1,5 +1,7 @@
 path = require 'path'
 _ = require 'lodash'
+{spawn} = require('child_process')
+log = require('loglevel').getLogger('server-startup')
 
 # sort monkeys and add tools.jar
 fixClasspath = (javaHome, classpathList) ->
@@ -25,9 +27,29 @@ javaCmdOf = (dotEnsime) ->
   path.join(dotEnsime.javaHome, 'bin', 'java')
 
 
+spawnServer = (javaCmd, args, detached = false) ->
+  spawn(javaCmd, args, {detached: detached})
+  
 
+startServerFromClasspath = (classpath, dotEnsime, serverFlags = "") ->
+  fixedClasspath = fixClasspath(dotEnsime.javaHome, classpath)
+  cmd = javaCmdOf(dotEnsime)
+  args = javaArgsOf(fixedClasspath, dotEnsime.dotEnsimePath, serverFlags)
+  log.info("Starting Ensime server with #{cmd} #{args}")
+  pid = spawnServer(cmd, args)
+  logServer(pid, path.join(dotEnsime.cacheDir,'server.log'))
+  
+logServer = (pid, path) ->
+  serverLog = fs.createWriteStream(path)
+  pid.stdout.pipe(serverLog)
+  pid.stderr.pipe(serverLog)
+  pid.stdin.end()
+  
+  
 module.exports = {
   fixClasspath
   javaArgsOf
-  javaCmdOf
+  javaCmdOf,
+  spawnServer,
+  startServerFromClasspath
 }

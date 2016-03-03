@@ -16,14 +16,18 @@ parseDotEnsime = (path) ->
   dotEnsimeJs = sexpToJObject(dotEnsimeLisp)
   subprojects = dotEnsimeJs[':subprojects']
   sourceRoots = _.flattenDeep(_.map(subprojects, (sp) -> sp[':source-roots']))
-  
+  scalaVersion = dotEnsimeJs[':scala-version']
+  scalaEdition = scalaVersion.substring(0, 4)
+
   {
     name: dotEnsimeJs[':name']
-    scalaVersion: dotEnsimeJs[':scala-version']
+    scalaVersion: scalaVersion
+    scalaEdition: scalaEdition
     javaHome: dotEnsimeJs[':java-home']
     javaFlags: dotEnsimeJs[':java-flags']
     rootDir: dotEnsimeJs[':root-dir']
     cacheDir: dotEnsimeJs[':cache-dir']
+    compilerJars: dotEnsimeJs[':scala-compiler-jars']
     dotEnsimePath: path
     sourceRoots: sourceRoots
   }
