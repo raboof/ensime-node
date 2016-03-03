@@ -66,5 +66,5 @@ module.exports = (grunt) ->
   grunt.registerTask('build', ['lint', 'copy', 'coffee'])
   grunt.registerTask('default', ['build'])
   grunt.registerTask('test', ['build', 'shell:test'])
-  grunt.registerTask('integration', ['build', 'shell:integration'])
-  grunt.registerTask('prepublish', ['clean', 'build', 'test', 'integration'])
+  grunt.registerTask('it', ['build', 'shell:integration'])
+  grunt.registerTask('prepublish', ['clean', 'build', 'test', 'it'])

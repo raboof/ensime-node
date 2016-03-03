@@ -29,7 +29,7 @@ javaArgs = (dotEnsime, updateChanging = false) ->
   
   
 # Updates ensime server, invoke callback when done
-updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
+module.exports = (tempdir, getPidLogger, failure) ->
   log = loglevel.getLogger('ensime.server-update')
   log.info('update ensime server, tempdir: ' + tempdir)
 
@@ -86,7 +86,3 @@ updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
         else
           failure("Failed to get Coursier", exitCode)
     
-    
-          
-
-module.exports = updateEnsimeServer
