@@ -4,6 +4,28 @@ path = require('path')
 loglevel = require 'loglevel'
 _ = require 'lodash'
 
+
+javaArgs = (scalaVersion, updateChanging = false) ->
+  scalaEdition = scalaVersion.substring(0, 4)
+  args =
+    [
+      '-noverify', # https://github.com/alexarchambault/coursier/issues/176#issuecomment-188772685
+      '-jar', './coursier',
+      'fetch'
+    ]
+  args.push ['-m', 'update-changing']... if updateChanging
+  args.push [
+    '-r', 'file:///$HOME/.m2/repository',
+    '-r', 'https://oss.sonatype.org/content/repositories/snapshots',
+    '-r', 'https://jcenter.bintray.com/',
+    "org.ensime:ensime_#{scalaEdition}:0.9.10-SNAPSHOT",
+    '-V', "org.scala-lang:scala-compiler:#{scalaVersion}",
+    '-V', "org.scala-lang:scala-library:#{scalaVersion}",
+    '-V', "org.scala-lang:scala-reflect:#{scalaVersion}",
+    '-V', "org.scala-lang:scalap:#{scalaVersion}"
+  ]...
+  args
+  
   
 # Updates ensime server, invoke callback when done
 updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
@@ -11,7 +33,6 @@ updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
   log.info('update ensime server, tempdir: ' + tempdir)
 
   (parsedDotEnsime, ensimeServerVersion, classpathFile, whenUpdated = -> ) ->
-    scalaVersion = parsedDotEnsime.scalaVersion
     
     logPid = getPidLogger()
     
@@ -21,24 +42,10 @@ updateEnsimeServer = (tempdir, getPidLogger, failureLog) ->
       else
         "java"
         
-      scalaEdition = scalaVersion.substring(0, 4)
-      args =
-        [
-          '-noverify', # https://github.com/alexarchambault/coursier/issues/176#issuecomment-188772685
-          '-jar', './coursier',
-          'fetch',
-          '-m', 'update-changing',
-          '-r', 'file:///$HOME/.m2/repository',
-          '-r', 'https://oss.sonatype.org/content/repositories/snapshots',
-          '-r', 'https://jcenter.bintray.com/',
-          "org.ensime:ensime_#{scalaEdition}:0.9.10-SNAPSHOT",
-          '-V', "org.scala-lang:scala-compiler:#{scalaVersion}",
-          '-V', "org.scala-lang:scala-library:#{scalaVersion}",
-          '-V', "org.scala-lang:scala-reflect:#{scalaVersion}",
-          '-V', "org.scala-lang:scalap:#{scalaVersion}"
-        ]
-
+    
       spaceSeparatedClassPath = ""
+      
+      args = javaArgs(parsedDotEnsime.scalaVersion, false)
       
       log.trace([javaCmd], args, tempdir)
       pid = spawn(javaCmd, args, {cwd: tempdir})
