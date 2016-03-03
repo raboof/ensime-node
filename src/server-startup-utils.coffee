@@ -2,6 +2,7 @@ path = require 'path'
 _ = require 'lodash'
 {spawn} = require('child_process')
 log = require('loglevel').getLogger('server-startup')
+fs = require 'fs'
 
 # sort monkeys and add tools.jar
 fixClasspath = (javaHome, classpathList) ->
@@ -38,6 +39,7 @@ startServerFromClasspath = (classpath, dotEnsime, serverFlags = "") ->
   log.info("Starting Ensime server with #{cmd} #{args}")
   pid = spawnServer(cmd, args)
   logServer(pid, path.join(dotEnsime.cacheDir,'server.log'))
+  pid
   
 logServer = (pid, path) ->
   serverLog = fs.createWriteStream(path)
