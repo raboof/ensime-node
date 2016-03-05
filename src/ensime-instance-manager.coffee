@@ -12,7 +12,7 @@ module.exports = class InstanceManager
   # Just something with a rootDir for now
   registerInstance: (instance) ->
     @instances.push(instance)
-    
+
   stopInstance: (dotEnsime) ->
     for instance in @instances when instance.rootDir == dotEnsime.rootDir
       do (instance) =>
@@ -24,9 +24,9 @@ module.exports = class InstanceManager
     _.find(@instances, (instance) ->
       path.startsWith(instance.dotEnsime.cacheDir) or instance.isSourceOf(path)
     )
-    
+
   destroyAll: ->
-    _.foreach(@instances, (instance) ->
+    _.forEach(@instances, (instance) ->
       instance.destroy()
     )
 
