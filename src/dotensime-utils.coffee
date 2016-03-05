@@ -2,6 +2,9 @@ fs = require ('fs')
 lisp = require ('./lisp/lisp')
 {sexpToJObject} = require './lisp/swank-extras'
 _ = require 'lodash'
+Promise = require 'bluebird'
+glob = require 'glob'
+
 
 readDotEnsime = (path) ->
   raw = fs.readFileSync(path)
@@ -32,10 +35,28 @@ parseDotEnsime = (path) ->
     sourceRoots: sourceRoots
   }
 
+# Gives promise of .ensime paths
+allDotEnsimesInPaths = (paths) ->
+  globTask = Promise.promisify(glob)
+  promises = dirs.map (dir) ->
+    globTask(
+      '.ensime'
+        cwd: dir
+        matchBase: true
+        nodir: true
+        realpath: true
+        ignore: '**/{node_modules,.ensime_cache,.git,target,.idea}/**'
+    )
+  promise = Promise.all(promises)
+  promise.then (dotEnsimesUnflattened) ->
+    {path: path} for path in _.flattenDeep(dotEnsimesUnflattened)
+  
+
 dotEnsimesFilter = (path, stats) ->
   !stats.isDirectory() && ! path.endsWith('.ensime')
 
 module.exports = {
   parseDotEnsime
   dotEnsimesFilter
+  allDotEnsimesInPaths
 }

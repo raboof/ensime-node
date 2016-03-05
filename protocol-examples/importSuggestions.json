@@ -1,0 +1,36 @@
+{
+  "callId": 16,
+  "payload": {
+    "typehint": "ImportSuggestions",
+    "symLists": [
+      [
+        {
+          "name": "net.liftweb.util.TimeHelpers$TimeSpan",
+          "localName": "TimeHelpers$TimeSpan",
+          "pos": {
+            "typehint": "LineSourcePosition",
+            "file": "/Users/viktor/dev/projects/ensime-test-project/.ensime_cache/dep-src/source-jars/net/liftweb/util/TimeHelpers.scala",
+            "line": 89
+          },
+          "typehint": "TypeSearchResult",
+          "declAs": {
+            "typehint": "Class"
+          }
+        },
+        {
+          "name": "net.liftweb.util.TimeHelpers$TimeSpanBuilder",
+          "localName": "TimeHelpers$TimeSpanBuilder",
+          "pos": {
+            "typehint": "LineSourcePosition",
+            "file": "/Users/viktor/dev/projects/ensime-test-project/.ensime_cache/dep-src/source-jars/net/liftweb/util/TimeHelpers.scala",
+            "line": 56
+          },
+          "typehint": "TypeSearchResult",
+          "declAs": {
+            "typehint": "Class"
+          }
+        }
+      ]
+    ]
+  }
+}
