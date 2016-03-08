@@ -13,7 +13,7 @@ module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalH
 
   if fs.existsSync(portFilePath) && fs.existsSync(httpPortFilePath)
     # server running, no need to start
-    port = fs.readFileSync(portFilePath).toString()
+    port = removeTrailingNewline(fs.readFileSync(portFilePath).toString())
     httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
     callback(new Client(port, httpPort, generalHandler))
   else
