@@ -1,0 +1,46 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "isolatedModules": false,
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false,
+        "preserveConstEnums": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "outDir": "lib",
+        "sourceMap": true
+    },
+    "filesGlob": [
+        "src/**/*.ts",
+        "typings/main/**/*.ts",
+        "!node_modules/**"
+    ],
+    "compileOnSave": false,
+    "buildOnSave": false,
+    "atom": {
+        "rewriteTsconfig": false
+    },
+    "files": [
+        "src/dotensime-utils.ts",
+        "src/ensime-server-startup.ts",
+        "src/formatting.ts",
+        "src/index.ts",
+        "src/lisp/lisp.d.ts",
+        "src/lisp/swank-extras.d.ts",
+        "src/server-startup-utils.ts",
+        "src/types.ts",
+        "src/typings/server-api.d.ts",
+        "typings/main/ambient/glob/index.d.ts",
+        "typings/main/ambient/loglevel/loglevel.d.ts",
+        "typings/main/ambient/minimatch/index.d.ts",
+        "typings/main/ambient/node/node.d.ts",
+        "typings/main/definitions/bluebird/bluebird.d.ts",
+        "typings/main/definitions/lodash/lodash.d.ts"
+    ]
+}

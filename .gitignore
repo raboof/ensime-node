@@ -4,3 +4,5 @@ node_modules
 lib
 api.json
 npm-debug.log
+.tscache
+/typings

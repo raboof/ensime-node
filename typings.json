@@ -1,0 +1,13 @@
+{
+  "name": "ensime-client",
+  "dependencies": {
+    "bluebird": "github:typed-typings/npm-bluebird#524d5cc66654fe7c8dcbccf90faeaa70588853a0",
+    "glob": "registry:npm/glob#6.0.0+20160211003958",
+    "lodash": "github:typed-typings/npm-lodash#65781ee6b25562ee9b5913043a3ba249acfcee17"
+  },
+  "devDependencies": {},
+  "ambientDependencies": {
+    "loglevel": "github:DefinitelyTyped/DefinitelyTyped/loglevel/loglevel.d.ts#e85bc9decb401ea14d29143def204d82ec41e9e1",
+    "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#48c1e3c1d6baefa4f1a126f188c27c4fefd36bff"
+  }
+}

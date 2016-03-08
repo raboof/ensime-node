@@ -8,10 +8,6 @@ temp = require 'temp'
 tempDir = temp.mkdirSync()
 getTempDir = -> tempDir
 
-# TODO:
-# Client should be stripped of everything Atom specific
-# to be a node ensime-node client ready to be separated into
-# npm module used bs vscode for instance
 module.exports =
 class Client
   constructor: (port, @httpPort, generalMsgHandler, @serverPid = undefined) ->

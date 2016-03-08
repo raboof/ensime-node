@@ -35,9 +35,7 @@ arrToJObject = (x) ->
     x
 
 
-# Oh noes, this is crap, but fuck it and wait for json protocol
 sexpToJObject = (msg) ->
-  that = this
   arr = fromLisp(msg) # This arrayifies the lisp cons-list
   arrToJObject(arr)
 
