@@ -9,6 +9,25 @@ module.exports = (grunt) ->
         src: ['**/*.coffee']
         dest: 'lib'
         ext: '.js'
+        
+    ts:
+      default:
+        tsconfig: true
+        # src: ["src/**/*.ts"]
+        # outDir: "lib"
+        # baseDir: "lib"
+        options:
+          compiler: './node_modules/typescript/bin/tsc'
+          module: 'commonjs'
+          mapRoot: '/maps'
+      
+      dev:
+        tsconfig: true
+        options:
+          compiler: './node_modules/typescript/bin/tsc'
+          module: 'commonjs'
+          mapRoot: '/maps'
+        watch: "src/**/*.ts"
 
     coffeelint:
       options:
@@ -54,6 +73,7 @@ module.exports = (grunt) ->
 
 
   grunt.loadNpmTasks('grunt-contrib-coffee')
+  grunt.loadNpmTasks('grunt-ts')
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-shell')
   grunt.loadNpmTasks('grunt-coffeelint')

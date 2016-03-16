@@ -1,13 +1,13 @@
 {
   "name": "ensime-client",
-  "main": "./lib/index",
+  "main": "lib/index.js",
   "version": "0.2.3",
   "description": "Ensime integration for node.js",
   "scripts": {
     "prepublish": "grunt prepublish",
     "test": "grunt test",
     "it": "grunt it",
-    "watch": "grunt watch"
+    "watch": "grunt ts:dev"
   },
   "repository": "https://github.com/hedefalk/ensime-node",
   "license": "MIT",
@@ -43,6 +43,8 @@
     "grunt-contrib-copy": "^0.8.2",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-shell": "^0.2.2",
-    "jasmine-focused": "^1.0.7"
+    "grunt-ts": "^5.3.2",
+    "jasmine-focused": "^1.0.7",
+    "typescript": "^1.8.7"
   }
 }
