@@ -1,4 +1,4 @@
-{fixClasspath, javaArgsOf, javaCmdOf} = require '../src/server-startup-utils'
+{fixClasspath, javaArgsOf, javaCmdOf} = require '../lib/server-startup-utils'
 
 describe 'server-startup', ->
   describe 'fixClasspath', ->

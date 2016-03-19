@@ -1,15 +1,17 @@
-import Swank = require('./lisp/swank-protocol');
-import Client = require('./client');
-import Instance = require('./ensime-instance');
-import InstanceManager = require('./ensime-instance-manager');
+let Swank = require('./lisp/swank-protocol');
+let Client = require('./client');
+let InstanceManager = require('./ensime-instance-manager');
 
+import types = require('./types')
 import formatting = require('./formatting');
-import ensimeServerUpdate = require('./ensime-server-update-coursier');
+let ensimeServerUpdate = require('./ensime-server-update-coursier');
 import dotEnsimeUtils = require('./dotensime-utils');
 import ensimeServerStartup = require('./ensime-server-startup')
-import ensimeClientStartup = require('./ensime-client-startup')
+let ensimeClientStartup = require('./ensime-client-startup')
 
 console.log("index running")
+
+const Instance = types.EnsimeInstance
 
 module.exports = {
   Swank,

@@ -1,45 +1,39 @@
 lib = '../lib'
-{formatType, formatCompletionsSignature, formatImplicitInfo} = require "#{lib}/formatting"
+{formatType, formatImplicitInfo, formatTypeNameAsString} = require "#{lib}/formatting"
 {readFromString, fromLisp} = require "#{lib}/lisp/lisp"
 
 
-describe 'formatCompletionsSignature', ->
-  it "should format x, y -> z", ->
-    inputParams = [[["x", "Int"], ["y", "Int"]]]
-    result = formatCompletionsSignature(inputParams)
-
-    expect(result).toBe("(${1:x: Int}, ${2:y: Int})")
-
-  it "should format foo(asdf: Int, y: Int)", ->
-    inputString =
-        """
-        {"name":"foo","typeId":2801,"typeSig":{"sections":[[["asdf","Int"],["y","Int"]]],"result":"Int"},"relevance":90,"isCallable":true}
-        """
-    json = JSON.parse(inputString)
-    result = formatCompletionsSignature(json.typeSig.sections)
-    expect(result).toBe("(${1:asdf: Int}, ${2:y: Int})")
-
-  it "should format curried", ->
-    sections =
-       [
-          [
-            [
-              "x",
-              "Int"
-            ]
-          ],
-          [
-            [
-              "y",
-              "Int"
-            ]
-          ]
-        ]
-
-    result = formatCompletionsSignature(sections)
-    expect(result).toBe("(${1:x: Int})(${2:y: Int})")
-
-
+describe 'formatTypeNameAsString', ->
+  it 'should use name', ->
+    type =
+      "name": "A",
+      "fullName": "wrong.A"
+      "typehint": "BasicTypeInfo",
+      "declAs": {
+        "typehint": "Nil"
+      }
+    expect(formatTypeNameAsString(type)).toBe("A")
+    
+  it 'should not match scalaz as scala', ->
+    type =
+      "name": "A",
+      "fullName": "scalaz.A"
+      "typehint": "BasicTypeInfo",
+      "declAs": {
+        "typehint": "Nil"
+      }
+    expect(formatTypeNameAsString(type)).toBe("A")
+    
+  it 'should match and remove scala.', ->
+    type =
+      "name": "Integer",
+      "fullName": "scala.Integer"
+      "typehint": "BasicTypeInfo",
+      "declAs": {
+        "typehint": "Nil"
+      }
+    expect(formatTypeNameAsString(type)).toBe("Integer")
+    
 describe 'formatType', ->
   it "should use simple name for type param", ->
     typeStr = """
@@ -58,29 +52,6 @@ describe 'formatType', ->
 
     type = JSON.parse(typeStr)
     expect(formatType(type)).toBe("A")
-
-  it "should use fullName for class type", ->
-    typeStr = """
-        {
-            "name": "Thang",
-            "fullName": "se.foo.bar.Thang",
-            "pos": {
-              "typehint": "OffsetSourcePosition",
-              "file": "/Users/viktor/dev/projects/ensime-test-project/src/main/scala/se/foo/bar/Thang.scala",
-              "offset": 31
-            },
-            "typehint": "BasicTypeInfo",
-            "typeId": 689,
-            "typeArgs": [],
-            "members": [],
-            "declAs": {
-              "typehint": "Class"
-            }
-          }
-      """
-    type = JSON.parse(typeStr)
-    expect(formatType(type)).toBe("se.foo.bar.Thang")
-
 
   it "should format by-name with arrow", ->
     type =
@@ -147,7 +118,7 @@ describe 'formatType', ->
       "declAs": {
         "typehint": "Class"
       }
-    expect(formatType(type)).toBe("slick.ast.ColumnOption[C]*")
+    expect(formatType(type)).toBe("ColumnOption[C]*")
               
               
   it "should format implicit params", ->

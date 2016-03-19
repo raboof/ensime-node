@@ -1,7 +1,5 @@
 import _ = require('lodash');
 
-
-
 export interface DotEnsime {
     name: string
     scalaVersion: string
@@ -15,17 +13,13 @@ export interface DotEnsime {
     sourceRoots: [string]
 }
 
-
-
 export class EnsimeInstance  {
     rootDir: string;
     
     constructor(public dotEnsime: DotEnsime, public client: any, public ui?: any) {
     }
     
-    isSourceOf(path) {
-        _.some(this.dotEnsime.sourceRoots, (sourceRoot) => path.startsWith(sourceRoot))    
-    } 
+    isSourceOf = (path) => _.some(this.dotEnsime.sourceRoots, (sourceRoot) => path.startsWith(sourceRoot))    
     
     destroy () {
         this.client.destroy()

@@ -4,9 +4,9 @@ import api = require("server-api");
 
 import _ = require ('lodash');
 
-const functionMatcher = new RegExp("scala\.Function\d{1,2}")
-const scalaPackageMatcher = new RegExp("scala\.([\s\S]*)")
-const refinementMatcher = new RegExp("(.*)\$<refinement>") // scalaz.syntax.ApplyOps$<refinement>
+const functionMatcher = new RegExp("scala\\.Function\\d{1,2}")
+const scalaPackageMatcher = new RegExp("scala\\.([\\s\\S]*)")
+const refinementMatcher = new RegExp("(.*)\\$<refinement>") // scalaz.syntax.ApplyOps$<refinement>
 
 export const fixQualifiedTypeName = (theType) => {
     const refinementMatch = refinementMatcher.exec(theType.fullName)
@@ -17,23 +17,20 @@ export const fixQualifiedTypeName = (theType) => {
 }
     
 export function fixShortTypeName(theType) {
-  const refinementMatch = refinementMatcher.exec(theType.fullName)
-  if(refinementMatch)
-    return _.last(_.split(theType.fullName, "."))
-  else
-    return theType.name
+    const refinementMatch = refinementMatcher.exec(theType.fullName)
+    if(refinementMatch)
+        return _.last(_.split(theType.fullName, "."))
+    else
+        return theType.name
 }
     
     
 export function formatTypeNameAsString(theType: api.Type) : string {
     const scalaPackage = scalaPackageMatcher.exec(theType.fullName)
     if(scalaPackage)
-      return scalaPackage[1]
+        return scalaPackage[1]
     else {
-      if(theType.declAs.typehint in ['Class', 'Trait', 'Object', 'Interface']) 
-          return theType.fullName
-      else
-          return theType.name
+        return theType.name
     }
 }
 
@@ -66,7 +63,6 @@ export const formatTypeWith = (typeNameFormatter: (x: any) => string) => (theTyp
             if(! typeArgs || typeArgs.length == 0)
               return name
             else {
-              
               const formattedTypeArgs = typeArgs.map(recur)
               if(theType.fullName == 'scala.<byname>')
                 return "=> " + formattedTypeArgs.join(", ")
@@ -85,9 +81,9 @@ export const formatTypeWith = (typeNameFormatter: (x: any) => string) => (theTyp
             }
         }
 
-        if(theType.typehint == "ArrowTypeInfo")
+        if(theType.typehint === "ArrowTypeInfo")
           return formatParamSections(theType.paramSections) + ": " + recur(theType.resultType)
-        else if(theType.typehint == "BasicTypeInfo")
+        else if(theType.typehint === "BasicTypeInfo")
           return formatBasicType(theType)
     }
     return recur(theType)
