@@ -1,7 +1,7 @@
 {
   "name": "ensime-client",
   "main": "lib/index.js",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Ensime integration for node.js",
   "scripts": {
     "prepublish": "grunt prepublish",
