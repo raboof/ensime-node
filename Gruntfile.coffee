@@ -56,6 +56,8 @@ module.exports = (grunt) ->
           stdout: true
           stderr: true
           failOnError: true
+      typings:
+        command: './node_modules/.bin/typings install'
       
       integration:
         command: 'node --harmony node_modules/.bin/jasmine-focused --coffee --captureExceptions --forceexit spec-integration'
@@ -83,7 +85,7 @@ module.exports = (grunt) ->
     require('rimraf').sync('lib')
 
   grunt.registerTask('lint', ['coffeelint'])
-  grunt.registerTask('build', ['lint', 'copy', 'ts:default', 'coffee'])
+  grunt.registerTask('build', ['shell:typings', 'lint', 'copy', 'ts:default', 'coffee'])
   grunt.registerTask('default', ['build'])
   grunt.registerTask('test', ['build', 'shell:test'])
   grunt.registerTask('it', ['build', 'shell:integration'])
