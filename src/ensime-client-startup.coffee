@@ -15,7 +15,7 @@ module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalH
     # server running, no need to start
     port = removeTrailingNewline(fs.readFileSync(portFilePath).toString())
     httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
-    callback(new Client(port, httpPort, generalHandler))
+    new Client(port, httpPort, generalHandler, callback)
   else
     serverPid = undefined
 
@@ -37,7 +37,7 @@ module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalH
     whenAllAdded([portFilePath, httpPortFilePath], ->
       port = fs.readFileSync(portFilePath).toString()
       httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
-      callback(new Client(port, httpPort, generalHandler, serverPid))
+      new Client(port, httpPort, generalHandler, callback, serverPid)
     )
 
     # no server running, start that first

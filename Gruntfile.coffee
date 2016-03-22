@@ -69,8 +69,8 @@ module.exports = (grunt) ->
             maxBuffer: 500*1024
     
     watch:
-      files: ['**/*.coffee'],
-      tasks: ['lint', 'coffee', 'test']
+      files: ['**/*.coffee', '**/*.ts']
+      tasks: ['test']
     
 
 

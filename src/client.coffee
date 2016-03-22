@@ -4,77 +4,61 @@ fs = require 'fs-extra'
 path = require 'path'
 log = require('loglevel').getLogger('ensime.client')
 temp = require 'temp'
+WebSocket = require("ws")
+
 
 tempDir = temp.mkdirSync()
 getTempDir = -> tempDir
 
 module.exports =
 class Client
-  constructor: (port, @httpPort, generalMsgHandler, @serverPid = undefined) ->
+  constructor: (port, @httpPort, @generalMsgHandler, callback, @serverPid = undefined) ->
     @ensimeMessageCounter = 1
     @callbackMap = {}
 
-    @parser = new Swank.SwankParser( (env) =>
-      log.trace("incoming: #{env}")
-      json = JSON.parse(env)
-      callId = json.callId
-      # If RpcResponse - lookup in map, otherwise use some general function for handling general msgs
+    @websocket = new WebSocket("ws://localhost:" + @httpPort + "/jerky")
 
-      if(callId)
-        try
-          @callbackMap[callId](json.payload)
-        catch error
-          log.trace("error in callback: #{error}")
-        finally
-          delete @callbackMap[callId]
-      else
-        generalMsgHandler(json.payload)
-    )
+    @websocket.on "open", =>
+      log.trace "connecting websocket…"
+      callback(this)
+  
+    @websocket.on "message", (msg) =>
+      log.trace("incoming: #{msg}")
+      @handleIncoming(msg)
+  
+    @websocket.on "error", (error) ->
+      log.error error
+  
+    @websocket.on "close", ->
+      log.trace "websocket closed from server"
+  
+  handleIncoming: (env) ->
+    json = JSON.parse(env)
+    callId = json.callId
+    # If RpcResponse - lookup in map, otherwise use some general function for handling general msgs
 
-    @openSocket(port)
+    if(callId)
+      try
+        @callbackMap[callId](json.payload)
+      catch error
+        log.trace("error in callback: #{error}")
+      finally
+        delete @callbackMap[callId]
+    else
+      @generalMsgHandler(json.payload)
+  
 
   # Kills server if it was spawned from here.
   destroy: ->
-    @socket.destroy()
+    @websocket.terminate()
     @serverPid?.kill()
 
-  openSocket: (port) ->
-    log.trace('connecting on port: ' + port)
-    @socket = net.connect({port: port, allowHalfOpen: true} , ->
-      log.trace('client connected')
-    )
-
-    @socket.on('data', (data) =>
-      @parser.execute(data)
-    )
-
-    @socket.on('end', ->
-      log.trace("Ensime server disconnected")
-    )
-
-    @socket.on('close', (data) ->
-      log.trace("Ensime server close event: " + data)
-    )
-
-    @socket.on('error', (data) ->
-      if (data.code == 'ECONNREFUSED')
-        log.error("Connection refused connecting to ensime, it is probably not running. Remove .ensime_cache/port and .ensime_cache/http and try again.")
-      else if (data.code == 'EADDRNOTAVAIL')
-        log.trace(data)
-        # happens when connecting too soon I think
-      else
-        log.trace("Ensime server error event: " + data)
-    )
-
-    @socket.on('timeout', ->
-      log.trace("Ensime server timeout event")
-    )
-
+  
   postString: (msg, callback) =>
-    swankMsg = Swank.buildMessage """{"req": #{msg}, "callId": #{@ensimeMessageCounter}}"""
+    msg = """{"req": #{msg}, "callId": #{@ensimeMessageCounter}}"""
     @callbackMap[@ensimeMessageCounter++] = callback
-    log.trace("outgoing: " + swankMsg)
-    @socket.write(swankMsg, "UTF8")
+    log.trace("outgoing: " + msg)
+    @websocket.send(msg)
 
   # Public:
   post: (msg, callback) ->
@@ -128,8 +112,6 @@ class Client
             contentsIn: tempFilePath
         @post(msg, callback)
     )
-
-
   
   typecheckFile: (path) =>
     msg =
@@ -144,6 +126,7 @@ class Client
       typehint: 'SymbolByNameReq'
       typeFullName: qualifiedName
     @post(msg, callback)
+    
     
     
   formatSourceFile: (path, contents, callback) ->
