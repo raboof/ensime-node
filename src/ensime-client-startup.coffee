@@ -2,7 +2,7 @@ path = require 'path'
 fs = require 'fs'
 log = require('loglevel').getLogger('ensime.startup')
 chokidar = require 'chokidar'
-Client = require './client'
+createClient = require './client'
 
 # Start an ensime client given path to .ensime. If server already running, just use, else startup that too.
 module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalHandler, callback) ->
@@ -15,7 +15,7 @@ module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalH
     # server running, no need to start
     port = removeTrailingNewline(fs.readFileSync(portFilePath).toString())
     httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
-    new Client(port, httpPort, generalHandler, callback)
+    createClient(port, httpPort, generalHandler).then(callback)
   else
     serverPid = undefined
 
@@ -37,7 +37,7 @@ module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalH
     whenAllAdded([portFilePath, httpPortFilePath], ->
       port = fs.readFileSync(portFilePath).toString()
       httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
-      new Client(port, httpPort, generalHandler, callback, serverPid)
+      createClient(port, httpPort, generalHandler, serverPid).then(callback)
     )
 
     # no server running, start that first
