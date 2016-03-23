@@ -17,6 +17,7 @@ export class EnsimeInstance  {
     rootDir: string;
     
     constructor(public dotEnsime: DotEnsime, public client: any, public ui?: any) {
+        this.rootDir = dotEnsime.rootDir;
     }
     
     isSourceOf = (path) => _.some(this.dotEnsime.sourceRoots, (sourceRoot) => path.startsWith(sourceRoot))    
