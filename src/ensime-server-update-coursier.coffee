@@ -5,7 +5,7 @@ loglevel = require 'loglevel'
 _ = require 'lodash'
 
 
-javaArgs = (dotEnsime, updateChanging = false) ->
+javaArgs = (dotEnsime, updateChanging) ->
   scalaVersion = dotEnsime.scalaVersion
   scalaEdition = dotEnsime.scalaEdition
   args =
@@ -46,7 +46,7 @@ module.exports = (tempdir, getPidLogger, failure) ->
     
       spaceSeparatedClassPath = ""
       
-      args = javaArgs(parsedDotEnsime, false)
+      args = javaArgs(parsedDotEnsime, true)
       
       log.trace([javaCmd], args, tempdir)
       pid = spawn(javaCmd, args, {cwd: tempdir})
