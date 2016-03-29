@@ -7,19 +7,20 @@
     "prepublish": "grunt prepublish",
     "test": "grunt test",
     "it": "grunt it",
-    "watch": "grunt ts:dev"
+    "watch": "grunt watch"
   },
-  "repository": "https://github.com/hedefalk/ensime-node",
+  "repository": "https://github.com/ensime/ensime-node",
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.3.3",
-    "chokidar": "^1.4.3",
     "download": "^4.4.3",
     "fs": "0.0.2",
+    "gaze": "^1.0.0",
     "glob": "^7.0.0",
     "lodash": "^4.5.1",
     "loglevel": "^1.4.0",
-    "temp": "^0.8.3"
+    "temp": "^0.8.3",
+    "ws": "^1.0.1"
   },
   "coffeelintConfig": {
     "indentation": {

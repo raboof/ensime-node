@@ -1,163 +1,158 @@
 net = require('net')
-Swank = require './lisp/swank-protocol'
 fs = require 'fs-extra'
 path = require 'path'
 log = require('loglevel').getLogger('ensime.client')
 temp = require 'temp'
+WebSocket = require("ws")
 
+temp.track()
 tempDir = temp.mkdirSync()
 getTempDir = -> tempDir
 
-module.exports =
-class Client
-  constructor: (port, @httpPort, generalMsgHandler, @serverPid = undefined) ->
-    @ensimeMessageCounter = 1
-    @callbackMap = {}
+module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefined) ->
+  new Promise (resolve, reject) ->
+    
+    callbackMap = {}
 
-    @parser = new Swank.SwankParser( (env) =>
-      log.trace("incoming: #{env}")
+    ensimeMessageCounter = 1
+      
+    websocket = new WebSocket("ws://localhost:" + httpPort + "/jerky")
+
+    websocket.on "open", ->
+      log.trace "connecting websocket…"
+      resolve(publicApi())
+
+    websocket.on "message", (msg) ->
+      log.trace("incoming: #{msg}")
+      handleIncoming(msg)
+
+    websocket.on "error", (error) ->
+      log.error error
+
+    websocket.on "close", ->
+      log.trace "websocket closed from server"
+
+    publicApi = -> {
+      post,
+      destroy,
+      getCompletions,
+      getSymbolAtPoint,
+      typecheckBuffer,
+      typecheckFile,
+      symbolByName,
+      formatSourceFile
+    }
+      
+    
+    handleIncoming = (env) ->
       json = JSON.parse(env)
       callId = json.callId
       # If RpcResponse - lookup in map, otherwise use some general function for handling general msgs
 
       if(callId)
         try
-          @callbackMap[callId](json.payload)
+          callbackMap[callId](json.payload)
         catch error
           log.trace("error in callback: #{error}")
         finally
-          delete @callbackMap[callId]
+          delete callbackMap[callId]
       else
         generalMsgHandler(json.payload)
-    )
-
-    @openSocket(port)
-
-  # Kills server if it was spawned from here.
-  destroy: ->
-    @socket.destroy()
-    @serverPid?.kill()
-
-  openSocket: (port) ->
-    log.trace('connecting on port: ' + port)
-    @socket = net.connect({port: port, allowHalfOpen: true} , ->
-      log.trace('client connected')
-    )
-
-    @socket.on('data', (data) =>
-      @parser.execute(data)
-    )
-
-    @socket.on('end', ->
-      log.trace("Ensime server disconnected")
-    )
-
-    @socket.on('close', (data) ->
-      log.trace("Ensime server close event: " + data)
-    )
-
-    @socket.on('error', (data) ->
-      if (data.code == 'ECONNREFUSED')
-        log.error("Connection refused connecting to ensime, it is probably not running. Remove .ensime_cache/port and .ensime_cache/http and try again.")
-      else if (data.code == 'EADDRNOTAVAIL')
-        log.trace(data)
-        # happens when connecting too soon I think
-      else
-        log.trace("Ensime server error event: " + data)
-    )
-
-    @socket.on('timeout', ->
-      log.trace("Ensime server timeout event")
-    )
-
-  postString: (msg, callback) =>
-    swankMsg = Swank.buildMessage """{"req": #{msg}, "callId": #{@ensimeMessageCounter}}"""
-    @callbackMap[@ensimeMessageCounter++] = callback
-    log.trace("outgoing: " + swankMsg)
-    @socket.write(swankMsg, "UTF8")
-
-  # Public:
-  post: (msg, callback) ->
-    @postString(JSON.stringify(msg), callback)
-
-
-  getCompletions: (filePath, bufferText, offset, noOfAutocompleteSuggestions, callback) =>
-    tempFilePath = getTempDir() + filePath
-    fs.outputFile(tempFilePath, bufferText, (err) =>
-      if (err)
-        throw err
-      else
-        msg =
-          typehint: "CompletionsReq"
-          fileInfo:
-            file: filePath
-            contentsIn: tempFilePath
-          point: offset
-          maxResults: noOfAutocompleteSuggestions
-          caseSens: false
-          reload: true
-        @post(msg, callback)
-    )
-    
-    
- 
-  getSymbolAtPoint: (path, offset, callback) ->
-    req =
-      typehint: "SymbolAtPointReq"
-      file: path
-      point: offset
-    @post(req, (msg) ->
-      if msg.typehint == 'SymbolInfo'
-        callback(msg)
-      else
-        # if msg.typehint == 'FalseResponse'
-        # do nothing
-    )
     
 
-  typecheckBuffer: (path, text, callback = ->) =>
-    tempFilePath = getTempDir() + path
-    fs.outputFile(tempFilePath, text, (err) =>
-      if (err)
-        throw err
-      else
-        msg =
-          typehint: "TypecheckFileReq"
-          fileInfo:
-            file: path
-            contentsIn: tempFilePath
-        @post(msg, callback)
-    )
+    # Kills server if it was spawned from here.
+    destroy = ->
+      websocket.terminate()
+      serverPid?.kill()
+
+    
+    postString = (msg, callback) ->
+      msg = """{"req": #{msg}, "callId": #{ensimeMessageCounter}}"""
+      callbackMap[ensimeMessageCounter++] = callback
+      log.trace("outgoing: " + msg)
+      websocket.send(msg)
+
+    # Public:
+    post = (msg, callback) ->
+      postString(JSON.stringify(msg), callback)
 
 
-  
-  typecheckFile: (path) =>
-    msg =
-      typehint: "TypecheckFileReq"
-      fileInfo:
+    getCompletions = (filePath, bufferText, offset, noOfAutocompleteSuggestions, callback) ->
+      tempFilePath = getTempDir() + filePath
+      fs.outputFile(tempFilePath, bufferText, (err) ->
+        if (err)
+          throw err
+        else
+          msg =
+            typehint: "CompletionsReq"
+            fileInfo:
+              file: filePath
+              contentsIn: tempFilePath
+            point: offset
+            maxResults: noOfAutocompleteSuggestions
+            caseSens: false
+            reload: true
+          post(msg, callback)
+      )
+      
+      
+   
+    getSymbolAtPoint = (path, offset, callback) ->
+      req =
+        typehint: "SymbolAtPointReq"
         file: path
-    @post(msg, (result) ->)
+        point: offset
+      post(req, (msg) ->
+        if msg.typehint == 'SymbolInfo'
+          callback(msg)
+        else
+          # if msg.typehint == 'FalseResponse'
+          # do nothing
+      )
+      
+
+    typecheckBuffer = (path, text, callback = ->) ->
+      tempFilePath = getTempDir() + path
+      fs.outputFile(tempFilePath, text, (err) ->
+        if (err)
+          throw err
+        else
+          msg =
+            typehint: "TypecheckFileReq"
+            fileInfo:
+              file: path
+              contentsIn: tempFilePath
+          post(msg, callback)
+      )
+    
+    typecheckFile = (path) ->
+      msg =
+        typehint: "TypecheckFileReq"
+        fileInfo:
+          file: path
+      post(msg, (result) ->)
 
 
-  symbolByName: (qualifiedName, callback) ->
-    msg =
-      typehint: 'SymbolByNameReq'
-      typeFullName: qualifiedName
-    @post(msg, callback)
-    
-    
-  formatSourceFile: (path, contents, callback) ->
-    tempFilePath = getTempDir() + path
-    fs.outputFile(tempFilePath, contents, (err) =>
-      if (err)
-        throw err
-      else
-        req =
-          typehint: "FormatOneSourceReq"
-          file:
-            file: path
-            contentsIn: tempFilePath
-        @post(req, callback)
-    )
-        
+    symbolByName = (qualifiedName, callback) ->
+      msg =
+        typehint: 'SymbolByNameReq'
+        typeFullName: qualifiedName
+      post(msg, callback)
+      
+      
+      
+    formatSourceFile = (path, contents, callback) ->
+      tempFilePath = getTempDir() + path
+      fs.outputFile(tempFilePath, contents, (err) ->
+        if (err)
+          throw err
+        else
+          req =
+            typehint: "FormatOneSourceReq"
+            file:
+              file: path
+              contentsIn: tempFilePath
+          post(req, callback)
+      )
+          
         

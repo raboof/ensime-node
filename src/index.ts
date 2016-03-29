@@ -1,4 +1,3 @@
-let Swank = require('./lisp/swank-protocol');
 let Client = require('./client');
 let InstanceManager = require('./ensime-instance-manager');
 
@@ -14,7 +13,6 @@ console.log("index running")
 const Instance = types.EnsimeInstance
 
 module.exports = {
-  Swank,
   Client,
   InstanceManager,
   Instance,

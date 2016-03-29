@@ -18,7 +18,7 @@
     },
     "filesGlob": [
         "src/**/*.ts",
-        "typings/main/**/*.ts",
+        "typings/main.d.ts",
         "!node_modules/**"
     ],
     "compileOnSave": false,
@@ -36,10 +36,6 @@
         "src/server-startup-utils.ts",
         "src/types.ts",
         "src/typings/server-api.d.ts",
-        "typings/main/ambient/loglevel/index.d.ts",
-        "typings/main/ambient/node/index.d.ts",
-        "typings/main/definitions/bluebird/index.d.ts",
-        "typings/main/definitions/glob/index.d.ts",
-        "typings/main/definitions/lodash/index.d.ts"
+        "typings/main.d.ts"
     ]
 }
