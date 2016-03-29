@@ -51,7 +51,7 @@ module.exports = (grunt) ->
 
     shell:
       test:
-        command: 'node --harmony node_modules/.bin/jasmine-focused --coffee --captureExceptions --forceexit spec'
+        command: 'node --harmony node_modules/jasmine-focused/bin/jasmine-focused --coffee --captureExceptions --forceexit spec'
         options:
           stdout: true
           stderr: true
@@ -60,7 +60,7 @@ module.exports = (grunt) ->
         command: './node_modules/.bin/typings install'
       
       integration:
-        command: 'node --harmony node_modules/.bin/jasmine-focused --coffee --captureExceptions --forceexit spec-integration'
+        command: 'node --harmony node_modules/jasmine-focused/bin/jasmine-focused --coffee --captureExceptions --forceexit spec-integration'
         options:
           stdout: true
           stderr: true

@@ -13,6 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.3.3",
+    "download": "^4.4.3",
     "fs": "0.0.2",
     "gaze": "^1.0.0",
     "glob": "^7.0.0",

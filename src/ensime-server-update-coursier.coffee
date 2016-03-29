@@ -3,6 +3,7 @@ fs = require('fs')
 path = require('path')
 loglevel = require 'loglevel'
 _ = require 'lodash'
+download = require 'download'
 
 
 javaArgs = (dotEnsime, updateChanging) ->
@@ -70,19 +71,9 @@ module.exports = (tempdir, getPidLogger, failure) ->
     if fs.existsSync(tempdir + path.sep + 'coursier')
       runCoursier()
     else
-      # """curl -L -o coursier https://git.io/vgvpD && chmod +x coursier"""
       coursierUrl = 'https://git.io/vgvpD'
-      getCoursier = spawn('curl', ['-L', '-o', 'coursier', coursierUrl], {cwd: tempdir})
-      logPid(getCoursier)
-      getCoursier.on 'close', (exitCode) ->
-        if(exitCode == 0)
-          chmod = spawn('chmod', ['+x', 'coursier'], {cwd: tempdir})
-          logPid(chmod)
-          chmod.on 'close', (chmodExitCode) ->
-            if(chmodExitCode == 0)
-              runCoursier()
-            else
-              failure("Failed to chmod coursier", chmodExitCode)
+      download(mode: '0755').get(coursierUrl).dest(tempdir).rename('coursier').run (err) ->
+        if(err)
+          failure("Failed to download coursier", err)
         else
-          failure("Failed to get Coursier", exitCode)
-    
+          runCoursier()
