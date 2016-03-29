@@ -1,3 +1,5 @@
+path = require 'path'
+_ = require 'lodash'
 {fixClasspath, javaArgsOf, javaCmdOf} = require '../lib/server-startup-utils'
 
 describe 'server-startup', ->
@@ -6,7 +8,7 @@ describe 'server-startup', ->
       javaHome = '__javaHome__'
       classpathList = ['a.jar', 'b.jar', 'monkey.jar']
       fixedClasspath = fixClasspath(javaHome, classpathList)
-      expect(fixedClasspath).toBe('monkey.jar:a.jar:b.jar:__javaHome__/lib/tools.jar')
+      expect(fixedClasspath).toBe(_.join(['monkey.jar','a.jar','b.jar',path.join('__javaHome__','lib','tools.jar')], path.delimiter))
   
   describe 'javaArgsOf', ->
     it "should work without server flags", ->
@@ -25,4 +27,4 @@ describe 'server-startup', ->
     it 'should find java form .ensime', ->
       dotEnsime =
         javaHome: '__javaHome__'
-      expect(javaCmdOf(dotEnsime)).toBe '__javaHome__/bin/java'
+      expect(javaCmdOf(dotEnsime)).toBe path.join('__javaHome__','bin','java')
