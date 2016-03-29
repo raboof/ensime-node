@@ -20,7 +20,7 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
 
     websocket.on "open", ->
       log.trace "connecting websocket…"
-      resolve(publicApi()) # FIXME
+      resolve(publicApi())
 
     websocket.on "message", (msg) ->
       log.trace("incoming: #{msg}")

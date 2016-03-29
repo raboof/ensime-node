@@ -9,7 +9,7 @@
     "it": "grunt it",
     "watch": "grunt watch"
   },
-  "repository": "https://github.com/hedefalk/ensime-node",
+  "repository": "https://github.com/ensime/ensime-node",
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.3.3",
