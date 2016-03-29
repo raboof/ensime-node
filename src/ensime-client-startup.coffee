@@ -8,14 +8,12 @@ createClient = require './client'
 module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalHandler, callback) ->
   removeTrailingNewline = (str) -> str.replace(/^\s+|\s+$/g, '')
   
-  portFilePath = parsedDotEnsime.cacheDir + path.sep + "port"
   httpPortFilePath = parsedDotEnsime.cacheDir + path.sep + "http"
 
-  if fs.existsSync(portFilePath) && fs.existsSync(httpPortFilePath)
+  if fs.existsSync(httpPortFilePath)
     # server running, no need to start
-    port = removeTrailingNewline(fs.readFileSync(portFilePath).toString())
     httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
-    createClient(port, httpPort, generalHandler).then(callback)
+    createClient(httpPort, generalHandler).then(callback)
   else
     serverPid = undefined
 
@@ -36,9 +34,8 @@ module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalH
       )
 
     whenAllAdded([portFilePath, httpPortFilePath], ->
-      port = fs.readFileSync(portFilePath).toString()
       httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
-      createClient(port, httpPort, generalHandler, serverPid).then(callback)
+      createClient(httpPort, generalHandler, serverPid).then(callback)
     )
 
     # no server running, start that first

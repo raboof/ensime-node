@@ -9,7 +9,7 @@ temp.track()
 tempDir = temp.mkdirSync()
 getTempDir = -> tempDir
 
-module.exports = createClient = (port, httpPort, generalMsgHandler, serverPid = undefined) ->
+module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefined) ->
   new Promise (resolve, reject) ->
     
     callbackMap = {}
