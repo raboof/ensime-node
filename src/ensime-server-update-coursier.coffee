@@ -3,7 +3,7 @@ fs = require('fs')
 path = require('path')
 loglevel = require 'loglevel'
 _ = require 'lodash'
-download = require 'download'
+
 
 
 javaArgs = (dotEnsime, updateChanging) ->
@@ -72,6 +72,7 @@ module.exports = (tempdir, getPidLogger, failure) ->
       runCoursier()
     else
       coursierUrl = 'https://git.io/vgvpD'
+      download = require 'download' # Need to be here because node thread
       download(mode: '0755').get(coursierUrl).dest(tempdir).rename('coursier').run (err) ->
         if(err)
           failure("Failed to download coursier", err)
