@@ -4,7 +4,6 @@
   "version": "0.3.1",
   "description": "Ensime integration for node.js",
   "scripts": {
-    "prepublish": "grunt prepublish",
     "test": "grunt test",
     "it": "grunt it",
     "watch": "grunt watch"

@@ -79,7 +79,7 @@ module.exports = (grunt) ->
           spawn: false
       ts:
         files: '**/*.ts'
-        tasks: ['ts:default']
+        tasks: ['ts:dev']
       test:
         files: './spec/**/*.coffee'
         tasks: ['shell:test']
@@ -94,9 +94,8 @@ module.exports = (grunt) ->
   grunt.registerTask 'clean', ->
     require('rimraf').sync('lib')
 
-  grunt.registerTask('lint', ['coffeelint'])
-  grunt.registerTask('build', ['shell:typings', 'lint', 'copy', 'ts:default', 'coffee'])
+  grunt.registerTask('build', ['shell:typings', 'copy', 'ts:default', 'coffee'])
   grunt.registerTask('default', ['build'])
   grunt.registerTask('test', ['build', 'shell:test'])
-  grunt.registerTask('it', ['build', 'shell:integration'])
-  grunt.registerTask('prepublish', ['clean', 'build', 'test', 'it'])
+  grunt.registerTask('it', ['build', 'shell:test', 'shell:integration'])
+  grunt.registerTask('prepublish', ['clean', 'it'])

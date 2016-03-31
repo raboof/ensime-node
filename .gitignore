@@ -7,3 +7,4 @@ npm-debug.log
 .tscache
 /typings
 foo
+ensime-client*.tgz

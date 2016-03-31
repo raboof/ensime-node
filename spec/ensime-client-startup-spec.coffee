@@ -26,7 +26,7 @@ testFile = (expectedFile) ->
 
 
 
-describe 'chokidar', ->
+xdescribe 'chokidar', ->
   it "should notice absolute paths, even from temp", ->
     testFile(temp.path({suffix: '.txt'}))
 
