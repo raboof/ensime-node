@@ -58,7 +58,8 @@ module.exports = (tempdir, getPidLogger, failure) ->
       pid.stdin.end()
       pid.on 'close', (exitCode) ->
         if(exitCode == 0)
-          classpath = _.join(_.split(spaceSeparatedClassPath, '\n'), path.delimiter)
+          classpath = _.join(_.split(_.trim(spaceSeparatedClassPath), /\s/), path.delimiter)
+          log.trace ['classpath', classpath]
           fs.writeFile(classpathFile, classpath, whenUpdated)
         else
           failure("Ensime server update failed", exitCode)

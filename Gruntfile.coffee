@@ -69,10 +69,20 @@ module.exports = (grunt) ->
             maxBuffer: 500*1024
     
     watch:
-      files: ['**/*.coffee', '**/*.ts']
-      tasks: ['test']
-    
-
+      gruntfile:
+        files: 'Gruntfile.js'
+        tasks: ['jshint:gruntfile']
+      coffee:
+        files: '**/*.coffee'
+        tasks: ['coffee', 'coffeelint']
+        options:
+          spawn: false
+      ts:
+        files: '**/*.ts'
+        tasks: ['ts:default']
+      test:
+        files: './spec/**/*.coffee'
+        tasks: ['shell:test']
 
   grunt.loadNpmTasks('grunt-contrib-coffee')
   grunt.loadNpmTasks('grunt-ts')

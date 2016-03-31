@@ -1,8 +1,8 @@
 path = require 'path'
 fs = require 'fs'
 log = require('loglevel').getLogger('ensime.startup')
-gaze = require 'gaze'
 createClient = require './client'
+chokidar = require 'chokidar'
 
 # Start an ensime client given path to .ensime. If server already running, just use, else startup that too.
 module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalHandler, callback) ->
@@ -17,23 +17,18 @@ module.exports = startClient = (startEnsimeServer) -> (parsedDotEnsime, generalH
   else
     serverPid = undefined
 
-    whenAllAdded = (files, f) ->
-      log.trace('starting watching for: '+files)
-      file = files.pop() # NB: mutates files
+    whenAdded = (file, f) ->
+      log.trace('starting watching for: '+file)
       
-      gaze.watch(file, (err, watcher) ->
-        watcher.on('add', (path) ->
-          log.trace 'Seen: ', path
-          watcher.end()
-          if 0 == files.length
-            log.trace('All files seen. Starting client')
-            f()
-          else
-            whenAllAdded(files, f)
-        )
+      watcher = chokidar.watch(file, {
+        persistent: true
+      }).on('add', (path) ->
+        log.trace 'Seen: ', path
+        watcher.close()
+        f()
       )
 
-    whenAllAdded([portFilePath, httpPortFilePath], ->
+    whenAdded(httpPortFilePath, ->
       httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
       createClient(httpPort, generalHandler, serverPid).then(callback)
     )
