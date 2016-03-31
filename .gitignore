@@ -6,3 +6,4 @@ api.json
 npm-debug.log
 .tscache
 /typings
+foo
