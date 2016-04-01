@@ -1,13 +1,8 @@
 language: cpp
 env:
   - NODE_VERSION="0.12"
-  - NODE_VERSION="4.0"
-  - NODE_VERSION="4.1"
   - NODE_VERSION="4.2"
   - NODE_VERSION="5.0"
-  - NODE_VERSION="5.1"
-  - NODE_VERSION="5.2"
-  - NODE_VERSION="5.3"
   - NODE_VERSION="5.4"
 os:
   - linux
@@ -26,6 +21,8 @@ script:
   
 notifications:
   email:
-    on_success: never
-    on_failure: hedefalk@gmail.com
+    recipients: 
+      - hedefalk@gmail.com
+    on_success: change
+    on_failure: always
     
