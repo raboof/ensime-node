@@ -31,7 +31,7 @@ module.exports = class InstanceManager
     )
 
   firstInstance: ->
-    return @instances[0]
+    @instances[0]
 
   isStarted: (dotEnsimePath) ->
     _.some(@instances, (instance) -> instance.dotEnsime.dotEnsimePath == dotEnsimePath)

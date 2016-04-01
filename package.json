@@ -4,7 +4,7 @@
   "version": "0.3.1",
   "description": "Ensime integration for node.js",
   "scripts": {
-    "prepublish": "grunt prepublish",
+    "postinstall": "find node_modules -type d -name got | xargs rm -fr; npm install got@6.2.0",
     "test": "grunt test",
     "it": "grunt it",
     "watch": "grunt watch"
