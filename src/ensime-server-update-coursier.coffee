@@ -72,7 +72,8 @@ module.exports = (tempdir, getPidLogger, failure) ->
     if fs.existsSync(tempdir + path.sep + 'coursier')
       runCoursier()
     else
-      coursierUrl = 'https://git.io/vgvpD'
+      # coursierUrl = 'https://git.io/vgvpD' # Java 7
+      coursierUrl = 'https://git.io/v2L2P' # Java 6
       download = require 'download' # Need to be here because node thread
       download(mode: '0755').get(coursierUrl).dest(tempdir).rename('coursier').run (err) ->
         if(err)

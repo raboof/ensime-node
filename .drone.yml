@@ -1,0 +1,23 @@
+build:
+  image: ensime/ensime:latest
+      
+  commands:
+    - export NVM_DIR="$HOME/.nvm"
+    - git clone https://github.com/creationix/nvm.git $NVM_DIR && cd $NVM_DIR && git checkout `git describe --abbrev=0 --tags`
+    - . $NVM_DIR/nvm.sh
+    - nvm install $$NODE_VERSION
+    - nvm use $$NODE_VERSION
+    - cd $DRONE_DIR
+    - rm -rf node_modules
+    - npm install
+    - npm run it
+
+matrix:
+  NODE_VERSION:
+    - 5
+    - 4
+    - 0.12
+
+cache:
+  mount:
+    - .git
