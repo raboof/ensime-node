@@ -21,7 +21,7 @@ describe "ensime-server-update", ->
     
     dotEnsime =
       name: "test"
-      scalaVersion: "2.11.7"
+      scalaVersion: "2.11.8"
       scalaEdition: "2.11"
       rootDir: tempDir
       cacheDir: tempDir + path.sep + ".ensime_cache"
@@ -43,9 +43,10 @@ describe "ensime-server-update", ->
     updater(dotEnsime, "0.9.10-SNAPSHOT", tempDir + path.sep + "classpathfile", spy)
     log.error('ran it')
     
-    waitsFor( (-> spy.callCount > 0), "callback wasn't called in time", 60000)
+    waitsFor( (-> spy.callCount > 0), "callback wasn't called in time", 240000)
     runs ->
 #      expect(spy.mostRecentCall.args).toEqual exp
 #      expect(spy).toHaveBeenCalledWith(null, ['example.coffee'])
 
   afterEach ->
+    temp.cleanupSync()
