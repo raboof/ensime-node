@@ -8,3 +8,4 @@ npm-debug.log
 /typings
 foo
 ensime-client*.tgz
+ensime-integration-test*
