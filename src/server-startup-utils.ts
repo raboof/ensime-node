@@ -1,7 +1,7 @@
 import path = require('path');
 import _ = require('lodash');
 
-import {spawn} from 'child_process';
+import {ChildProcess, spawn} from 'child_process';
 
 import loglevel = require('loglevel')
 const log = loglevel.getLogger('server-startup')

@@ -12,7 +12,7 @@ console.log("index running")
 
 const Instance = types.EnsimeInstance
 
-module.exports = {
+export default {
   Client,
   InstanceManager,
   Instance,
