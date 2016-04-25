@@ -55,3 +55,8 @@ export function logServer(pid, path) {
   pid.stderr.pipe(serverLog)
   return pid.stdin.end()
 }
+
+export function removeTrailingNewline(str: string) {
+  return str.replace(/^\s+|\s+$/g, '');
+} 
+  

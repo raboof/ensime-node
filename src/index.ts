@@ -5,8 +5,8 @@ import types = require('./types')
 import formatting = require('./formatting');
 let ensimeServerUpdate = require('./ensime-server-update-coursier');
 import dotEnsimeUtils = require('./dotensime-utils');
-import ensimeServerStartup = require('./ensime-server-startup')
-let ensimeClientStartup = require('./ensime-client-startup')
+import ensimeServerStartup = require('./ensime-server-startup');
+import ensimeClientStartup = require('./ensime-client-startup');
 
 console.log("index running")
 

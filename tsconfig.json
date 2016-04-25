@@ -7,15 +7,14 @@
         "jsx": "react",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "declaration": false,
+        "declaration": true,
         "noImplicitAny": false,
         "removeComments": true,
         "noLib": false,
         "preserveConstEnums": true,
         "suppressImplicitAnyIndexErrors": true,
         "outDir": "lib",
-        "sourceMap": true,
-        "declaration": true
+        "sourceMap": true
     },
     "filesGlob": [
         "src/**/*.ts",
@@ -29,6 +28,7 @@
     },
     "files": [
         "src/dotensime-utils.ts",
+        "src/ensime-client-startup.ts",
         "src/ensime-server-startup.ts",
         "src/formatting.ts",
         "src/index.ts",
