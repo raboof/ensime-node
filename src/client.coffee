@@ -16,10 +16,6 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
 
     ensimeMessageCounter = 1
     
-    onConnect = -> resolve(publicApi())
-    
-    netClient = new WebsocketClient(httpPort, onConnect, @handleIncoming)
-    
     publicApi = -> {
       post,
       destroy,
@@ -30,7 +26,6 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
       symbolByName,
       formatSourceFile
     }
-      
     
     handleIncoming = (msg) ->
       json = JSON.parse(msg)
@@ -47,6 +42,8 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
       else
         generalMsgHandler(json.payload)
     
+    onConnect = -> resolve(publicApi())
+    netClient = new WebsocketClient(httpPort, onConnect, handleIncoming)
 
     # Kills server if it was spawned from here.
     destroy = ->
@@ -58,7 +55,7 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
       msg = """{"req": #{msg}, "callId": #{ensimeMessageCounter}}"""
       callbackMap[ensimeMessageCounter++] = callback
       log.trace("outgoing: " + msg)
-      websocket.send(msg)
+      netClient.send(msg)
 
     # Public:
     post = (msg, callback) ->
