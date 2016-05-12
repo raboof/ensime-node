@@ -43,7 +43,7 @@ export default function updateServer(tempdir: string, getPidLogger: () => (strin
     
     function runCoursier() {
       const javaCmd = (parsedDotEnsime.javaHome) ? 
-          "#{parsedDotEnsime.javaHome}#{path.sep}bin#{path.sep}java"
+          path.join(parsedDotEnsime.javaHome, 'bin', 'java')
         :
           "java"
     

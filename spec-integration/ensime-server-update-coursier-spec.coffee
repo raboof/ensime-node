@@ -37,10 +37,13 @@ describe "ensime-server-update", ->
     failure = (msg, code) -> log.error(msg, code)
   
     log.error('doing ensime server update using coursier')
-    updater = updateEnsimeServer(tempDir, getPidLogger, failure)
+    doUpdateServer = updateEnsimeServer(tempDir, getPidLogger, failure)
+    
+    
     
     log.error('updater created')
-    updater(dotEnsime, "0.9.10-SNAPSHOT", tempDir + path.sep + "classpathfile", spy)
+    # function doUpdateServer(parsedDotEnsime: DotEnsime, ensimeServerVersion: string, classpathFile: string, whenUpdated: () => void ) {
+    doUpdateServer(dotEnsime, "0.9.10-SNAPSHOT", path.join(tempDir, "classpathfile"), spy)
     log.error('ran it')
     
     waitsFor( (-> spy.callCount > 0), "callback wasn't called in time", 240000)

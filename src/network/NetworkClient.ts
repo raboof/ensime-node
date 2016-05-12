@@ -29,7 +29,7 @@ export class WebsocketClient implements NetworkClient {
         });
 
         this.websocket.on("message", (msg) => {
-            log.trace("incoming: #{msg}")
+            log.trace(`incoming: ${msg}`)
             onMsg(msg);
         });
 
