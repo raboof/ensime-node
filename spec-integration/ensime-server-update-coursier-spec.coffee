@@ -44,10 +44,10 @@ describe "ensime-server-update", ->
     log.error('updater created')
     # function doUpdateServer(parsedDotEnsime: DotEnsime, ensimeServerVersion: string, classpathFile: string, whenUpdated: () => void ) {
     doUpdateServer(dotEnsime, "0.9.10-SNAPSHOT", path.join(tempDir, "classpathfile"), spy)
-    log.error('ran it')
+    log.trace('ran doUpdateServer')
     
-    waitsFor( (-> spy.callCount > 0), "callback wasn't called in time", 240000)
-    runs ->
+    waitsFor( (-> spy.callCount > 0), "callback wasn't called in time", 120000)
+    # runs ->
 #      expect(spy.mostRecentCall.args).toEqual exp
 #      expect(spy).toHaveBeenCalledWith(null, ['example.coffee'])
 

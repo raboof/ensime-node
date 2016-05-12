@@ -51,7 +51,7 @@ export default function updateServer(tempdir: string, getPidLogger: () => (strin
       
       const args = javaArgs(parsedDotEnsime, true)
       
-      log.trace([javaCmd], args, tempdir)
+      log.trace(javaCmd, args, tempdir)
       const pid = spawn(javaCmd, args, {cwd: tempdir})
       pid.stdout.on('data', (chunk) => {
         log.trace(chunk.toString('utf8'))
@@ -70,21 +70,27 @@ export default function updateServer(tempdir: string, getPidLogger: () => (strin
       });
     }
 
-    log.info("checking tempdir: " + tempdir)
-    if(! fs.existsSync(tempdir))
+    log.trace("checking tempdir: " + tempdir)
+    if(! fs.existsSync(tempdir)) {
+      log.trace("tempdir didn't exist, creating: " + tempdir)
       fs.mkdirSync(tempdir)
+    }
 
     if(fs.existsSync(tempdir + path.sep + 'coursier'))
       runCoursier()
     else {
+      log.trace("no pre-existing coursier binary, downloading: " + tempdir)
       // # coursierUrl = 'https://git.io/vgvpD' # Java 7
       const coursierUrl = "https://git.io/v2L2P" // Java 6
       
       download({mode: '0755'}).get(coursierUrl).dest(tempdir).rename('coursier').run((err) => {
-        if(err)
+        if(err) {
+          log.error("failed to download coursier")
           failure("Failed to download coursier", err)
-        else
+        } else {
+          log.trace("downloaded coursier, now running:")
           runCoursier()
+        }
       });
     }
   }
