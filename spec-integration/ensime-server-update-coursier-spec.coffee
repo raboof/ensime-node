@@ -1,4 +1,4 @@
-updateEnsimeServer = require ('../src/ensime-server-update-coursier')
+updateEnsimeServer = (require('../lib/ensime-server-update-coursier')).default
 fs = require 'fs'
 path = require 'path'
 temp = require 'temp'
