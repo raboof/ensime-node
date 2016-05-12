@@ -5,7 +5,7 @@
   "version": "0.3.3",
   "description": "Ensime integration for node.js",
   "scripts": {
-    "prepublish": "grunt build",
+    "prepublish": "typings install; grunt build",
     "test": "grunt test",
     "it": "grunt it",
     "watch": "grunt watch"
