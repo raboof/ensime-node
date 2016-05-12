@@ -25,10 +25,10 @@ function javaArgs(dotEnsime, updateChanging) {
     '-r', 'https://oss.sonatype.org/content/repositories/snapshots',
     '-r', 'https://jcenter.bintray.com/',
     `org.ensime:ensime_${scalaEdition}:0.9.10-SNAPSHOT`, // TODO: Should be parameterized?
-    '-V', "org.scala-lang:scala-compiler:#{scalaVersion}",
-    '-V', "org.scala-lang:scala-library:#{scalaVersion}",
-    '-V', "org.scala-lang:scala-reflect:#{scalaVersion}",
-    '-V', "org.scala-lang:scalap:#{scalaVersion}"
+    '-V', `org.scala-lang:scala-compiler:${scalaVersion}`,
+    '-V', `org.scala-lang:scala-library:${scalaVersion}`,
+    '-V', `org.scala-lang:scala-reflect:${scalaVersion}`,
+    '-V', `org.scala-lang:scalap:${scalaVersion}`
   );
   return args;
 }
