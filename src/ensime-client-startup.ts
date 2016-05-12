@@ -3,14 +3,17 @@ import path = require('path');
 import loglevel = require('loglevel');
 import chokidar = require('chokidar');
 import utils = require('./server-startup-utils');
+import {DotEnsime} from './types';
+
 
 const log = loglevel.getLogger('ensime.startup');
 const createClient = require('./client');
 
+export type ServerStarter = (dotEnsime: DotEnsime, callback: (pid: string) => void) => void
 
 //  Start an ensime client given path to .ensime. If server already running, just use, else startup that too.
-export function startClient(serverStarter: any) {
-  return function(parsedDotEnsime, generalHandler, callback) {
+export default function(serverStarter: ServerStarter) {
+  return function(parsedDotEnsime, generalHandler: (msg: string) => any, callback: (client: any) => any) {
      
     const httpPortFilePath = parsedDotEnsime.cacheDir + path.sep + "http";
 

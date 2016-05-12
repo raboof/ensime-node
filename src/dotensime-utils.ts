@@ -5,17 +5,17 @@ import Promise = require('bluebird');
 import glob = require('glob');
 import swankExtras = require('./lisp/swank-extras')
 import {spawn} from 'child_process';
-
+import {DotEnsime} from './types';
 const sexpToJObject = swankExtras.sexpToJObject
 
-export function readDotEnsime(path: string) {
+export function readDotEnsime(path: string) : string {
   let raw = fs.readFileSync(path)
   let rows = raw.toString().split(new RegExp("\r?\n"))
   let filtered = rows.filter((l) => l.indexOf(';;') != 0)
   return filtered.join('\n')
 }
 
-export function parseDotEnsime(path) {
+export function parseDotEnsime(path) : DotEnsime {
   // scala version from .ensime config file of project
   const dotEnsime = readDotEnsime(path)
   const dotEnsimeLisp = lisp.readFromString(dotEnsime)
@@ -27,15 +27,15 @@ export function parseDotEnsime(path) {
 
   return {
     name: <string> dotEnsimeJs[':name'],
-    scalaVersion: scalaVersion,
-    scalaEdition: scalaEdition,
-    javaHome: dotEnsimeJs[':java-home'],
-    javaFlags: dotEnsimeJs[':java-flags'],
-    rootDir: dotEnsimeJs[':root-dir'],
-    cacheDir: dotEnsimeJs[':cache-dir'],
-    compilerJars: dotEnsimeJs[':scala-compiler-jars'],
-    dotEnsimePath: path,
-    sourceRoots: sourceRoots
+    scalaVersion: <string> scalaVersion,
+    scalaEdition: <string> scalaEdition,
+    javaHome: <string> dotEnsimeJs[':java-home'],
+    javaFlags: <string> dotEnsimeJs[':java-flags'],
+    rootDir: <string> dotEnsimeJs[':root-dir'],
+    cacheDir: <string> dotEnsimeJs[':cache-dir'],
+    compilerJars: <string> dotEnsimeJs[':scala-compiler-jars'],
+    dotEnsimePath: <string> path,
+    sourceRoots:  <[string]> sourceRoots
   };
 }
 

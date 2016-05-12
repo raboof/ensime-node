@@ -15,11 +15,11 @@ export class TcpClient implements NetworkClient {
         
     }
 }
- 
+  
 export class WebsocketClient implements NetworkClient {
     websocket: any;
     
-        constructor(httpPort: string, onConnected: () => any, onMsg: (msg: string) => any) {
+    constructor(httpPort: string, onConnected: () => any, onMsg: (msg: string) => any) {
         let log = loglevel.getLogger('ensime.socketclient');
         this.websocket = new WebSocket("ws://localhost:" + httpPort + "/jerky");
     

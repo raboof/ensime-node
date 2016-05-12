@@ -7,20 +7,19 @@ import loglevel = require('loglevel')
 const log = loglevel.getLogger('server-startup')
 import fs = require('fs');
 
-
-
-// sort monkeys and add tools.jar
+/*
+* Sort monkeys and add tools.jar
+*/
 export function fixClasspath(javaHome, classpathList) {  
   const toolsJar = path.join(javaHome, 'lib', 'tools.jar');
   
-  // # Sort classpath so any jar containing monkey comes first
+  //Sort classpath so any jar containing monkey comes first
   const monkey = new RegExp('monkey')
   const sorter = (jarPath) => ! monkey.test(jarPath)
   classpathList.push(toolsJar)
   return _.sortBy(classpathList, sorter).join(path.delimiter)
 }
   
-
 // # Make an array of java command line args for spawn
 export function javaArgsOf(classpath, dotEnsimePath, ensimeServerFlags = "") {
   const args = ["-classpath", classpath, `-Densime.config=${dotEnsimePath}`, "-Densime.protocol=jerk"]
@@ -38,7 +37,6 @@ export function spawnServer(javaCmd, args, detached = false) {
   return spawn(javaCmd, args, {detached: detached})
 }
   
-
 export function startServerFromClasspath(classpath, dotEnsime, serverFlags = "") {
   const fixedClasspath = fixClasspath(dotEnsime.javaHome, classpath)
   const cmd = javaCmdOf(dotEnsime)

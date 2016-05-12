@@ -30,6 +30,7 @@
         "src/dotensime-utils.ts",
         "src/ensime-client-startup.ts",
         "src/ensime-server-startup.ts",
+        "src/ensime-server-update-coursier.ts",
         "src/formatting.ts",
         "src/index.ts",
         "src/lisp/lisp.d.ts",
