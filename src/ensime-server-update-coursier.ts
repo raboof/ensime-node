@@ -76,9 +76,10 @@ export default function updateServer(tempdir: string, getPidLogger: () => (strin
       fs.mkdirSync(tempdir)
     }
 
-    if(fs.existsSync(tempdir + path.sep + 'coursier'))
+    if(fs.existsSync(tempdir + path.sep + 'coursier')) {
+      log.trace("pre-existing coursier binary, downloading: " + tempdir)
       runCoursier()
-    else {
+    } else {
       log.trace("no pre-existing coursier binary, downloading: " + tempdir)
       // # coursierUrl = 'https://git.io/vgvpD' # Java 7
       const coursierUrl = "https://git.io/v2L2P" // Java 6
