@@ -17,6 +17,7 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
     ensimeMessageCounter = 1
     
     publicApi = -> {
+      httpPort,
       post,
       destroy,
       getCompletions,
