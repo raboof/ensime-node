@@ -2,7 +2,7 @@
   "name": "ensime-client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Ensime integration for node.js",
   "scripts": {
     "prepublish": "typings install; grunt build",
