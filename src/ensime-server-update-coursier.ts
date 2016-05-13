@@ -51,22 +51,27 @@ export default function updateServer(tempdir: string, getPidLogger: () => (strin
       
       const args = javaArgs(parsedDotEnsime, true)
       
-      log.trace(javaCmd, args, tempdir)
+      log.trace('java command to spawn', javaCmd, args, tempdir)
       const pid = spawn(javaCmd, args, {cwd: tempdir})
       pid.stdout.on('data', (chunk) => {
-        log.trace(chunk.toString('utf8'))
+        log.trace('got data from java process', chunk.toString('utf8'))
         spaceSeparatedClassPath += chunk.toString('utf8')
-      });
+      })
+      pid.stderr.on('data', (chunk) => {
+        log.error('error from spawned java coursier process: ', chunk.toString('utf8'))
+      })
       
       pid.stdin.end()
+      
       pid.on('close', (exitCode) => {
         if(exitCode == 0) {
           const classpath = _.join(_.split(_.trim(spaceSeparatedClassPath), /\s/), path.delimiter)
           log.trace ['classpath', classpath]
           fs.writeFile(classpathFile, classpath, whenUpdated)
-        }
-        else
+        } else {
+          log.error('Ensime server update failed, exitCode: ', exitCode) 
           failure("Ensime server update failed", exitCode)
+        }
       });
     }
 
