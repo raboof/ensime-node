@@ -1,4 +1,4 @@
-updateEnsimeServer = require ('../src/ensime-server-update-coursier')
+updateEnsimeServer = (require('../lib/ensime-server-update-coursier')).default
 fs = require 'fs'
 path = require 'path'
 temp = require 'temp'
@@ -37,14 +37,17 @@ describe "ensime-server-update", ->
     failure = (msg, code) -> log.error(msg, code)
   
     log.error('doing ensime server update using coursier')
-    updater = updateEnsimeServer(tempDir, getPidLogger, failure)
+    doUpdateServer = updateEnsimeServer(tempDir, getPidLogger, failure)
+    
+    
     
     log.error('updater created')
-    updater(dotEnsime, "0.9.10-SNAPSHOT", tempDir + path.sep + "classpathfile", spy)
-    log.error('ran it')
+    # function doUpdateServer(parsedDotEnsime: DotEnsime, ensimeServerVersion: string, classpathFile: string, whenUpdated: () => void ) {
+    doUpdateServer(dotEnsime, "0.9.10-SNAPSHOT", path.join(tempDir, "classpathfile"), spy)
+    log.trace('ran doUpdateServer')
     
-    waitsFor( (-> spy.callCount > 0), "callback wasn't called in time", 240000)
-    runs ->
+    waitsFor( (-> spy.callCount > 0), "callback wasn't called in time", 120000)
+    # runs ->
 #      expect(spy.mostRecentCall.args).toEqual exp
 #      expect(spy).toHaveBeenCalledWith(null, ['example.coffee'])
 

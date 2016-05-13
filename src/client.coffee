@@ -3,7 +3,7 @@ fs = require 'fs-extra'
 path = require 'path'
 log = require('loglevel').getLogger('ensime.client')
 temp = require 'temp'
-WebSocket = require("ws")
+{WebsocketClient} = require './network/NetworkClient'
 
 temp.track()
 tempDir = temp.mkdirSync()
@@ -15,23 +15,7 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
     callbackMap = {}
 
     ensimeMessageCounter = 1
-      
-    websocket = new WebSocket("ws://localhost:" + httpPort + "/jerky")
-
-    websocket.on "open", ->
-      log.trace "connecting websocket…"
-      resolve(publicApi())
-
-    websocket.on "message", (msg) ->
-      log.trace("incoming: #{msg}")
-      handleIncoming(msg)
-
-    websocket.on "error", (error) ->
-      log.error error
-
-    websocket.on "close", ->
-      log.trace "websocket closed from server"
-
+    
     publicApi = -> {
       post,
       destroy,
@@ -42,10 +26,9 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
       symbolByName,
       formatSourceFile
     }
-      
     
-    handleIncoming = (env) ->
-      json = JSON.parse(env)
+    handleIncoming = (msg) ->
+      json = JSON.parse(msg)
       callId = json.callId
       # If RpcResponse - lookup in map, otherwise use some general function for handling general msgs
 
@@ -59,10 +42,12 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
       else
         generalMsgHandler(json.payload)
     
+    onConnect = -> resolve(publicApi())
+    netClient = new WebsocketClient(httpPort, onConnect, handleIncoming)
 
     # Kills server if it was spawned from here.
     destroy = ->
-      websocket.terminate()
+      netClient.destroy()
       serverPid?.kill()
 
     
@@ -70,7 +55,7 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
       msg = """{"req": #{msg}, "callId": #{ensimeMessageCounter}}"""
       callbackMap[ensimeMessageCounter++] = callback
       log.trace("outgoing: " + msg)
-      websocket.send(msg)
+      netClient.send(msg)
 
     # Public:
     post = (msg, callback) ->

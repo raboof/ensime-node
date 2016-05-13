@@ -13,7 +13,7 @@ export interface DotEnsime {
     sourceRoots: [string]
 }
 
-export class EnsimeInstance  {
+export class EnsimeInstance {
     rootDir: string;
     
     constructor(public dotEnsime: DotEnsime, public client: any, public ui?: any) {
