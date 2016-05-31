@@ -9,6 +9,12 @@ temp.track()
 tempDir = temp.mkdirSync()
 getTempDir = -> tempDir
 
+getTempPath = (file) ->
+  if(process.platform == 'win32')
+    path.join(getTempDir(), file.replace(':', ""))
+  else
+    path.join(getTempDir(), file)
+
 module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefined) ->
   new Promise (resolve, reject) ->
     
@@ -64,7 +70,7 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
 
 
     getCompletions = (filePath, bufferText, offset, noOfAutocompleteSuggestions, callback) ->
-      tempFilePath = getTempDir() + filePath
+      tempFilePath = getTempPath(filePath)
       fs.outputFile(tempFilePath, bufferText, (err) ->
         if (err)
           throw err
@@ -98,7 +104,7 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
       
 
     typecheckBuffer = (path, text, callback = ->) ->
-      tempFilePath = getTempDir() + path
+      tempFilePath = getTempPath(path)
       fs.outputFile(tempFilePath, text, (err) ->
         if (err)
           throw err
@@ -128,7 +134,7 @@ module.exports = createClient = (httpPort, generalMsgHandler, serverPid = undefi
       
       
     formatSourceFile = (path, contents, callback) ->
-      tempFilePath = getTempDir() + path
+      tempFilePath = getTempPath(path)
       fs.outputFile(tempFilePath, contents, (err) ->
         if (err)
           throw err
