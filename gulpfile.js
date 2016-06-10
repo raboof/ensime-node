@@ -54,3 +54,7 @@ gulp.task('lint', ['coffee-lint']);
 
 gulp.task('default', ['lint', 'build']);
 
+gulp.task('watch', ['compile'], function() {
+    gulp.watch('src/**/*.ts', ['compile-ts']);
+    gulp.watch('src/**/*.coffee', ['compile-coffee']);
+});
