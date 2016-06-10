@@ -4,41 +4,25 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "isolatedModules": false,
-        "jsx": "react",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "declaration": true,
         "noImplicitAny": false,
-        "removeComments": true,
         "noLib": false,
         "preserveConstEnums": true,
         "suppressImplicitAnyIndexErrors": true,
-        "outDir": "lib",
         "sourceMap": true
     },
-    "filesGlob": [
-        "src/**/*.ts",
-        "typings/main.d.ts",
-        "!node_modules/**"
-    ],
+    "exclude": [
+        "gulpfile.js",
+        "node_modules",
+        "typings/browser",
+        "typings/browser.d.ts",
+        "release"
+        ],
     "compileOnSave": false,
     "buildOnSave": false,
     "atom": {
         "rewriteTsconfig": false
-    },
-    "files": [
-        "src/dotensime-utils.ts",
-        "src/ensime-client-startup.ts",
-        "src/ensime-server-startup.ts",
-        "src/ensime-server-update-coursier.ts",
-        "src/formatting.ts",
-        "src/index.ts",
-        "src/lisp/lisp.d.ts",
-        "src/lisp/swank-extras.d.ts",
-        "src/network/NetworkClient.ts",
-        "src/server-startup-utils.ts",
-        "src/types.ts",
-        "src/typings/server-api.d.ts",
-        "typings/main.d.ts"
-    ]
+    }
 }
