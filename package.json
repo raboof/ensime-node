@@ -1,14 +1,14 @@
 {
   "name": "ensime-client",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
+  "main": "release/js/lib/index.js",
+  "typings": "release/definitions/lib/index.d.ts",
   "version": "0.4.1",
   "description": "Ensime integration for node.js",
   "scripts": {
-    "prepublish": "typings install; grunt build",
-    "test": "grunt test",
-    "it": "grunt it",
-    "watch": "grunt watch"
+    "prepublish": "typings install; gulp build",
+    "test": "gulp test",
+    "it": "gulp integration",
+    "watch": "gulp watch"
   },
   "repository": "https://github.com/ensime/ensime-node",
   "license": "MIT",

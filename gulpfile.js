@@ -44,8 +44,12 @@ gulp.task('coffee-lint', function() {
         .pipe(coffeelint.reporter()) 
 });
 
-gulp.task('test-spec', ['build'], function() {
-	gulp.src('./release/spec/**/*.js').pipe(jasmine())
+gulp.task('integration', ['build'], function() {
+	gulp.src('./release/js/spec-integration/**/*.js').pipe(jasmine())
+});
+
+gulp.task('test', ['build'], function() {
+	gulp.src('./release/js/spec/**/*.js').pipe(jasmine())
 });
 
 gulp.task('compile', ['compile-ts', 'compile-coffee']);
