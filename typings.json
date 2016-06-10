@@ -6,12 +6,12 @@
     "lodash": "github:typed-typings/npm-lodash#65781ee6b25562ee9b5913043a3ba249acfcee17"
   },
   "devDependencies": {},
-  "ambientDependencies": {
+  "globalDependencies": {
     "chokidar": "registry:dt/chokidar#1.4.3+20160316155526",
     "loglevel": "github:DefinitelyTyped/DefinitelyTyped/loglevel/loglevel.d.ts#e85bc9decb401ea14d29143def204d82ec41e9e1",
     "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#48c1e3c1d6baefa4f1a126f188c27c4fefd36bff"
   },
-  "ambientDevDependencies": {
+  "globalDevDependencies": {
     "jasmine": "registry:dt/jasmine#2.2.0+20160505161446"
   }
 }

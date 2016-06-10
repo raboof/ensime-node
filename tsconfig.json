@@ -16,8 +16,6 @@
     "exclude": [
         "gulpfile.js",
         "node_modules",
-        "typings/browser",
-        "typings/browser.d.ts",
         "release"
         ],
     "compileOnSave": false,
