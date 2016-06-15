@@ -1,3 +1,7 @@
+/**
+ * Server json protocol definitions
+ */
+
 export interface Typehinted {
   typehint: string;
 }
@@ -5,6 +9,7 @@ export interface Typehinted {
 export interface Param {
   localName: string;
 }
+
 export interface ImplicitParamInfo extends Typehinted {
   typehint: string;
   fun: Param; // Not really

@@ -1,6 +1,6 @@
 path = require 'path'
 _ = require 'lodash'
-{fixClasspath, javaArgsOf, javaCmdOf} = require '../lib/server-startup-utils'
+{fixClasspath, javaArgsOf, javaCmdOf} = require '../lib/server-startup/server-startup-utils'
 
 describe 'server-startup', ->
   describe 'fixClasspath', ->

@@ -40,8 +40,7 @@ sexpToJObject = (msg) ->
   arrToJObject(arr)
 
 
-module.exports =
-  {
-    sexpToJObject
-    arrToJObject
-  }
+module.exports = {
+  sexpToJObject
+  arrToJObject
+}

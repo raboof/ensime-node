@@ -1,5 +1,6 @@
 import fs = require('fs');
 import path = require('path');
+import * as Promise from 'bluebird';
 
 import {spawn} from 'child_process';
 import _ = require('lodash');
@@ -7,8 +8,9 @@ import loglevel = require('loglevel');
 import {DotEnsime} from './types';
 const download = require('download');
       
+
       
-function javaArgs(dotEnsime, updateChanging) {
+function javaArgs(dotEnsime: DotEnsime, updateChanging: boolean) {
   const scalaVersion = dotEnsime.scalaVersion
   const scalaEdition = dotEnsime.scalaEdition
   const args =
@@ -34,13 +36,14 @@ function javaArgs(dotEnsime, updateChanging) {
 }
    
 // Updates ensime server, invoke callback when done
-export default function updateServer(tempdir: string, getPidLogger: () => (string) => void, failure: (string, int) => void) {
+export default function updateServer(tempdir: string, failure: (string, int) => void) {
   
   const log = loglevel.getLogger('ensime.server-update')
   log.info('update ensime server, tempdir: ' + tempdir)
 
-  function doUpdateServer(parsedDotEnsime: DotEnsime, ensimeServerVersion: string, classpathFile: string, whenUpdated: () => void ) {
-    
+  return function doUpdateServer(parsedDotEnsime: DotEnsime, ensimeServerVersion: string, classpathFile: string): Promise<any> {
+    const p = Promise.defer<any>();
+
     function runCoursier() {
       const javaCmd = (parsedDotEnsime.javaHome) ? 
           path.join(parsedDotEnsime.javaHome, 'bin', 'java')
@@ -58,7 +61,7 @@ export default function updateServer(tempdir: string, getPidLogger: () => (strin
         spaceSeparatedClassPath += chunk.toString('utf8')
       })
       pid.stderr.on('data', (chunk) => {
-        log.error('error from spawned java coursier process: ', chunk.toString('utf8'))
+        log.debug('coursier: ', chunk.toString('utf8'))
       })
       
       pid.stdin.end()
@@ -67,7 +70,7 @@ export default function updateServer(tempdir: string, getPidLogger: () => (strin
         if(exitCode == 0) {
           const classpath = _.join(_.split(_.trim(spaceSeparatedClassPath), /\s/), path.delimiter)
           log.trace ['classpath', classpath]
-          fs.writeFile(classpathFile, classpath, whenUpdated)
+          fs.writeFile(classpathFile, classpath, p.resolve)
         } else {
           log.error('Ensime server update failed, exitCode: ', exitCode) 
           failure("Ensime server update failed", exitCode)
@@ -99,8 +102,8 @@ export default function updateServer(tempdir: string, getPidLogger: () => (strin
         }
       });
     }
+    return p.promise;
+
   }
-  
-  return doUpdateServer;
 
 }
