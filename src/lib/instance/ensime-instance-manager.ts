@@ -7,15 +7,15 @@ import {EnsimeInstance} from './instance'
  * This might be supported in vscode too, but currently isn't
  * # TODO: Should use sourdeDirs of .ensime to do mapping of files -> ensime instance
  */
-export class InstanceManager {
+export class InstanceManager<T> {
 
-  instances: EnsimeInstance[]
+  instances: EnsimeInstance<T>[]
 
   constructor() {
       this.instances = []
   }
   
-  registerInstance(instance: EnsimeInstance) {
+  registerInstance(instance: EnsimeInstance<T>) {
       this.instances.push(instance)
   }
 

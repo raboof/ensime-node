@@ -35,6 +35,7 @@ export interface Api {
     typecheckBuffer: (path: string, text: string) => void;
     symbolByName: (qualifiedName: any) => Promise<Typehinted>;
     formatSourceFile: (path: any, contents: any, callback: any) => Promise<Typehinted>;
+    getImplicitInfo: (path: string, startO: number, endO: number) => Promise<Typehinted>;
 }
 
 export function apiOf(client: ServerConnection): Api {
@@ -56,16 +57,18 @@ export function apiOf(client: ServerConnection): Api {
     } 
 
     function getSymbolAtPoint(path: string, offset) : Promise<Typehinted> {
-        const req = {
-            typehint: "SymbolAtPointReq",
-            file: path,
-            point: offset
-        }
-        return client.post(req).then((msg) => {
-            if(msg.typehint == 'SymbolInfo') 
-                return msg
-            else
-                return Promise.reject("no symbol response");
+        return new Promise<Typehinted>((resolve, reject) => {
+            const req = {
+                typehint: "SymbolAtPointReq",
+                file: path,
+                point: offset
+            }
+            client.post(req).then((msg) => {
+                if(msg.typehint == 'SymbolInfo') 
+                    resolve(msg)
+                else
+                    reject("no symbol response");
+            });
         });
     }
         
@@ -113,13 +116,27 @@ export function apiOf(client: ServerConnection): Api {
         });
     }
 
+
+    function getImplicitInfo(path: string, startO: number, endO: number) {
+        const msg = {
+            "typehint":"ImplicitInfoReq",
+            "file": path,
+            "range": {
+                "from": startO,
+                "to": endO
+            }
+        }
+        return client.post(msg)
+    }
+
     return {
         getCompletions,
         getSymbolAtPoint,
         typecheckFile,
         typecheckBuffer,
         symbolByName,
-        formatSourceFile
+        formatSourceFile,
+        getImplicitInfo
     }
             
 }

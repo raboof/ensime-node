@@ -4,19 +4,23 @@ import {Api, apiOf} from '../server-api/server-api'
 import * as _ from 'lodash'
 import * as path from 'path'
 
-export interface EnsimeInstance {
+
+export interface EnsimeInstance<UI> {
     destroy() : any;
     rootDir: string;
     api: Api;
     dotEnsime: DotEnsime;
-    isSourceOf(path: string): boolean
+    isSourceOf(path: string): boolean;
+    
+    /** Client specific ui to use for ui switching and stuff */
+    ui: UI
 }
 
-export function makeInstanceOf(dotEnsime: DotEnsime, connection: ServerConnection, ui?: {destroy: () => any}) : EnsimeInstance{
+export function makeInstanceOf<T extends {destroy(): void}>(dotEnsime: DotEnsime, connection: ServerConnection, ui: T) : EnsimeInstance<T>{
     function destroy () {
-        this.connection.destroy()
-        if(this.ui) {
-            this.ui.destroy()
+        connection.destroy()
+        if(ui) {
+            ui.destroy()
         } 
     } 
     
@@ -27,7 +31,8 @@ export function makeInstanceOf(dotEnsime: DotEnsime, connection: ServerConnectio
         api: apiOf(connection),
         destroy,
         isSourceOf,
-        dotEnsime
+        dotEnsime,
+        ui
     } 
         
 }

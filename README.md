@@ -17,3 +17,6 @@ drone -s https://drone.github.woodenstake.se -t TOKEN secure --repo hedefalk/ens
 
 
 
+## TODOS:
+
+* Tail server log externally so pipe doesn't die on client death

@@ -29,12 +29,14 @@ export function createConnection(httpPort, generalMsgHandler, serverPid = undefi
     
     function handleIncoming(msg) {
       const json = JSON.parse(msg);
+      log.debug("incoming: ", json)
       const callId = json.callId
       // If RpcResponse - lookup in map, otherwise use some general function for handling general msgs
 
       if(callId) {
         try {
           const p = callbackMap[callId];
+          log.debug("resolving promise: " + p)
           p.resolve(json.payload)
         } catch(error) {
           log.trace(`error in callback: ${error}`)
@@ -47,9 +49,7 @@ export function createConnection(httpPort, generalMsgHandler, serverPid = undefi
     }
     
     function onConnect() {
-      log.debug("onConnect");
       clientPromise.resolve(publicApi());
-      log.debug("after resolve");
     } 
 
 
