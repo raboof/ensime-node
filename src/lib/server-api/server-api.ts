@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as temp from 'temp';
 import {ServerConnection} from './server-connection'
 import * as Promise from 'bluebird'
-import {Typehinted} from './server-protocol'
+import {Typehinted, RefactoringDesc} from './server-protocol'
 
 temp.track()
 const tempDir = temp.mkdirSync('ensime-temp-files');
@@ -28,15 +28,6 @@ const withTempFile = (filePath: string, bufferText: string) : Promise<string> =>
     return p.promise; 
 } 
 
-export interface Api {
-    getCompletions: (filePath: string, bufferText: any, offset: any, noOfAutocompleteSuggestions: any) => Promise<Typehinted>;
-    getSymbolAtPoint: (path: string, offset: any) => Promise<Typehinted>;
-    typecheckFile: (path: string) => Promise<Typehinted>;
-    typecheckBuffer: (path: string, text: string) => void;
-    symbolByName: (qualifiedName: any) => Promise<Typehinted>;
-    formatSourceFile: (path: any, contents: any, callback: any) => Promise<Typehinted>;
-    getImplicitInfo: (path: string, startO: number, endO: number) => Promise<Typehinted>;
-}
 
 export function apiOf(client: ServerConnection): Api {
     function getCompletions(filePath: string, bufferText, offset, noOfAutocompleteSuggestions) {
@@ -65,7 +56,7 @@ export function apiOf(client: ServerConnection): Api {
             }
             client.post(req).then((msg) => {
                 if(msg.typehint == 'SymbolInfo') 
-                    resolve(msg)
+                    resolve(msg);
                 else
                     reject("no symbol response");
             });
@@ -129,6 +120,33 @@ export function apiOf(client: ServerConnection): Api {
         return client.post(msg)
     }
 
+
+    function typecheckAll() {
+        client.post({"typehint": "TypecheckAllReq"});
+    }
+
+    function unloadAll() {
+        client.post({"typehint": "UnloadAllReq"});
+    }
+
+    function getRefactoringPatch(procId: number, refactoring: RefactoringDesc) {
+        const req = {
+            typehint: 'RefactorReq',
+            procId: procId,
+            params: refactoring,
+            interactive: false
+        }
+        return client.post(req);
+    }
+
+    function searchPublicSymbols(keywords: string[], maxSymbols: number) {
+        return client.post({
+            typehint: "PublicSymbolSearchReq",
+            keywords: keywords,
+            maxResults: maxSymbols
+        })
+    }
+
     return {
         getCompletions,
         getSymbolAtPoint,
@@ -136,7 +154,25 @@ export function apiOf(client: ServerConnection): Api {
         typecheckBuffer,
         symbolByName,
         formatSourceFile,
-        getImplicitInfo
+        getImplicitInfo,
+        typecheckAll,
+        unloadAll,
+        getRefactoringPatch,
+        searchPublicSymbols
     }
-            
+}
+
+export interface Api {
+    getCompletions: (filePath: string, bufferText: any, offset: any, noOfAutocompleteSuggestions: any) => Promise<Typehinted>;
+    getSymbolAtPoint: (path: string, offset: any) => Promise<Typehinted>;
+    typecheckFile: (path: string) => Promise<Typehinted>;
+    typecheckBuffer: (path: string, text: string) => void;
+    symbolByName: (qualifiedName: any) => Promise<Typehinted>;
+    formatSourceFile: (path: any, contents: any, callback: any) => Promise<Typehinted>;
+    getImplicitInfo: (path: string, startO: number, endO: number) => Promise<Typehinted>;
+    typecheckAll(): void;
+    unloadAll(): void;
+    getRefactoringPatch: (procId: number, refactoring: RefactoringDesc) => Promise<Typehinted>;
+    searchPublicSymbols(keywords: string[], maxSymbols: number): Promise<Typehinted>;
+
 }

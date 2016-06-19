@@ -25,3 +25,7 @@ export interface Type {
   fullName: string;
   declAs: any;
 }
+
+export interface RefactoringDesc {
+  typehint: string;
+}
