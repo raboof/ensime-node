@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as temp from 'temp';
 import {ServerConnection} from './server-connection'
 import * as Promise from 'bluebird'
-import {Typehinted, RefactoringDesc} from './server-protocol'
+import {Typehinted, RefactoringDesc, Point} from './server-protocol'
 
 temp.track()
 const tempDir = temp.mkdirSync('ensime-temp-files');
@@ -147,6 +147,16 @@ export function apiOf(client: ServerConnection): Api {
         })
     }
 
+    
+
+    function getDocUriAtPoint(file: string, point: Point) {
+        return client.post({
+            typehint: "DocUriAtPointReq",
+            file: file,
+            point: point
+        });
+    }
+
     return {
         getCompletions,
         getSymbolAtPoint,
@@ -158,9 +168,12 @@ export function apiOf(client: ServerConnection): Api {
         typecheckAll,
         unloadAll,
         getRefactoringPatch,
-        searchPublicSymbols
+        searchPublicSymbols,
+        getDocUriAtPoint
     }
 }
+
+
 
 export interface Api {
     getCompletions: (filePath: string, bufferText: any, offset: any, noOfAutocompleteSuggestions: any) => Promise<Typehinted>;
@@ -174,5 +187,5 @@ export interface Api {
     unloadAll(): void;
     getRefactoringPatch: (procId: number, refactoring: RefactoringDesc) => Promise<Typehinted>;
     searchPublicSymbols(keywords: string[], maxSymbols: number): Promise<Typehinted>;
-
+    getDocUriAtPoint(file: string, point: Point): Promise<Typehinted>;
 }

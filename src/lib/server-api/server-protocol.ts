@@ -29,3 +29,8 @@ export interface Type {
 export interface RefactoringDesc {
   typehint: string;
 }
+
+export interface Point {
+    from: number;
+    to: number
+}
