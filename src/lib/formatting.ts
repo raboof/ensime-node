@@ -1,6 +1,4 @@
-/// <reference path="typings/server-api.d.ts"/>
-import api = require("server-api");
-
+import api = require("./server-api/server-protocol");
 
 import _ = require ('lodash');
 
@@ -22,8 +20,7 @@ export function fixShortTypeName(theType) {
         return _.last(_.split(theType.fullName, "."))
     else
         return theType.name
-}
-    
+}   
     
 export function formatTypeNameAsString(theType: api.Type) : string {
     const scalaPackage = scalaPackageMatcher.exec(theType.fullName)
@@ -98,6 +95,5 @@ export function formatImplicitInfo(info: api.ImplicitParamInfo | api.ImplicitCon
         return `Implicit conversion: ${implicitConversionInfo.fun.localName}`
     }
 }
-
 
 export const formatType = formatTypeWith(formatTypeNameAsString);

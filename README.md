@@ -14,3 +14,9 @@ This package needs lot of cleanup and test coverage. The pull-out from ensime-at
 
 ## Temp private drone ci instructions:
 drone -s https://drone.github.woodenstake.se -t TOKEN secure --repo hedefalk/ensime-node --in ../drone-secrets/secrets.yml --out .drone.sec
+
+
+
+## TODOS:
+
+* Tail server log externally so pipe doesn't die on client death

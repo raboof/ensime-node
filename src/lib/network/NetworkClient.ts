@@ -20,16 +20,16 @@ export class WebsocketClient implements NetworkClient {
     websocket: any;
     
     constructor(httpPort: string, onConnected: () => any, onMsg: (msg: string) => any) {
-        let log = loglevel.getLogger('ensime.socketclient');
+        let log = loglevel.getLogger('ensime-client');
         this.websocket = new WebSocket("ws://localhost:" + httpPort + "/jerky");
     
         this.websocket.on("open", () => {
-            log.trace("connecting websocket…");
+            log.debug("connecting websocket…");
             onConnected();
         });
 
         this.websocket.on("message", (msg) => {
-            log.trace(`incoming: ${msg}`)
+            log.debug(`incoming: ${msg}`)
             onMsg(msg);
         });
 
@@ -38,7 +38,7 @@ export class WebsocketClient implements NetworkClient {
         });
         
         this.websocket.on("close", () => {
-            log.trace("websocket closed from server");
+            log.debug("websocket closed from server");
         });
         
     }

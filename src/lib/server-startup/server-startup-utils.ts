@@ -6,11 +6,12 @@ import {ChildProcess, spawn} from 'child_process';
 import loglevel = require('loglevel')
 const log = loglevel.getLogger('server-startup')
 import fs = require('fs');
+import {DotEnsime} from '../types';
 
-/*
+/**
 * Sort monkeys and add tools.jar
 */
-export function fixClasspath(javaHome, classpathList) {  
+export function fixClasspath(javaHome: string, classpathList: string[]) {  
   const toolsJar = path.join(javaHome, 'lib', 'tools.jar');
   
   //Sort classpath so any jar containing monkey comes first
@@ -20,8 +21,10 @@ export function fixClasspath(javaHome, classpathList) {
   return _.sortBy(classpathList, sorter).join(path.delimiter)
 }
   
-// # Make an array of java command line args for spawn
-export function javaArgsOf(classpath, dotEnsimePath, ensimeServerFlags = "") {
+/**
+ *  Make an array of java command line args for spawn
+ */
+export function javaArgsOf(classpath: string, dotEnsimePath, ensimeServerFlags = "") {
   const args = ["-classpath", classpath, `-Densime.config=${dotEnsimePath}`, "-Densime.protocol=jerk"]
   if(ensimeServerFlags.length > 0) 
     args.push(ensimeServerFlags) // ## Weird, but extra " " broke everyting
@@ -29,32 +32,35 @@ export function javaArgsOf(classpath, dotEnsimePath, ensimeServerFlags = "") {
   return args
 }
 
-export function javaCmdOf(dotEnsime) {
+export function javaCmdOf(dotEnsime: DotEnsime) {
   return path.join(dotEnsime.javaHome, 'bin', 'java')
 } 
 
-export function spawnServer(javaCmd, args, detached = false) {
+function spawnServer(javaCmd: string, args: string[], detached = false) {
   return spawn(javaCmd, args, {detached: detached})
 }
   
-export function startServerFromClasspath(classpath, dotEnsime, serverFlags = "") {
+function logServer(pid, cacheDir) {
+ fs.exists(cacheDir, (exists) => {
+    if(exists) {
+      const serverLog = fs.createWriteStream(path.join(cacheDir, "server.log"))
+      pid.stdout.pipe(serverLog)
+      pid.stderr.pipe(serverLog)
+      return pid.stdin.end()
+    } else {
+      fs.mkdir(cacheDir, (err) => {
+        return logServer(pid, cacheDir);
+      });
+    }
+ });
+}
+
+export function startServerFromClasspath(classpath: string[], dotEnsime: DotEnsime, serverFlags = "") {
   const fixedClasspath = fixClasspath(dotEnsime.javaHome, classpath)
   const cmd = javaCmdOf(dotEnsime)
   const args = javaArgsOf(fixedClasspath, dotEnsime.dotEnsimePath, serverFlags)
   log.info(`Starting Ensime server with ${cmd} ${args}`)
   const pid = spawnServer(cmd, args)
-  logServer(pid, path.join(dotEnsime.cacheDir,'server.log'))
+  logServer(pid, dotEnsime.cacheDir)
   return pid
 }
-  
-export function logServer(pid, path) {
-  const serverLog = fs.createWriteStream(path)
-  pid.stdout.pipe(serverLog)
-  pid.stderr.pipe(serverLog)
-  return pid.stdin.end()
-}
-
-export function removeTrailingNewline(str: string) {
-  return str.replace(/^\s+|\s+$/g, '');
-} 
-  
