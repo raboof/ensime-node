@@ -14,24 +14,24 @@ export const fixQualifiedTypeName = (theType) => {
       return theType.fullName
 }
     
-export function fixShortTypeName(theType) {
+export function fixShortTypeName(theType: api.Type) {
     const refinementMatch = refinementMatcher.exec(theType.fullName)
     if(refinementMatch)
         return _.last(_.split(theType.fullName, "."))
     else
-        return theType.name
+        return typeConstructorFromName(theType)
 }   
     
+export function typeConstructorFromName(theType: api.Type) {
+    const type = formatTypeNameAsString(theType)
+    return type.replace(/\[.*\]/, "")
+} 
+
+
 export function formatTypeNameAsString(theType: api.Type) : string {
     const scalaPackage = scalaPackageMatcher.exec(theType.fullName)
-    if(scalaPackage)
-        return scalaPackage[1]
-    else {
-        return theType.name
-    }
-}
-
-
+    return scalaPackage ? scalaPackage[1] : theType.name
+} 
     
 // # For hover
 // # typeNameFormatter: function from {name, fullName} -> Html/String
@@ -96,4 +96,4 @@ export function formatImplicitInfo(info: api.ImplicitParamInfo | api.ImplicitCon
     }
 }
 
-export const formatType = formatTypeWith(formatTypeNameAsString);
+export const formatType = formatTypeWith(typeConstructorFromName);

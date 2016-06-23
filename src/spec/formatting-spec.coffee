@@ -1,18 +1,21 @@
 lib = '../lib'
-{formatType, formatImplicitInfo, formatTypeNameAsString} = require "#{lib}/formatting"
+{formatType, formatImplicitInfo, formatTypeNameAsString, typeConstructorFromName} = require "#{lib}/formatting"
 {readFromString, fromLisp} = require "#{lib}/lisp/lisp"
 
+describe 'typeConstructorFromName', ->
+  it 'should strip type args', ->
+    type =
+      "name": "Thing[T]",
+      "typehint": "BasicTypeInfo",
+    expect(typeConstructorFromName(type)).toBe("Thing")
 
 describe 'formatTypeNameAsString', ->
-  it 'should use name', ->
+  it 'should use name, not fullName', ->
     type =
-      "name": "A",
-      "fullName": "wrong.A"
+      "name": "Thing[T]",
+      "fullName": "LanguageFeatureImport.Thing[LanguageFeatureImport.Thing.T]",
       "typehint": "BasicTypeInfo",
-      "declAs": {
-        "typehint": "Nil"
-      }
-    expect(formatTypeNameAsString(type)).toBe("A")
+    expect(formatTypeNameAsString(type)).toBe("Thing[T]")
     
   it 'should not match scalaz as scala', ->
     type =

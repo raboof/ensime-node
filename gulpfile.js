@@ -50,7 +50,7 @@ gulp.task('it', function() {
 	gulp.src('./release/js/spec-integration/**/*.js').pipe(jasmine());
 });
 
-gulp.task('test', ['build'], function() {
+gulp.task('test', function() {
 	gulp.src('./release/js/spec/**/*.js').pipe(jasmine())
 });
 
@@ -66,6 +66,6 @@ gulp.task('clean', function() {
 gulp.task('default', ['lint', 'build']);
 
 gulp.task('watch', ['build'], function() {
-    gulp.watch('src/**/*.ts', ['compile-ts']);
-    gulp.watch('src/**/*.coffee', ['compile-coffee']);
+    gulp.watch('src/**/*.ts', ['compile-ts', 'test']);
+    gulp.watch('src/**/*.coffee', ['compile-coffee', 'test']);
 });
