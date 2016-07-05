@@ -9,7 +9,7 @@ build:
     - nvm use $$NODE_VERSION
     - cd $DRONE_DIR
     - rm -rf node_modules
-    - npm install
+    - npm install --unsafe-perm
     - npm run it
 
 matrix:
