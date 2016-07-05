@@ -1,43 +1,40 @@
 lib = '../lib'
-{formatType, formatImplicitInfo, formatTypeNameAsString, typeConstructorFromName} = require "#{lib}/formatting"
+{formatType, formatImplicitInfo, typeConstructorFromName, typeConstructorFromType} = require "#{lib}/formatting"
 {readFromString, fromLisp} = require "#{lib}/lisp/lisp"
 
 describe 'typeConstructorFromName', ->
   it 'should strip type args', ->
-    type =
-      "name": "Thing[T]",
-      "typehint": "BasicTypeInfo",
-    expect(typeConstructorFromName(type)).toBe("Thing")
+    expect(typeConstructorFromName("Thing[T]")).toBe("Thing")
 
-describe 'formatTypeNameAsString', ->
-  it 'should use name, not fullName', ->
-    type =
-      "name": "Thing[T]",
-      "fullName": "LanguageFeatureImport.Thing[LanguageFeatureImport.Thing.T]",
-      "typehint": "BasicTypeInfo",
-    expect(formatTypeNameAsString(type)).toBe("Thing[T]")
-    
-  it 'should not match scalaz as scala', ->
-    type =
-      "name": "A",
-      "fullName": "scalaz.A"
-      "typehint": "BasicTypeInfo",
-      "declAs": {
-        "typehint": "Nil"
-      }
-    expect(formatTypeNameAsString(type)).toBe("A")
-    
-  it 'should match and remove scala.', ->
-    type =
-      "name": "Integer",
-      "fullName": "scala.Integer"
-      "typehint": "BasicTypeInfo",
-      "declAs": {
-        "typehint": "Nil"
-      }
-    expect(formatTypeNameAsString(type)).toBe("Integer")
-    
 describe 'formatType', ->
+  it 'should format Rep[Int] correctly', ->
+    type = {
+      "name": "Rep[Int]",
+      "fullName": "slick.lifted.Rep[scala.Int]",
+      "typehint": "BasicTypeInfo",
+      "typeArgs": [
+        {
+          "name": "Int",
+          "fullName": "scala.Int",
+          "typehint": "BasicTypeInfo",
+          "typeArgs": [],
+          "members": [],
+          "declAs": {
+            "typehint": "Class"
+          }
+        }
+      ],
+      "members": [],
+      "declAs": {
+        "typehint": "Trait"
+      }
+    }
+
+    expect(typeConstructorFromType(type)).toBe("Rep")
+    expect(formatType(type)).toBe("Rep[Int]")
+
+
+
   it "should use simple name for type param", ->
     typeStr = """
           {

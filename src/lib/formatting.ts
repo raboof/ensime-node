@@ -14,28 +14,27 @@ export const fixQualifiedTypeName = (theType) => {
       return theType.fullName
 }
     
+
+    
 export function fixShortTypeName(theType: api.Type) {
     const refinementMatch = refinementMatcher.exec(theType.fullName)
     if(refinementMatch)
         return _.last(_.split(theType.fullName, "."))
     else
-        return typeConstructorFromName(theType)
+        return typeConstructorFromName(theType.name)
 }   
     
-export function typeConstructorFromName(theType: api.Type) {
-    const type = formatTypeNameAsString(theType)
-    return type.replace(/\[.*\]/, "")
-} 
+export function typeConstructorFromType(type: api.Type) {
+    return typeConstructorFromName(type.name);
+}
 
-
-export function formatTypeNameAsString(theType: api.Type) : string {
-    const scalaPackage = scalaPackageMatcher.exec(theType.fullName)
-    return scalaPackage ? scalaPackage[1] : theType.name
+export function typeConstructorFromName(name: string) {
+    return _.replace(name, /\[.*\]/, "");
 } 
     
 // # For hover
 // # typeNameFormatter: function from {name, fullName} -> Html/String
-export const formatTypeWith = (typeNameFormatter: (x: any) => string) => (theType: any) => {
+export const formatTypeWith = (typeNameFormatter: (x: api.Type) => string) => (theType: any) => {
     function recur(theType) {
 
         const formatParam = (param) => {
@@ -96,4 +95,4 @@ export function formatImplicitInfo(info: api.ImplicitParamInfo | api.ImplicitCon
     }
 }
 
-export const formatType = formatTypeWith(typeConstructorFromName);
+export const formatType = formatTypeWith(typeConstructorFromType);
