@@ -147,13 +147,21 @@ export function apiOf(client: ServerConnection): Api {
         })
     }
 
-    
-
     function getDocUriAtPoint(file: string, point: Point) {
         return client.post({
             typehint: "DocUriAtPointReq",
             file: file,
             point: point
+        });
+    }
+
+    function getImportSuggestions(file: string, characterIndex: number, symbol: string) {
+        return client.post({
+            typehint: 'ImportSuggestionsReq',
+            file: file,
+            point: characterIndex,
+            names: [symbol],
+            maxResults: 10
         });
     }
 
@@ -169,7 +177,8 @@ export function apiOf(client: ServerConnection): Api {
         unloadAll,
         getRefactoringPatch,
         searchPublicSymbols,
-        getDocUriAtPoint
+        getDocUriAtPoint,
+        getImportSuggestions
     }
 }
 
@@ -188,4 +197,5 @@ export interface Api {
     getRefactoringPatch: (procId: number, refactoring: RefactoringDesc) => Promise<Typehinted>;
     searchPublicSymbols(keywords: string[], maxSymbols: number): Promise<Typehinted>;
     getDocUriAtPoint(file: string, point: Point): Promise<Typehinted>;
+    getImportSuggestions(file: string, characterIndex: number, symbol: string): Promise<Typehinted>;
 }
