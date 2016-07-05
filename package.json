@@ -5,10 +5,11 @@
   "version": "0.4.1",
   "description": "Ensime integration for node.js",
   "scripts": {
-    "prepublish": "typings install; gulp build",
+    "postinstall": "typings install; gulp build",
     "test": "gulp test",
     "it": "gulp integration",
-    "watch": "gulp watch"
+    "watch": "gulp watch",
+    "clean": "gulp clean"
   },
   "repository": "https://github.com/ensime/ensime-node",
   "license": "MIT",
