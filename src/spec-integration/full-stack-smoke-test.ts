@@ -61,6 +61,8 @@ fdescribe("full-stack-smoke", () => {
      */    
     const generateProject = (dir: string) => {
         fs.mkdirSync(path.join(dir, 'src'));
+        fs.mkdirSync(path.join(dir, 'project'));
+
         fs.mkdirSync(path.join(dir, 'src', 'main'));
         fs.mkdirSync(path.join(dir, 'src', 'main', 'scala'));
 
@@ -77,12 +79,15 @@ fdescribe("full-stack-smoke", () => {
                     name := "ensime-test-project"
                 )
         `;
-        
 
         // http://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript/37835265#37835265
 
+        const buildSbtP = writeFile(path.join(dir, "build.sbt"), buildDotSbt);    
 
-        return writeFile(path.join(dir, "build.sbt"), buildDotSbt);        
+        const pluginsSbtP = writeFile(path.join(dir, 'project', 'plugins.sbt'),
+         `addSbtPlugin("org.ensime" % "sbt-ensime" % "0.6.0")`)
+
+        return Promise.all([buildDotSbt, pluginsSbtP])
     };
 
     /**
