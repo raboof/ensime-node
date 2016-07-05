@@ -86,16 +86,16 @@ fdescribe("full-stack-smoke", () => {
     };
 
     /**
-     * Calls sbt gen-ensime to generate .ensime
+     * Calls sbt ensimeConfig to generate .ensime
      */
     const genDotEnsime = (dir: string) => {
-        const pid = spawn("sbt", ["gen-ensime"], {cwd: dir});
+        const pid = spawn("sbt", ["ensimeConfig"], {cwd: dir});
         const p = Promise.defer<number>();
 
         pid.stdin.end();
         
         pid.stdout.on('data', (chunk) => {
-            log.info('gen-ensime', chunk.toString('utf8'))
+            log.info('ensimeConfig', chunk.toString('utf8'))
         })
 
         pid.on('close', (exitCode: number) => {
