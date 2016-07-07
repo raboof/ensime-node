@@ -7,7 +7,8 @@
   "scripts": {
     "postinstall": "typings install; gulp build",
     "test": "gulp test",
-    "it": "gulp integration",
+    "integration": "gulp integration",
+    "it": "gulp it",
     "watch": "gulp watch",
     "clean": "gulp clean"
   },
@@ -15,13 +16,13 @@
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.3.3",
-    "chokidar": "1.5.2",
+    "chokidar": "1.6.0",
     "download": "^4.4.3",
     "fs": "0.0.2",
     "glob": "^7.0.0",
     "lodash": "^4.5.1",
     "loglevel": "^1.4.0",
-    "temp": "^0.8.3",
+    "temp": "0.8.3",
     "ws": "^1.0.1"
   },
   "coffeelintConfig": {

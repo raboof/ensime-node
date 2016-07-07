@@ -8,7 +8,7 @@ import {apiOf} from './server-api/server-api'
 import {ServerConnection} from './server-api/server-connection'
 
 export interface ServerStarter {
-    (project: DotEnsime): Promise<ChildProcess>
+    (project: DotEnsime): PromiseLike<ChildProcess>
 } 
 
 export interface ServerSettings {

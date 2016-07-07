@@ -10,3 +10,4 @@ foo
 ensime-client*.tgz
 ensime-integration-test*
 release
+ensime*assembly.jar

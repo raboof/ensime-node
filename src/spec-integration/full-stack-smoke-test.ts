@@ -1,4 +1,6 @@
 import fs = require('fs')
+// import process = require('process')
+
 import * as path from 'path';
 import {writeFile, readFile} from '../lib/file-utils';
 
@@ -12,16 +14,16 @@ import {ServerConnection} from '../lib/server-api/server-connection'
 
 const log = loglevel.getLogger('full-stack-smoke');
 
-fdescribe("full-stack-smoke", () => {
+describe("full-stack-smoke", () => {
     let projectPath: string  = undefined;
     
     let originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;   
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 200000
     let client : ServerConnection = undefined
 
     beforeAll((done) => {
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000
-        // temp.track();
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 200000
+        temp.track();
         originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL
         projectPath = temp.mkdirSync('ensime-integration-test');
         generateProject(projectPath).then(() => {
@@ -49,9 +51,9 @@ fdescribe("full-stack-smoke", () => {
     afterAll((done) => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
         client.destroy();
-        // temp.cleanupSync();
+        temp.cleanupSync();
         fs.exists(projectPath, (exists) => {
-            // expect(exists).toBeFalsy();
+            expect(exists).toBeFalsy();
             done();
         });
     });
@@ -109,18 +111,22 @@ fdescribe("full-stack-smoke", () => {
         return p.promise; 
     };
 
-    function startEnsime(dotEnsimePath: string): Promise<ServerConnection> {
+    function startEnsime(dotEnsimePath: string): PromiseLike<ServerConnection> {
         return dotEnsimeUtils.parseDotEnsime(dotEnsimePath).then((dotEnsime) => {
             log.debug("got a parsed .ensime")
+           
             const serverStarter : ServerStarter = (project: DotEnsime) => {
-                // FIXME: assembly jar location in docker image?
-                const assemblyJar = "/Users/viktor/dev/projects/atom-ensime/ensime_2.11-1.0.0-SNAPSHOT-assembly.jar"
-                const process = startServerFromAssemblyJar(assemblyJar, project)
-                return Promise.resolve(process)
-            } 
+                let assemblyJar = process.env.ENSIME_ASSEMBLY_JAR;
+                if(! assemblyJar) {
+                    log.error("Please point to assembly jar with env ENSIME_ASSEMBLY_JAR")
+                    fail("Please point to assembly jar with env ENSIME_ASSEMBLY_JAR")
+                }
+                return startServerFromAssemblyJar(assemblyJar, project)
+            }
+
             return clientStarterFromServerStarter(serverStarter)(dotEnsime, (msg) => {
                 log.debug(msg);
-            });
+            })
         });
     }
     

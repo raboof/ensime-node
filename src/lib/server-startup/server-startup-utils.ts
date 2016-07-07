@@ -1,5 +1,6 @@
 import path = require('path');
 import _ = require('lodash');
+import * as Promise from 'bluebird';
 
 import {ChildProcess, spawn} from 'child_process';
 
@@ -7,6 +8,7 @@ import loglevel = require('loglevel')
 const log = loglevel.getLogger('server-startup')
 import fs = require('fs');
 import {DotEnsime} from '../types';
+import {ensureExists} from '../file-utils'
 
 /**
 * Sort monkeys and add tools.jar
@@ -55,12 +57,21 @@ function logServer(pid, cacheDir) {
  });
 }
 
-export function startServerFromClasspath(classpath: string[], dotEnsime: DotEnsime, serverFlags = "") {
-  const fixedClasspath = fixClasspath(dotEnsime.javaHome, classpath)
-  const cmd = javaCmdOf(dotEnsime)
-  const args = javaArgsOf(fixedClasspath, dotEnsime.dotEnsimePath, serverFlags)
-  log.info(`Starting Ensime server with ${cmd} ${args}`)
-  const pid = spawnServer(cmd, args)
-  logServer(pid, dotEnsime.cacheDir)
-  return pid
+
+
+
+export function startServerFromClasspath(classpath: string[], dotEnsime: DotEnsime, serverFlags = "") : PromiseLike<ChildProcess> {
+  return new Promise<ChildProcess>((resolve, reject) => {
+    const fixedClasspath = fixClasspath(dotEnsime.javaHome, classpath)
+    const cmd = javaCmdOf(dotEnsime)
+    const args = javaArgsOf(fixedClasspath, dotEnsime.dotEnsimePath, serverFlags)
+    log.info(`Starting Ensime server with ${cmd} ${_.join(args, " ")}`)
+
+    ensureExists(dotEnsime.cacheDir).then( () => {
+      const pid = spawnServer(cmd, args)
+      logServer(pid, dotEnsime.cacheDir)
+      resolve(pid)
+    });
+
+  });
 }

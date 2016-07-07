@@ -12,19 +12,18 @@ import {ChildProcess} from 'child_process';
 
 // Start ensime server from given classpath file
 export function startServerFromFile(classpathFile: string, dotEnsime: DotEnsime, ensimeServerFlags = ""): Promise<ChildProcess> {  
-  const p = Promise.defer<ChildProcess>();
-  fs.readFile(classpathFile, {encoding: 'utf8'}, (err, classpathFileContents) => {
-      if(err) 
-        p.reject(err);
-      let classpathList = _.split(classpathFileContents, path.delimiter);
-      let pid = startServerFromClasspath(classpathList, dotEnsime, ensimeServerFlags)
-      p.resolve(pid);
-  })
-  return p.promise;
+  return new Promise<ChildProcess>((resolve, reject) => {
+      fs.readFile(classpathFile, {encoding: 'utf8'}, (err, classpathFileContents) => {
+        if(err) 
+          reject(err);
+        let classpathList = _.split(classpathFileContents, path.delimiter);
+        let pid = startServerFromClasspath(classpathList, dotEnsime, ensimeServerFlags)
+        pid.then(resolve);
+      })
+  });
 }
 
 export function startServerFromAssemblyJar(assemblyJar: string, dotEnsime: DotEnsime, ensimeServerFlags = "") {
   let cp = [assemblyJar].concat(dotEnsime.compilerJars)
-  let pid = startServerFromClasspath(cp, dotEnsime, ensimeServerFlags)
-  return pid;
+  return startServerFromClasspath(cp, dotEnsime, ensimeServerFlags)
 }
