@@ -1,4 +1,6 @@
 import fs = require('fs')
+// import process = require('process')
+
 import * as path from 'path';
 import {writeFile, readFile} from '../lib/file-utils';
 
@@ -12,16 +14,16 @@ import {ServerConnection} from '../lib/server-api/server-connection'
 
 const log = loglevel.getLogger('full-stack-smoke');
 
-fdescribe("full-stack-smoke", () => {
+describe("full-stack-smoke", () => {
     let projectPath: string  = undefined;
     
     let originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;   
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 200000
     let client : ServerConnection = undefined
 
     beforeAll((done) => {
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000
-        // temp.track();
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 200000
+        temp.track();
         originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL
         projectPath = temp.mkdirSync('ensime-integration-test');
         generateProject(projectPath).then(() => {
@@ -49,9 +51,9 @@ fdescribe("full-stack-smoke", () => {
     afterAll((done) => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
         client.destroy();
-        // temp.cleanupSync();
+        temp.cleanupSync();
         fs.exists(projectPath, (exists) => {
-            // expect(exists).toBeFalsy();
+            expect(exists).toBeFalsy();
             done();
         });
     });
@@ -61,6 +63,8 @@ fdescribe("full-stack-smoke", () => {
      */    
     const generateProject = (dir: string) => {
         fs.mkdirSync(path.join(dir, 'src'));
+        fs.mkdirSync(path.join(dir, 'project'));
+
         fs.mkdirSync(path.join(dir, 'src', 'main'));
         fs.mkdirSync(path.join(dir, 'src', 'main', 'scala'));
 
@@ -77,25 +81,28 @@ fdescribe("full-stack-smoke", () => {
                     name := "ensime-test-project"
                 )
         `;
-        
 
         // http://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript/37835265#37835265
 
+        const buildSbtP = writeFile(path.join(dir, "build.sbt"), buildDotSbt);    
 
-        return writeFile(path.join(dir, "build.sbt"), buildDotSbt);        
+        const pluginsSbtP = writeFile(path.join(dir, 'project', 'plugins.sbt'),
+         `addSbtPlugin("org.ensime" % "sbt-ensime" % "0.6.0")`)
+
+        return Promise.all([buildDotSbt, pluginsSbtP])
     };
 
     /**
-     * Calls sbt gen-ensime to generate .ensime
+     * Calls sbt ensimeConfig to generate .ensime
      */
     const genDotEnsime = (dir: string) => {
-        const pid = spawn("sbt", ["gen-ensime"], {cwd: dir});
+        const pid = spawn("sbt", ["ensimeConfig"], {cwd: dir});
         const p = Promise.defer<number>();
 
         pid.stdin.end();
         
         pid.stdout.on('data', (chunk) => {
-            log.info('gen-ensime', chunk.toString('utf8'))
+            log.info('ensimeConfig', chunk.toString('utf8'))
         })
 
         pid.on('close', (exitCode: number) => {
@@ -104,18 +111,22 @@ fdescribe("full-stack-smoke", () => {
         return p.promise; 
     };
 
-    function startEnsime(dotEnsimePath: string): Promise<ServerConnection> {
+    function startEnsime(dotEnsimePath: string): PromiseLike<ServerConnection> {
         return dotEnsimeUtils.parseDotEnsime(dotEnsimePath).then((dotEnsime) => {
             log.debug("got a parsed .ensime")
+           
             const serverStarter : ServerStarter = (project: DotEnsime) => {
-                // FIXME: assembly jar location in docker image?
-                const assemblyJar = "/Users/viktor/dev/projects/atom-ensime/ensime_2.11-1.0.0-SNAPSHOT-assembly.jar"
-                const process = startServerFromAssemblyJar(assemblyJar, project)
-                return Promise.resolve(process)
-            } 
+                let assemblyJar = process.env.ENSIME_ASSEMBLY_JAR;
+                if(! assemblyJar) {
+                    log.error("Please point to assembly jar with env ENSIME_ASSEMBLY_JAR")
+                    fail("Please point to assembly jar with env ENSIME_ASSEMBLY_JAR")
+                }
+                return startServerFromAssemblyJar(assemblyJar, project)
+            }
+
             return clientStarterFromServerStarter(serverStarter)(dotEnsime, (msg) => {
                 log.debug(msg);
-            });
+            })
         });
     }
     

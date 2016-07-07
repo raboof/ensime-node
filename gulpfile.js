@@ -6,9 +6,10 @@ var coffee = require('gulp-coffee');
 var coffeelint = require('gulp-coffeelint');
 var jasmine = require('gulp-jasmine');
 var rimraf = require('rimraf');
-
+var runSequence = require('run-sequence');
 var tsProject = ts.createProject('tsconfig.json');
-gulp.task('compile-ts', function() {   
+
+function compileTs() {
     var tsResult = tsProject.src() // instead of gulp.src(...) 
         .pipe(sourcemaps.init())
         .pipe(ts(tsProject));
@@ -20,10 +21,12 @@ gulp.task('compile-ts', function() {
             .pipe(sourcemaps.write()) 
             .pipe(gulp.dest('release/js'))
     ]); 
-});
+}
+
+gulp.task('compile-ts', compileTs);
 
 gulp.task('compile-coffee', function() {
-    gulp.src('src/**/*.coffee')
+    return gulp.src('src/**/*.coffee')
     .pipe(sourcemaps.init())
     .pipe(coffee())
     .pipe(sourcemaps.write())
@@ -50,22 +53,29 @@ gulp.task('it', function() {
 	gulp.src('./release/js/spec-integration/**/*.js').pipe(jasmine());
 });
 
-gulp.task('test', ['build'], function() {
-	gulp.src('./release/js/spec/**/*.js').pipe(jasmine())
+gulp.task('test', function() {
+    console.log("starting tests…");
+	return gulp.src('./release/js/spec/**/*.js').pipe(jasmine({includeStackTrace: false}));
 });
 
 gulp.task('compile', ['compile-ts', 'compile-coffee']);
 gulp.task('build', ['compile', 'copy-js']);
 gulp.task('lint', ['coffee-lint']);
 
-gulp.task('clean', function() {
-    rimraf('./release', function(err) {
-    });
+gulp.task('clean', function(cb) {
+    return rimraf('./release', cb);
 });
 
-gulp.task('default', ['lint', 'build']);
 
-gulp.task('watch', ['build'], function() {
-    gulp.watch('src/**/*.ts', ['compile-ts']);
-    gulp.watch('src/**/*.coffee', ['compile-coffee']);
+gulp.task('default', function(cb) {
+    runSequence(['clean, build'], cb);
+});
+
+gulp.task('watch', ['build'], function(cb) {
+    gulp.watch('src/**/*.ts', function(vinyl) {
+        runSequence('compile-ts', 'test', function() {});
+    });
+    gulp.watch('src/**/*.coffee', function(vinyl) {
+        runSequence('compile-coffee', 'test', function() {});
+    });
 });

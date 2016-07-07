@@ -1,40 +1,43 @@
 lib = '../lib'
-{formatType, formatImplicitInfo, formatTypeNameAsString} = require "#{lib}/formatting"
+{formatType, formatImplicitInfo, typeConstructorFromName, typeConstructorFromType} = require "#{lib}/formatting"
 {readFromString, fromLisp} = require "#{lib}/lisp/lisp"
 
+describe 'typeConstructorFromName', ->
+  it 'should strip type args', ->
+    expect(typeConstructorFromName("Thing[T]")).toBe("Thing")
 
-describe 'formatTypeNameAsString', ->
-  it 'should use name', ->
-    type =
-      "name": "A",
-      "fullName": "wrong.A"
-      "typehint": "BasicTypeInfo",
-      "declAs": {
-        "typehint": "Nil"
-      }
-    expect(formatTypeNameAsString(type)).toBe("A")
-    
-  it 'should not match scalaz as scala', ->
-    type =
-      "name": "A",
-      "fullName": "scalaz.A"
-      "typehint": "BasicTypeInfo",
-      "declAs": {
-        "typehint": "Nil"
-      }
-    expect(formatTypeNameAsString(type)).toBe("A")
-    
-  it 'should match and remove scala.', ->
-    type =
-      "name": "Integer",
-      "fullName": "scala.Integer"
-      "typehint": "BasicTypeInfo",
-      "declAs": {
-        "typehint": "Nil"
-      }
-    expect(formatTypeNameAsString(type)).toBe("Integer")
-    
+  it 'should not mess up when nested arguments', ->
+    expect(typeConstructorFromName("Seq[(ActivityRow, Option[AdminRow], Option[ParticipantCardRow])]")).toBe("Seq")
+
 describe 'formatType', ->
+  it 'should format Rep[Int] correctly', ->
+    type = {
+      "name": "Rep[Int]",
+      "fullName": "slick.lifted.Rep[scala.Int]",
+      "typehint": "BasicTypeInfo",
+      "typeArgs": [
+        {
+          "name": "Int",
+          "fullName": "scala.Int",
+          "typehint": "BasicTypeInfo",
+          "typeArgs": [],
+          "members": [],
+          "declAs": {
+            "typehint": "Class"
+          }
+        }
+      ],
+      "members": [],
+      "declAs": {
+        "typehint": "Trait"
+      }
+    }
+
+    expect(typeConstructorFromType(type)).toBe("Rep")
+    expect(formatType(type)).toBe("Rep[Int]")
+
+
+
   it "should use simple name for type param", ->
     typeStr = """
           {
@@ -431,3 +434,89 @@ describe 'formatType', ->
           }
     result = formatType(input)
     expect(result).toBe("Int => Double")
+
+  it "should format typeargs with tuples correctly", ->
+    type = {
+      "name": "Seq[(ActivityRow, Option[AdminRow], Option[ParticipantCardRow])]",
+      "fullName": "scala.collection.Seq[(se.uniply.dfkka.db.TableDefinitions.ActivityRow, scala.Option[se.uniply.dfkka.db.TableDefinitions.AdminRow], scala.Option[se.uniply.dfkka.db.TableDefinitions.ParticipantCardRow])]",
+      "pos": {
+        "typehint": "OffsetSourcePosition",
+        "file": "/Users/viktor/dev/projects/uniply-batch/.ensime_cache/dep-src/source-jars/scala/collection/Seq.scala",
+        "offset": 656
+      },
+      "typehint": "BasicTypeInfo",
+      "typeArgs": [
+        {
+          "name": "(ActivityRow, Option[AdminRow], Option[ParticipantCardRow])",
+          "fullName": "(se.uniply.dfkka.db.TableDefinitions.ActivityRow, scala.Option[se.uniply.dfkka.db.TableDefinitions.AdminRow], scala.Option[se.uniply.dfkka.db.TableDefinitions.ParticipantCardRow])",
+          "typehint": "BasicTypeInfo",
+          "typeArgs": [
+            {
+              "name": "ActivityRow",
+              "fullName": "se.uniply.dfkka.db.TableDefinitions.ActivityRow",
+              "typehint": "BasicTypeInfo",
+              "typeArgs": [],
+              "members": [],
+              "declAs": {
+                "typehint": "Class"
+              }
+            },
+            {
+              "name": "Option[AdminRow]",
+              "fullName": "scala.Option[se.uniply.dfkka.db.TableDefinitions.AdminRow]",
+              "typehint": "BasicTypeInfo",
+              "typeArgs": [
+                {
+                  "name": "AdminRow",
+                  "fullName": "se.uniply.dfkka.db.TableDefinitions.AdminRow",
+                  "typehint": "BasicTypeInfo",
+                  "typeArgs": [],
+                  "members": [],
+                  "declAs": {
+                    "typehint": "Class"
+                  }
+                }
+              ],
+              "members": [],
+              "declAs": {
+                "typehint": "Class"
+              }
+            },
+            {
+              "name": "Option[ParticipantCardRow]",
+              "fullName": "scala.Option[se.uniply.dfkka.db.TableDefinitions.ParticipantCardRow]",
+              "typehint": "BasicTypeInfo",
+              "typeArgs": [
+                {
+                  "name": "ParticipantCardRow",
+                  "fullName": "se.uniply.dfkka.db.TableDefinitions.ParticipantCardRow",
+                  "typehint": "BasicTypeInfo",
+                  "typeArgs": [],
+                  "members": [],
+                  "declAs": {
+                    "typehint": "Class"
+                  }
+                }
+              ],
+              "members": [],
+              "declAs": {
+                "typehint": "Class"
+              }
+            }
+          ],
+          "members": [],
+          "declAs": {
+            "typehint": "Class"
+          }
+        }
+      ],
+      "members": [],
+      "declAs": {
+        "typehint": "Trait"
+      }
+     }
+
+    result = formatType(type)
+    expect(result).toBe("Seq[(ActivityRow, Option[AdminRow], Option[ParticipantCardRow])]")
+
+

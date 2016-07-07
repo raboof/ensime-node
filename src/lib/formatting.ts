@@ -5,6 +5,7 @@ import _ = require ('lodash');
 const functionMatcher = new RegExp("scala\\.Function\\d{1,2}")
 const scalaPackageMatcher = new RegExp("scala\\.([\\s\\S]*)")
 const refinementMatcher = new RegExp("(.*)\\$<refinement>") // scalaz.syntax.ApplyOps$<refinement>
+const tupleMatcher = /^\(.*\)/;
 
 export const fixQualifiedTypeName = (theType) => {
     const refinementMatch = refinementMatcher.exec(theType.fullName)
@@ -14,28 +15,25 @@ export const fixQualifiedTypeName = (theType) => {
       return theType.fullName
 }
     
-export function fixShortTypeName(theType) {
+export function fixShortTypeName(theType: api.Type) {
     const refinementMatch = refinementMatcher.exec(theType.fullName)
     if(refinementMatch)
         return _.last(_.split(theType.fullName, "."))
     else
-        return theType.name
+        return typeConstructorFromName(theType.name)
 }   
     
-export function formatTypeNameAsString(theType: api.Type) : string {
-    const scalaPackage = scalaPackageMatcher.exec(theType.fullName)
-    if(scalaPackage)
-        return scalaPackage[1]
-    else {
-        return theType.name
-    }
+export function typeConstructorFromType(type: api.Type) {
+    return typeConstructorFromName(type.name);
 }
 
-
+export function typeConstructorFromName(name: string) {
+    return _.replace(name, /\[.*\]/, "");
+} 
     
 // # For hover
 // # typeNameFormatter: function from {name, fullName} -> Html/String
-export const formatTypeWith = (typeNameFormatter: (x: any) => string) => (theType: any) => {
+export const formatTypeWith = (typeNameFormatter: (x: api.Type) => string) => (theType: any) => {
     function recur(theType) {
 
         const formatParam = (param) => {
@@ -73,6 +71,8 @@ export const formatTypeWith = (typeNameFormatter: (x: any) => string) => (theTyp
                 const result = _.last(formattedTypeArgs)
                 const params = _.initial(formattedTypeArgs)
                 return `(${params.join(", ")}) => ${result}`
+              } else if(tupleMatcher.test(theType.name)) {
+                return `(${formattedTypeArgs.join(", ")})`
               } else
                 return name + `[${formattedTypeArgs.join(", ")}]`
             }
@@ -96,4 +96,4 @@ export function formatImplicitInfo(info: api.ImplicitParamInfo | api.ImplicitCon
     }
 }
 
-export const formatType = formatTypeWith(formatTypeNameAsString);
+export const formatType = formatTypeWith(typeConstructorFromType);

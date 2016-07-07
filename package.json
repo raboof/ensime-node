@@ -5,22 +5,24 @@
   "version": "0.4.1",
   "description": "Ensime integration for node.js",
   "scripts": {
-    "prepublish": "typings install; gulp build",
+    "postinstall": "typings install; gulp build",
     "test": "gulp test",
-    "it": "gulp integration",
-    "watch": "gulp watch"
+    "integration": "gulp integration",
+    "it": "gulp it",
+    "watch": "gulp watch",
+    "clean": "gulp clean"
   },
   "repository": "https://github.com/ensime/ensime-node",
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.3.3",
-    "chokidar": "1.5.2",
+    "chokidar": "1.6.0",
     "download": "^4.4.3",
     "fs": "0.0.2",
     "glob": "^7.0.0",
     "lodash": "^4.5.1",
     "loglevel": "^1.4.0",
-    "temp": "^0.8.3",
+    "temp": "0.8.3",
     "ws": "^1.0.1"
   },
   "coffeelintConfig": {
@@ -51,6 +53,7 @@
     "jasmine-focused": "^1.0.7",
     "merge2": "^1.0.2",
     "rimraf": "^2.5.2",
+    "run-sequence": "1.2.2",
     "typescript": "1.8.10",
     "typings": "1.0.4"
   }

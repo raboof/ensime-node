@@ -17,7 +17,7 @@ describe "ensime-server-update", ->
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000
   
   
-  it "should be able to download coursier", (done) ->
+  xit "should be able to download coursier", (done) ->
     # Java is installed installed on appveyor build servers C:\Program Files\Java\jdk1.8.0
     # http://www.appveyor.com/docs/installed-software#java
     tempDir = temp.mkdirSync('ensime-integration-test')

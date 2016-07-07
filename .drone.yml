@@ -9,14 +9,14 @@ build:
     - nvm use $$NODE_VERSION
     - cd $DRONE_DIR
     - rm -rf node_modules
-    - npm install
+    - npm install --unsafe-perm
+    - curl http://ensime.typelevel.org/ensime_2.11-1.0.0-assembly.jar -o $DRONE_DIR/ensime_2.11-1.0.0-assembly.jar
+    - export ENSIME_ASSEMBLY_JAR=$DRONE_DIR/ensime_2.11-1.0.0-assembly.jar
     - npm run it
 
 matrix:
   NODE_VERSION:
     - 5
-    - 4
-    - 0.12
 
 cache:
   mount:
