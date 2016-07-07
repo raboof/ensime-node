@@ -2,7 +2,7 @@
   "name": "ensime-client",
   "main": "release/js/lib/index.js",
   "typings": "release/definitions/lib/index.d.ts",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Ensime integration for node.js",
   "scripts": {
     "postinstall": "typings install; gulp build",
