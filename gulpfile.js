@@ -55,7 +55,7 @@ gulp.task('it', function() {
 
 gulp.task('test', function() {
     console.log("starting tests…");
-	return gulp.src('./release/js/spec/**/*.js').pipe(jasmine());
+	return gulp.src('./release/js/spec/**/*.js').pipe(jasmine({includeStackTrace: false}));
 });
 
 gulp.task('compile', ['compile-ts', 'compile-coffee']);
@@ -71,11 +71,11 @@ gulp.task('default', function(cb) {
     runSequence(['clean, build'], cb);
 });
 
-gulp.task('watch', ['build'], function() {
-    gulp.watch('src/**/*.ts', function(cb) {
-        runSequence('compile-ts', 'test');
+gulp.task('watch', ['build'], function(cb) {
+    gulp.watch('src/**/*.ts', function(vinyl) {
+        runSequence('compile-ts', 'test', function() {});
     });
-    gulp.watch('src/**/*.coffee', function(cb) {
-        runSequence('compile-coffee', 'test');
+    gulp.watch('src/**/*.coffee', function(vinyl) {
+        runSequence('compile-coffee', 'test', function() {});
     });
 });

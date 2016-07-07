@@ -5,6 +5,7 @@ import _ = require ('lodash');
 const functionMatcher = new RegExp("scala\\.Function\\d{1,2}")
 const scalaPackageMatcher = new RegExp("scala\\.([\\s\\S]*)")
 const refinementMatcher = new RegExp("(.*)\\$<refinement>") // scalaz.syntax.ApplyOps$<refinement>
+const tupleMatcher = /^\(.*\)/;
 
 export const fixQualifiedTypeName = (theType) => {
     const refinementMatch = refinementMatcher.exec(theType.fullName)
@@ -13,8 +14,6 @@ export const fixQualifiedTypeName = (theType) => {
     else
       return theType.fullName
 }
-    
-
     
 export function fixShortTypeName(theType: api.Type) {
     const refinementMatch = refinementMatcher.exec(theType.fullName)
@@ -72,6 +71,8 @@ export const formatTypeWith = (typeNameFormatter: (x: api.Type) => string) => (t
                 const result = _.last(formattedTypeArgs)
                 const params = _.initial(formattedTypeArgs)
                 return `(${params.join(", ")}) => ${result}`
+              } else if(tupleMatcher.test(theType.name)) {
+                return `(${formattedTypeArgs.join(", ")})`
               } else
                 return name + `[${formattedTypeArgs.join(", ")}]`
             }

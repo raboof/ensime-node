@@ -53,7 +53,7 @@
     "jasmine-focused": "^1.0.7",
     "merge2": "^1.0.2",
     "rimraf": "^2.5.2",
-    "run-sequence": "^1.2.1",
+    "run-sequence": "1.2.2",
     "typescript": "1.8.10",
     "typings": "1.0.4"
   }
