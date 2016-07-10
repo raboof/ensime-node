@@ -5,7 +5,7 @@
   "version": "0.5.0",
   "description": "Ensime integration for node.js",
   "scripts": {
-    "postinstall": "typings install; gulp build",
+    "prepublish": "typings install; gulp build",
     "test": "gulp test",
     "integration": "gulp integration",
     "it": "gulp it",
