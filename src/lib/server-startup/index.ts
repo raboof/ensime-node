@@ -11,7 +11,8 @@ import {startServerFromClasspath} from './server-startup-utils';
 import {ChildProcess} from 'child_process';
 
 // Start ensime server from given classpath file
-export function startServerFromFile(classpathFile: string, dotEnsime: DotEnsime, ensimeServerFlags = ""): Promise<ChildProcess> {  
+export function startServerFromFile(classpathFile: string, dotEnsime: DotEnsime, ensimeServerFlags = ""): PromiseLike<ChildProcess> {  
+  log.debug('starting server from file')
   return new Promise<ChildProcess>((resolve, reject) => {
       fs.readFile(classpathFile, {encoding: 'utf8'}, (err, classpathFileContents) => {
         if(err) 

@@ -15,9 +15,13 @@ function removeTrailingNewline(str: string) {
   
 //  Start an ensime client given path to .ensime. If server already running, just use, else startup that too.
 export default function(serverStarter: ServerStarter) {
-  return function(parsedDotEnsime: DotEnsime, generalHandler: (msg: string) => any) : Promise<ServerConnection> {
+  log.debug('creating client starter function from ServerStarter')
+  return function(parsedDotEnsime: DotEnsime, generalHandler: (msg: string) => any) : PromiseLike<ServerConnection> {
+
+    log.debug('trying to start client')
     return new Promise<ServerConnection>((resolve, reject) => {
 
+      
       ensureExists(parsedDotEnsime.cacheDir).then(() => {
 
         const httpPortFilePath = parsedDotEnsime.cacheDir + path.sep + "http";
@@ -60,10 +64,12 @@ export default function(serverStarter: ServerStarter) {
             });
           });
 
-          // no server running, start that first
+          log.debug('no server running, start that first…')
           serverStarter(parsedDotEnsime).then((pid) => serverPid = pid)
         }
 
+      }, (failToCreateCacheDir) => {
+        reject(failToCreateCacheDir)
       });
     }); 
   };

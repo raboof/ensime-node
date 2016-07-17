@@ -11,16 +11,19 @@ export const readFile = Promise.promisify(fs.readFile)
 
 export function ensureExists(path: string) {
   return new Promise((resolve, reject) => {
+    console.log('ensureExists')
     fs.exists(path, (exists) => {
       if(! exists) {
         fs.mkdir(path, (err) => {
-          if(err)
+          if(err) {
+            console.log(err)
             reject(err);
-          else
-            resolve();
+          } else {
+            resolve(path);
+          }
         });
       } else {
-        resolve();
+        resolve(path);
       } 
     });
   });

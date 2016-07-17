@@ -18,7 +18,7 @@ function readDotEnsime(path: string) : Promise<string> {
   })
 }
 
-export function parseDotEnsime(path) : Promise<DotEnsime> {
+export function parseDotEnsime(path: string) : PromiseLike<DotEnsime> {
   // scala version from .ensime config file of project
   return readDotEnsime(path).then((dotEnsime) => {
 

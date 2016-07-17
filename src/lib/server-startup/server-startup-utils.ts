@@ -65,7 +65,7 @@ export function startServerFromClasspath(classpath: string[], dotEnsime: DotEnsi
     const fixedClasspath = fixClasspath(dotEnsime.javaHome, classpath)
     const cmd = javaCmdOf(dotEnsime)
     const args = javaArgsOf(fixedClasspath, dotEnsime.dotEnsimePath, serverFlags)
-    log.info(`Starting Ensime server with ${cmd} ${_.join(args, " ")}`)
+    log.debug(`Starting Ensime server with ${cmd} ${_.join(args, " ")}`)
 
     ensureExists(dotEnsime.cacheDir).then( () => {
       const pid = spawnServer(cmd, args)
