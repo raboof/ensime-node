@@ -21,7 +21,6 @@ export default function(serverStarter: ServerStarter) {
     log.debug('trying to start client')
     return new Promise<ServerConnection>((resolve, reject) => {
 
-      
       ensureExists(parsedDotEnsime.cacheDir).then(() => {
 
         const httpPortFilePath = parsedDotEnsime.cacheDir + path.sep + "http";
@@ -30,10 +29,10 @@ export default function(serverStarter: ServerStarter) {
           // server running, no need to start
           log.debug("port file already there, starting client");
           const httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString())
-          const clientPromise = createConnection(httpPort, generalHandler)
-          clientPromise.then((client) => {
-            log.debug("got a client ")
-            resolve(client);
+          const connectionPromise = createConnection(httpPort, generalHandler)
+          connectionPromise.then((connection) => {
+            log.debug("got a connection")
+            resolve(connection);
           });
         } else {
           let serverPid = undefined
@@ -57,10 +56,10 @@ export default function(serverStarter: ServerStarter) {
           whenAdded(httpPortFilePath).then( () => {
             log.debug("got a port file");
             const httpPort = removeTrailingNewline(fs.readFileSync(httpPortFilePath).toString());
-            const clientPromise = createConnection(httpPort, generalHandler, serverPid)
-            clientPromise.then((client) => {
-              log.debug("got a client");
-              resolve(client);
+            const connectionPromise = createConnection(httpPort, generalHandler, serverPid)
+            connectionPromise.then((connection) => {
+              log.debug("got a connection");
+              resolve(connection);
             });
           });
 
