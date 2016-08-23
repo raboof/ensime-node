@@ -9,7 +9,7 @@ import {DotEnsime} from './types';
 const download = require('download');
 import {ensureExists} from './file-utils'
 
-function javaArgs(dotEnsime: DotEnsime, updateChanging: boolean) {
+function javaArgs(dotEnsime: DotEnsime, serverVersion: String, updateChanging: boolean) {
   const scalaVersion = dotEnsime.scalaVersion
   const scalaEdition = dotEnsime.scalaEdition
   const args =
@@ -25,7 +25,7 @@ function javaArgs(dotEnsime: DotEnsime, updateChanging: boolean) {
     '-r', 'file:///$HOME/.m2/repository',
     '-r', 'https://oss.sonatype.org/content/repositories/snapshots',
     '-r', 'https://jcenter.bintray.com/',
-    `org.ensime:ensime_${scalaEdition}:0.9.10-SNAPSHOT`, // TODO: Should be parameterized?
+    `org.ensime:ensime_${scalaEdition}:${serverVersion}`,
     '-V', `org.scala-lang:scala-compiler:${scalaVersion}`,
     '-V', `org.scala-lang:scala-library:${scalaVersion}`,
     '-V', `org.scala-lang:scala-reflect:${scalaVersion}`,
@@ -55,7 +55,7 @@ export default function updateServer(tempdir: string, failure: (string, int) => 
 
           let spaceSeparatedClassPath = ""
 
-          const args = javaArgs(parsedDotEnsime, true)
+          const args = javaArgs(parsedDotEnsime, ensimeServerVersion, true)
 
           logger.debug('java command to spawn', javaCmd, args, tempdir)
           const pid = spawn(javaCmd, args, { cwd: tempdir })
