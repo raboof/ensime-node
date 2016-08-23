@@ -15,14 +15,15 @@ import {Typehinted} from '../server-api/server-protocol'
 export interface ServerConnection {
     destroy: () => void
     
+    httpPort: string
     /**
      * Post a msg object 
      */
     post: (msg: any) => Promise<Typehinted>
 }
 
-export function createConnection(httpPort, generalMsgHandler, serverPid = undefined) {
-    const clientPromise = Promise.defer<ServerConnection>();
+export function createConnection(httpPort: string, generalMsgHandler, serverPid = undefined): PromiseLike<ServerConnection> {
+    const deferredConnection = Promise.defer<ServerConnection>();
 
     const callbackMap : {[callId: string]: Promise.Resolver<any>} = { }
     let ensimeMessageCounter = 1
@@ -49,7 +50,7 @@ export function createConnection(httpPort, generalMsgHandler, serverPid = undefi
     }
     
     function onConnect() {
-      clientPromise.resolve(publicApi());
+      deferredConnection.resolve(publicApi());
     } 
 
 
@@ -57,7 +58,8 @@ export function createConnection(httpPort, generalMsgHandler, serverPid = undefi
       log.debug("creating client api");
       return {
         post,
-        destroy
+        destroy,
+        httpPort
       }
     } 
 
@@ -86,5 +88,5 @@ export function createConnection(httpPort, generalMsgHandler, serverPid = undefi
       return postString(JSON.stringify(msg))
     }
 
-    return clientPromise.promise;
+    return deferredConnection.promise;
 }

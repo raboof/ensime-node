@@ -8,6 +8,7 @@ import * as path from 'path'
 export interface EnsimeInstance<UI> {
     destroy() : any;
     rootDir: string;
+    httpPort: string;
     api: Api;
     dotEnsime: DotEnsime;
     isSourceOf(path: string): boolean;
@@ -27,6 +28,7 @@ export function makeInstanceOf<T extends {destroy(): void}>(dotEnsime: DotEnsime
     const isSourceOf = (path: string) => _.some(dotEnsime.sourceRoots, (sourceRoot) => _.startsWith(path, sourceRoot))    
 
     return {
+        httpPort: connection.httpPort,
         rootDir: dotEnsime.rootDir,
         api: apiOf(connection),
         destroy,
