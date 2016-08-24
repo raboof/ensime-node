@@ -35,7 +35,7 @@ function javaArgs(dotEnsime: DotEnsime, serverVersion: String, updateChanging: b
 }
 
 // Updates ensime server, invoke callback when done
-export default function updateServer(tempdir: string, failure: (string, int) => void, pidLogger: (string) => void) {
+export default function updateServer(tempdir: string, failure: (string, int) => void, getPidLogger: () => (string) => void) {
   const logger = loglevel.getLogger('ensime.server-update')
   logger.debug('update ensime server, tempdir: ' + tempdir)
 
@@ -59,6 +59,7 @@ export default function updateServer(tempdir: string, failure: (string, int) => 
 
           logger.debug('java command to spawn', javaCmd, args, tempdir)
           const pid = spawn(javaCmd, args, { cwd: tempdir })
+          const pidLogger = getPidLogger()
           pid.stdout.on('data', (chunk) => {
             const s = chunk.toString('utf8')
             logger.debug('got data from java process', s)
