@@ -3,7 +3,6 @@
         "target": "es5",
         "module": "commonjs",
         "moduleResolution": "node",
-        "isolatedModules": false,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "declaration": true,

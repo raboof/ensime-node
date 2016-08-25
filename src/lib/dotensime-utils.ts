@@ -9,7 +9,7 @@ import {DotEnsime} from './types';
 const sexpToJObject = swankExtras.sexpToJObject
 import {readFile} from './file-utils';
 
-function readDotEnsime(path: string) : Promise<string> {
+function readDotEnsime(path: string) : PromiseLike<string> {
   
   return readFile(path).then((raw) => {
     let rows = raw.toString().split(new RegExp("\r?\n"))
@@ -45,7 +45,7 @@ export function parseDotEnsime(path: string) : PromiseLike<DotEnsime> {
 }
 
 // Gives promise of .ensime paths
-export function allDotEnsimesInPaths(paths: [string]): Promise<{path: string}[]> {
+export function allDotEnsimesInPaths(paths: [string]): PromiseLike<{path: string}[]> {
   const globTask = Promise.promisify<[string], string, {}>(glob)
   const promises = paths.map ((dir) =>
     globTask(

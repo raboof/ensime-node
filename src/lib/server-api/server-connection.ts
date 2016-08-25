@@ -19,7 +19,7 @@ export interface ServerConnection {
     /**
      * Post a msg object 
      */
-    post: (msg: any) => Promise<Typehinted>
+    post: (msg: any) => PromiseLike<Typehinted>
 }
 
 export function createConnection(httpPort: string, generalMsgHandler, serverPid = undefined): PromiseLike<ServerConnection> {
@@ -74,7 +74,7 @@ export function createConnection(httpPort: string, generalMsgHandler, serverPid 
         serverPid.kill();
     }
     
-    function postString(msg): Promise<Typehinted> {
+    function postString(msg): PromiseLike<Typehinted> {
       const p = Promise.defer<Typehinted>();
       const wireMsg = `{"req": ${msg}, "callId": ${ensimeMessageCounter}}`
       callbackMap[ensimeMessageCounter++] = p
@@ -84,7 +84,7 @@ export function createConnection(httpPort: string, generalMsgHandler, serverPid 
     }
 
     
-    function post(msg) : Promise<Typehinted> {
+    function post(msg) : PromiseLike<Typehinted> {
       return postString(JSON.stringify(msg))
     }
 

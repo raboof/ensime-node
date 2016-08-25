@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as temp from 'temp';
 import {ServerConnection} from './server-connection'
 import * as Promise from 'bluebird'
-import {Typehinted, RefactoringDesc, Point} from './server-protocol'
+import {Typehinted, SymbolInfo, CompletionsResponse, RefactoringDesc, Point} from './server-protocol'
 
 temp.track()
 const tempDir = temp.mkdirSync('ensime-temp-files');
@@ -16,7 +16,7 @@ const getTempPath = (file) => {
     return path.join(getTempDir(), file)
 }
 
-const withTempFile = (filePath: string, bufferText: string) : Promise<string> => {
+const withTempFile = (filePath: string, bufferText: string) : PromiseLike<string> => {
     const tempFilePath = getTempPath(filePath);
     const p = Promise.defer<string>();
     fs.outputFile(tempFilePath, bufferText, (err) => {
@@ -30,7 +30,7 @@ const withTempFile = (filePath: string, bufferText: string) : Promise<string> =>
 
 
 export function apiOf(client: ServerConnection): Api {
-    function getCompletions(filePath: string, bufferText, offset, noOfAutocompleteSuggestions) {
+    function getCompletions(filePath: string, bufferText: string, offset: number, noOfAutocompleteSuggestions: number) {
         return withTempFile(filePath, bufferText).then((tempFile) => {
             const msg = {
                 typehint: "CompletionsReq",
@@ -47,7 +47,7 @@ export function apiOf(client: ServerConnection): Api {
         });
     } 
 
-    function getSymbolAtPoint(path: string, offset) : Promise<Typehinted> {
+    function getSymbolAtPoint(path: string, offset) : PromiseLike<Typehinted> {
         return new Promise<Typehinted>((resolve, reject) => {
             const req = {
                 typehint: "SymbolAtPointReq",
@@ -185,17 +185,17 @@ export function apiOf(client: ServerConnection): Api {
 
 
 export interface Api {
-    getCompletions: (filePath: string, bufferText: any, offset: any, noOfAutocompleteSuggestions: any) => Promise<Typehinted>;
-    getSymbolAtPoint: (path: string, offset: any) => Promise<Typehinted>;
-    typecheckFile: (path: string) => Promise<Typehinted>;
+    getCompletions: (filePath: string, bufferText: any, offset: any, noOfAutocompleteSuggestions: any) => PromiseLike<CompletionsResponse>;
+    getSymbolAtPoint: (path: string, offset: any) => PromiseLike<SymbolInfo>;
+    typecheckFile: (path: string) => PromiseLike<Typehinted>;
     typecheckBuffer: (path: string, text: string) => void;
-    symbolByName: (qualifiedName: any) => Promise<Typehinted>;
-    formatSourceFile: (path: any, contents: any, callback: any) => Promise<Typehinted>;
-    getImplicitInfo: (path: string, startO: number, endO: number) => Promise<Typehinted>;
+    symbolByName: (qualifiedName: any) => PromiseLike<Typehinted>;
+    formatSourceFile: (path: any, contents: any, callback: any) => PromiseLike<Typehinted>;
+    getImplicitInfo: (path: string, startO: number, endO: number) => PromiseLike<Typehinted>;
     typecheckAll(): void;
     unloadAll(): void;
-    getRefactoringPatch: (procId: number, refactoring: RefactoringDesc) => Promise<Typehinted>;
-    searchPublicSymbols(keywords: string[], maxSymbols: number): Promise<Typehinted>;
-    getDocUriAtPoint(file: string, point: Point): Promise<Typehinted>;
-    getImportSuggestions(file: string, characterIndex: number, symbol: string): Promise<Typehinted>;
+    getRefactoringPatch: (procId: number, refactoring: RefactoringDesc) => PromiseLike<Typehinted>;
+    searchPublicSymbols(keywords: string[], maxSymbols: number): PromiseLike<Typehinted>;
+    getDocUriAtPoint(file: string, point: Point): PromiseLike<Typehinted>;
+    getImportSuggestions(file: string, characterIndex: number, symbol: string): PromiseLike<Typehinted>;
 }

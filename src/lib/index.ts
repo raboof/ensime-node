@@ -1,6 +1,6 @@
 export {InstanceManager, EnsimeInstance, makeInstanceOf} from './instance';
 
-export {DotEnsime, ServerStarter, pid} from './types';
+export {DotEnsime, ServerStarter, pid, serverProtocol} from './types';
 
 export import formatting = require('./formatting');
 export {default as ensimeServerUpdate} from './ensime-server-update-coursier';
