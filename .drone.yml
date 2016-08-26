@@ -1,5 +1,5 @@
 build:
-  image: ensime/ensime:latest
+  image: ensime/ensime:v1.x-cache
   
   when:
     event: push
@@ -9,9 +9,10 @@ build:
     - git clone https://github.com/creationix/nvm.git $NVM_DIR
     - cd $NVM_DIR
     - git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
-    - . $NVM_DIR/nvm.sh
-    - nvm install $$NODE_VERSION
-    - nvm use $$NODE_VERSION
+    - . "$NVM_DIR/nvm.sh"
+    - nvm ls || true
+    - nvm install $$NODE_VERSION || true
+    - nvm use $$NODE_VERSION || true
     - cd $DRONE_DIR
     - rm -rf node_modules
     - npm install --unsafe-perm
@@ -21,7 +22,7 @@ build:
 
 matrix:
   NODE_VERSION:
-    - 5
+    - 5.0
 
 cache:
   mount:
